@@ -356,6 +356,10 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </footer>
 
+  <a href="#" class="floating-wa-btn js-wa-link" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+    <svg width="30" height="30" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.527 5.845L.057 23.882l6.198-1.625A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.893a9.866 9.866 0 01-5.031-1.378l-.361-.214-3.735.979 1.004-3.638-.235-.374A9.837 9.837 0 012.108 12C2.108 6.527 6.527 2.108 12 2.108c5.473 0 9.893 4.42 9.893 9.892 0 5.473-4.42 9.893-9.893 9.893z"/></svg>
+  </a>
+
   <script>
     const WA = '5551843971' + '76'; // +55 51 8439-7176
     const waBase = 'https://wa.me/' + WA;
@@ -936,5 +940,43 @@ import Layout from '../layouts/Layout.astro';
     .nav { padding: 1rem 1.25rem; }
     .logo-img { height: 36px; }
     .features, .testimonials, .gallery { padding: 4rem 1.25rem; }
+    
+    .floating-wa-btn {
+      width: 50px;
+      height: 50px;
+      bottom: 20px;
+      right: 20px;
+    }
+    .floating-wa-btn svg {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  /* ─── FLOATING WHATSAPP ─── */
+  .floating-wa-btn {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 60px;
+    height: 60px;
+    background-color: #25D366;
+    color: white;
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0px 4px 14px rgba(37, 211, 102, 0.4);
+    z-index: 1000;
+    animation: wa-glow 2s infinite;
+    transition: transform 0.2s;
+  }
+  .floating-wa-btn:hover {
+    transform: scale(1.1);
+  }
+  @keyframes wa-glow {
+    0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6); }
+    70% { box-shadow: 0 0 0 15px rgba(37, 211, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
   }
 </style>
