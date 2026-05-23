@@ -73,8 +73,8 @@ import Layout from '../layouts/Layout.astro';
 
     <div class="hero-visual">
       <div class="hero-photo-wrap">
-        <img src="/sacola-1.jpg" alt="Sacola personalizada Seda Sapeka" class="hero-photo" />
-        <div class="hero-photo-badge">portfólio real</div>
+        <img src="/sacolas/alça-vazada.webp" alt="Sacola Alça Vazada" class="hero-photo" />
+        <div class="hero-photo-badge">Alça Vazada</div>
         <div class="hero-photo-glow"></div>
       </div>
     </div>
@@ -240,21 +240,27 @@ import Layout from '../layouts/Layout.astro';
       </div>
       <div class="gallery-grid">
         <div class="gallery-item gallery-item--featured">
-          <img src="/sacola-1.jpg" alt="Sacola personalizada preta - Seda Sapeka Moda Íntima" loading="lazy" />
+          <img src="/sacolas/alça-vazada.webp" alt="Sacola Alça Vazada" loading="lazy" />
           <div class="gallery-overlay">
-            <span>Seda Sapeka · Moda Íntima</span>
+            <span>Alça Vazada</span>
           </div>
         </div>
         <div class="gallery-item">
-          <img src="/sacola-2.jpg" alt="Sacola personalizada branca - Kaliel Garcia Imports" loading="lazy" />
+          <img src="/sacolas/alça-boda -de-palhaço.webp" alt="Sacola Alça Boca de Palhaço" loading="lazy" />
           <div class="gallery-overlay">
-            <span>Kaliel Garcia · Imports</span>
+            <span>Alça Boca de Palhaço</span>
           </div>
         </div>
         <div class="gallery-item">
-          <img src="/sacola-3.jpg" alt="Sacola personalizada rosa - Daskah Store" loading="lazy" />
+          <img src="/sacolas/alça-camiseta.webp" alt="Sacola Alça Camiseta" loading="lazy" />
           <div class="gallery-overlay">
-            <span>Daskah Store · Sportwear</span>
+            <span>Alça Camiseta</span>
+          </div>
+        </div>
+        <div class="gallery-item gallery-item--featured-alt">
+          <img src="/sacolas/alça-fita.webp" alt="Sacola Alça Fita" loading="lazy" />
+          <div class="gallery-overlay">
+            <span>Alça Fita</span>
           </div>
         </div>
       </div>
@@ -874,8 +880,7 @@ import Layout from '../layouts/Layout.astro';
   }
   .gallery-grid {
     display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    grid-template-rows: auto auto;
+    grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
     margin-bottom: 2rem;
   }
@@ -885,18 +890,14 @@ import Layout from '../layouts/Layout.astro';
     overflow: hidden;
     cursor: pointer;
   }
-  .gallery-item--featured {
-    grid-row: 1 / 3;
-  }
   .gallery-item img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
     transition: transform 0.4s ease;
+    min-height: 260px;
   }
-  .gallery-item--featured img { min-height: 420px; }
-  .gallery-item:not(.gallery-item--featured) img { min-height: 200px; }
   .gallery-item:hover img { transform: scale(1.04); }
   .gallery-overlay {
     position: absolute;
@@ -936,9 +937,8 @@ import Layout from '../layouts/Layout.astro';
     .trust-inner { gap: 1.5rem; }
     .trust-sep { display: none; }
 
-    .gallery-grid { grid-template-columns: 1fr; grid-template-rows: auto; }
-    .gallery-item--featured { grid-row: auto; }
-    .gallery-item--featured img { min-height: 280px; }
+    .gallery-grid { grid-template-columns: 1fr; }
+    .gallery-item img { min-height: 280px; }
     .gallery-overlay { opacity: 1; }
 
     .nav { padding: 1rem 1.25rem; }
