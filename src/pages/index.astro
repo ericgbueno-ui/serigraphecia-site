@@ -363,7 +363,7 @@ import Layout from '../layouts/Layout.astro';
   <script>
     const WA = '5551843971' + '76'; // +55 51 8439-7176
     const waBase = 'https://wa.me/' + WA;
-    const waMsg  = encodeURIComponent('🌐 Vim pelo site.\n\nOlá! Gostaria de um orçamento de sacolas personalizadas.');
+    const waMsg  = encodeURIComponent('✨ Olá! Vim pelo site da Serigraph e Cia.\n\nEstou buscando sacolas com acabamento premium para a minha loja e gostaria de solicitar um orçamento exclusivo.');
 
     document.querySelectorAll('.js-wa-link').forEach((el) => {
       (el as HTMLAnchorElement).href = waBase + '?text=' + waMsg;
@@ -379,9 +379,9 @@ import Layout from '../layouts/Layout.astro';
       const msg      = (document.getElementById('f-mensagem')  as HTMLTextAreaElement).value.trim();
 
       const linhas = [
-        '🌐 Vim pelo site.',
+        '✨ Olá! Vim pelo site da Serigraph e Cia.',
         '',
-        'Olá! Gostaria de um orçamento de sacolas personalizadas.',
+        'Estou buscando sacolas com acabamento premium para a minha loja e gostaria de solicitar um orçamento exclusivo.',
         `🏪 Loja: ${nome}`,
         whatsapp ? `📱 WhatsApp: ${whatsapp}`        : '',
         qtd      ? `📦 Quantidade: ${qtd} unidades`  : '',
