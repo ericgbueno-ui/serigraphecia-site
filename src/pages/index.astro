@@ -7,7 +7,7 @@ import Layout from '../layouts/Layout.astro';
   <header class="nav">
     <div class="nav-inner">
       <a href="/" class="logo">
-        <img src="/logo.png" alt="Serigrafia Serigraph" class="logo-img" />
+        <img src="/logo.png" alt="Serigraph e Cia" class="logo-img" />
       </a>
       <div class="nav-actions">
         <a href="https://www.instagram.com/serigraphecia" target="_blank" rel="noopener" class="nav-insta" aria-label="Instagram">
@@ -114,7 +114,7 @@ import Layout from '../layouts/Layout.astro';
   <section class="features">
     <div class="features-inner">
       <div class="section-header">
-        <h2 class="section-title">Por que a <em>Serigraphecia</em>?</h2>
+        <h2 class="section-title">Por que a <em>Serigraph e Cia</em>?</h2>
         <p class="section-sub">Porque sua boutique merece embalagem à altura do que você vende.</p>
       </div>
       <div class="features-grid">
@@ -241,27 +241,19 @@ import Layout from '../layouts/Layout.astro';
       <div class="gallery-grid">
         <div class="gallery-item gallery-item--featured">
           <img src="/sacolas/alça-vazada.webp" alt="Sacola Alça Vazada" loading="lazy" />
-          <div class="gallery-overlay">
-            <span>Alça Vazada</span>
-          </div>
+          <div class="bag-name-card">Alça Vazada</div>
         </div>
         <div class="gallery-item">
           <img src="/sacolas/alça-boda -de-palhaço.webp" alt="Sacola Alça Boca de Palhaço" loading="lazy" />
-          <div class="gallery-overlay">
-            <span>Alça Boca de Palhaço</span>
-          </div>
+          <div class="bag-name-card">Alça Boca de Palhaço</div>
         </div>
         <div class="gallery-item">
           <img src="/sacolas/alça-camiseta.webp" alt="Sacola Alça Camiseta" loading="lazy" />
-          <div class="gallery-overlay">
-            <span>Alça Camiseta</span>
-          </div>
+          <div class="bag-name-card">Alça Camiseta</div>
         </div>
         <div class="gallery-item gallery-item--featured-alt">
           <img src="/sacolas/alça-fita.webp" alt="Sacola Alça Fita" loading="lazy" />
-          <div class="gallery-overlay">
-            <span>Alça Fita</span>
-          </div>
+          <div class="bag-name-card">Alça Fita</div>
         </div>
       </div>
       <div class="gallery-cta">
@@ -344,8 +336,8 @@ import Layout from '../layouts/Layout.astro';
   <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-inner">
-      <img src="/logo.png" alt="Serigrafia Serigraph" class="footer-logo-img" />
-      <p>© 2025 Serigraphecia · A sacola que conta a história da sua marca</p>
+      <img src="/logo.png" alt="Serigraph e Cia" class="footer-logo-img" />
+      <p>© 2025 Serigraph e Cia · A sacola que conta a história da sua marca</p>
       <div class="footer-links">
         <a class="js-wa-link footer-wa" href="#" target="_blank" rel="noopener">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.527 5.845L.057 23.882l6.198-1.625A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.893a9.866 9.866 0 01-5.031-1.378l-.361-.214-3.735.979 1.004-3.638-.235-.374A9.837 9.837 0 012.108 12C2.108 6.527 6.527 2.108 12 2.108c5.473 0 9.893 4.42 9.893 9.892 0 5.473-4.42 9.893-9.893 9.893z"/></svg>
@@ -899,23 +891,24 @@ import Layout from '../layouts/Layout.astro';
     min-height: 260px;
   }
   .gallery-item:hover img { transform: scale(1.04); }
-  .gallery-overlay {
+  .bag-name-card {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 50%);
-    display: flex;
-    align-items: flex-end;
-    padding: 1.25rem;
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-  .gallery-item:hover .gallery-overlay { opacity: 1; }
-  .gallery-overlay span {
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(13,13,13,0.85);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255,45,120,0.4);
+    color: var(--pink);
     font-family: var(--font-display);
-    font-size: 0.88rem;
+    font-size: 0.8rem;
     font-weight: 600;
-    color: var(--white);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 0.45rem 1rem;
+    border-radius: 100px;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   }
   .gallery-cta { display: flex; justify-content: center; }
 
@@ -939,7 +932,6 @@ import Layout from '../layouts/Layout.astro';
 
     .gallery-grid { grid-template-columns: 1fr; }
     .gallery-item img { min-height: 280px; }
-    .gallery-overlay { opacity: 1; }
 
     .nav { padding: 1rem 1.25rem; }
     .logo-img { height: 36px; }
