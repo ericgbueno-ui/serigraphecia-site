@@ -1,0 +1,60 @@
+---
+import { getIsAdmin, ADMIN_COOKIE_NAME } from "../lib/server/adminAuth";
+import { AdminShell } from "../components/admin/AdminShell";
+
+interface Props {
+  title?: string;
+}
+
+const { title = "Admin | Serigraph e Cia" } = Astro.props;
+
+const cookieVal = Astro.cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
+const isAdmin = getIsAdmin(cookieVal);
+
+if (!isAdmin) {
+  return Astro.redirect("/admin");
+}
+
+const currentPath = new URL(Astro.request.url).pathname;
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{title}</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --bg: #05080d;
+        --bg-card: #0d1117;
+        --text: #e8eaf0;
+        --muted: #6b7280;
+        --border: rgba(255,255,255,0.07);
+        --border-md: rgba(255,255,255,0.12);
+        --gold: #c9a84c;
+        --gold-dim: rgba(201,168,76,0.08);
+        --gold-line: rgba(201,168,76,0.25);
+        --red: #f87171;
+        --mt-gold: #c9a84c;
+      }
+      body {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+        overflow-x: hidden;
+      }
+      a { color: inherit; }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <AdminShell currentPath={currentPath} client:load>
+      <slot />
+    </AdminShell>
+  </body>
+</html>

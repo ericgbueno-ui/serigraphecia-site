@@ -1,0 +1,126 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+const url = new URL(Astro.request.url);
+function monthKey(d: Date) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+const selectedMonth = url.searchParams.get("month") ?? monthKey(new Date());
+const [yearStr, monthStr] = selectedMonth.split("-");
+const year = parseInt(yearStr);
+const month = parseInt(monthStr) - 1;
+const startOfMonth = new Date(Date.UTC(year, month, 1));
+const endOfMonth = new Date(Date.UTC(year, month + 1, 1));
+
+const bookings = await prisma.booking.findMany({
+  where: {
+    status: "CONFIRMED",
+    OR: [
+      { idaDate: { gte: startOfMonth, lt: endOfMonth } },
+      { voltaDate: { gte: startOfMonth, lt: endOfMonth } },
+    ],
+  },
+  include: { customer: true },
+});
+
+interface AgendaEvent {
+  bookingId: string;
+  type: "ida" | "volta" | "citytour";
+  time: string;
+  customerName: string;
+  customerPhone: string;
+  vehicleType: string;
+  passengerCount: number;
+  hotel: string | null;
+  driverName: string | null;
+  concluido: boolean;
+}
+
+const eventsByDay: Record<number, AgendaEvent[]> = {};
+const daysInMonth = new Date(year, month + 1, 0).getDate();
+for (let d = 1; d <= daysInMonth; d++) eventsByDay[d] = [];
+
+for (const b of bookings) {
+  if (b.tripType !== "volta" && b.idaDate) {
+    const day = new Date(b.idaDate).getUTCDate();
+    if (day >= 1 && day <= daysInMonth) {
+      eventsByDay[day].push({ bookingId: b.id, type: "ida", time: b.idaFlightTime ?? "—", customerName: b.customer?.name ?? "Sem Nome", customerPhone: b.customer?.phone ?? "", vehicleType: b.vehicleType, passengerCount: b.passengerCount, hotel: b.hotel, driverName: b.driverInName ?? b.driverName, concluido: b.idaConcluida });
+    }
+  }
+  if (b.tripType !== "ida" && b.voltaDate) {
+    const day = new Date(b.voltaDate).getUTCDate();
+    if (day >= 1 && day <= daysInMonth) {
+      eventsByDay[day].push({ bookingId: b.id, type: "volta", time: b.voltaFlightTime ?? "—", customerName: b.customer?.name ?? "Sem Nome", customerPhone: b.customer?.phone ?? "", vehicleType: b.vehicleType, passengerCount: b.passengerCount, hotel: b.hotel, driverName: b.driverOutName ?? b.driverName, concluido: b.voltaConcluida });
+    }
+  }
+}
+
+const totalEvents = Object.values(eventsByDay).reduce((s, l) => s + l.length, 0);
+const prevMonth = monthKey(new Date(year, month - 1, 1));
+const nextMonth = monthKey(new Date(year, month + 1, 1));
+const monthName = new Date(year, month, 1).toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+---
+
+<AdminLayout title="Agenda | Admin">
+  <div style="padding:32px 40px;">
+    <div style="max-width:1200px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px;">
+        <div>
+          <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">📅 Agenda e Operação</h1>
+          <p style="font-size:13px;color:var(--muted);">{totalEvents} serviços em {monthName}</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <a href={`/admin/agenda?month=${prevMonth}`} style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;color:var(--gold);text-decoration:none;font-weight:700;">◀</a>
+          <span style="font-size:14px;font-weight:600;min-width:140px;text-align:center;">{monthName}</span>
+          <a href={`/admin/agenda?month=${nextMonth}`} style="padding:6px 12px;border:1px solid var(--border);border-radius:8px;color:var(--gold);text-decoration:none;font-weight:700;">▶</a>
+        </div>
+      </div>
+
+      {totalEvents === 0 ? (
+        <div style="text-align:center;padding:60px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:14px;">
+          Nenhum serviço confirmado neste mês.
+        </div>
+      ) : (
+        <div style="display:flex;flex-direction:column;gap:24px;">
+          {Array.from({ length: daysInMonth }).map((_, i) => {
+            const day = i + 1;
+            const events = eventsByDay[day] || [];
+            if (events.length === 0) return null;
+            const dayStr = new Date(year, month, day).toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long" });
+            return (
+              <div>
+                <h4 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:12px;">📅 {dayStr.charAt(0).toUpperCase() + dayStr.slice(1)}</h4>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                  {events.map((e, idx) => {
+                    const color = e.type === "ida" ? "#3ecf8e" : e.type === "volta" ? "#a78bfa" : "#c9a84c";
+                    const typeLabel = e.type === "ida" ? "Chegada In" : e.type === "volta" ? "Retorno Out" : "City Tour";
+                    return (
+                      <div style={`background:var(--bg-card);border:1px solid var(--border);border-left:3px solid ${color};border-radius:12px;padding:16px 20px;display:grid;grid-template-columns:100px 1.5fr 1fr auto;gap:16px;align-items:center;opacity:${e.concluido ? 0.7 : 1};`}>
+                        <div>
+                          <p style="font-size:16px;font-weight:800;">{e.time}</p>
+                          <span style={`font-size:9px;font-weight:700;padding:2px 8px;border-radius:100px;color:${color};background:${color}22;border:1px solid ${color}44;`}>{typeLabel}</span>
+                        </div>
+                        <div>
+                          <p style="font-size:13px;font-weight:700;">{e.customerName}</p>
+                          <p style="font-size:11px;color:var(--muted);margin-top:2px;">{e.customerPhone} · {e.passengerCount} pax</p>
+                          {e.hotel && <p style="font-size:11px;color:var(--muted);">🏨 {e.hotel}</p>}
+                        </div>
+                        <div>
+                          <p style="font-size:12px;color:var(--muted);">🚗 Motorista</p>
+                          {e.driverName ? <p style="font-size:12px;font-weight:600;margin-top:2px;">{e.driverName}</p> : <p style="font-size:12px;color:#c9a84c;margin-top:2px;">⚠️ Não designado</p>}
+                        </div>
+                        <a href={`/admin/reservas/${e.bookingId}`} style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);color:var(--text);text-decoration:none;">👁️</a>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+</AdminLayout>

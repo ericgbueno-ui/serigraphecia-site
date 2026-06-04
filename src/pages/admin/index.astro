@@ -1,0 +1,89 @@
+---
+export const prerender = false;
+
+import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../lib/server/adminAuth";
+import { PasswordInput } from "../../components/admin/PasswordInput";
+
+const cookieVal = Astro.cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
+const isAdmin = getIsAdmin(cookieVal);
+
+if (isAdmin) {
+  return Astro.redirect("/admin/painel");
+}
+
+const hasError = !!Astro.url.searchParams.get("error");
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Admin | Serigraph e Cia</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      :root {
+        --bg: #05080d;
+        --bg-card: #0d1117;
+        --text: #e8eaf0;
+        --muted: #6b7280;
+        --border: rgba(255,255,255,0.07);
+        --border-md: rgba(255,255,255,0.12);
+        --gold: #c9a84c;
+        --gold-dim: rgba(201,168,76,0.08);
+        --gold-line: rgba(201,168,76,0.25);
+        --red: #f87171;
+      }
+      body {
+        font-family: 'DM Sans', system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body>
+    <div style="position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse 700px 500px at 50% 40%,rgba(201,168,76,0.06),transparent 65%);"></div>
+
+    <div style="width:100%;max-width:360px;position:relative;">
+      <div style="text-align:center;margin-bottom:36px;">
+        <a href="/" aria-label="Voltar para o site" style="display:inline-block;">
+          <img src="/brand/logo-horizontal.webp" alt="Serigraph e Cia" style="height:40px;width:auto;margin:0 auto;display:block;" />
+        </a>
+        <h1 style="margin-top:24px;font-size:20px;font-weight:700;">Painel Administrativo</h1>
+        <p style="margin-top:6px;font-size:13px;color:var(--muted);">Insira a senha de acesso para continuar.</p>
+      </div>
+
+      <div style="background:var(--bg-card);border:1px solid var(--border-md);border-radius:20px;padding:32px;box-shadow:0 20px 60px rgba(0,0,0,0.4);">
+        <form action="/api/admin/login" method="POST">
+          <div style="margin-bottom:20px;">
+            <label style="display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin-bottom:8px;">
+              Senha de administrador
+            </label>
+            <PasswordInput hasError={hasError} client:load />
+          </div>
+
+          {hasError && (
+            <div style="background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.25);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:16px;">
+              Senha incorreta. Tente novamente.
+            </div>
+          )}
+
+          <button
+            type="submit"
+            style="width:100%;padding:13px;background:var(--gold);color:#05080d;font-weight:700;font-size:14px;letter-spacing:0.03em;border:none;border-radius:12px;cursor:pointer;box-shadow:0 0 20px rgba(201,168,76,0.25);"
+          >
+            Entrar →
+          </button>
+        </form>
+      </div>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,112 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+const url = new URL(Astro.request.url);
+const selectedId = url.searchParams.get("id");
+
+const leads = await prisma.lead.findMany({
+  orderBy: { updatedAt: "desc" },
+  take: 300,
+  select: {
+    id: true,
+    name: true,
+    whatsapp: true,
+    status: true,
+    score: true,
+    updatedAt: true,
+    valueCents: true,
+    interactions: { orderBy: { createdAt: "desc" }, take: 1, select: { role: true, content: true, createdAt: true } },
+  },
+});
+
+const [selectedLead, interactions] = await Promise.all([
+  selectedId ? prisma.lead.findUnique({ where: { id: selectedId } }) : null,
+  selectedId ? prisma.interaction.findMany({ where: { leadId: selectedId }, orderBy: { createdAt: "asc" } }) : [],
+]);
+
+const statusColors: Record<string, { color: string; bg: string }> = {
+  frio: { color: "#6b7280", bg: "rgba(107,114,128,0.1)" },
+  interessado: { color: "#60a5fa", bg: "rgba(96,165,250,0.1)" },
+  quente: { color: "#f97316", bg: "rgba(249,115,22,0.1)" },
+  pronto: { color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
+  convertido: { color: "#3ecf8e", bg: "rgba(62,207,142,0.1)" },
+};
+
+function fmtTime(d: Date) {
+  return new Date(d).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+}
+function fmtDate(d: Date) {
+  return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+---
+
+<AdminLayout title="Conversas | Admin">
+  <div style="display:grid;grid-template-columns:320px 1fr;height:calc(100dvh - 0px);overflow:hidden;">
+    <!-- Lista de leads -->
+    <div style="background:var(--bg-card);border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column;">
+      <div style="padding:16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:var(--bg-card);z-index:10;">
+        <h2 style="font-size:16px;font-weight:700;">💬 Conversas</h2>
+        <p style="font-size:11px;color:var(--muted);margin-top:2px;">{leads.length} leads</p>
+      </div>
+      {leads.map((lead) => {
+        const c = statusColors[lead.status] ?? { color: "var(--muted)", bg: "transparent" };
+        const lastMsg = lead.interactions[0];
+        const isSelected = lead.id === selectedId;
+        return (
+          <a href={`/admin/conversas?id=${lead.id}`} style={`display:flex;flex-direction:column;gap:6px;padding:14px 16px;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;${isSelected ? "background:rgba(201,168,76,0.06);" : ""}`}>
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+              <p style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{lead.name || lead.whatsapp}</p>
+              <span style={`font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;color:${c.color};background:${c.bg};white-space:nowrap;`}>{lead.status}</span>
+            </div>
+            {lastMsg && (
+              <p style="font-size:11px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{lastMsg.content.slice(0, 60)}</p>
+            )}
+            <p style="font-size:10px;color:var(--muted);">{fmtDate(lead.updatedAt)}</p>
+          </a>
+        );
+      })}
+    </div>
+
+    <!-- Conversa selecionada -->
+    <div style="overflow-y:auto;display:flex;flex-direction:column;">
+      {selectedLead ? (
+        <div style="display:flex;flex-direction:column;height:100%;">
+          <!-- Header -->
+          <div style="padding:16px 24px;border-bottom:1px solid var(--border);background:var(--bg-card);position:sticky;top:0;z-index:10;">
+            <p style="font-size:14px;font-weight:700;">{selectedLead.name || selectedLead.whatsapp}</p>
+            <p style="font-size:12px;color:var(--muted);margin-top:2px;">
+              📱 {selectedLead.whatsapp}
+              {selectedLead.email && ` · ✉️ ${selectedLead.email}`}
+            </p>
+          </div>
+
+          <!-- Mensagens -->
+          <div style="flex:1;padding:24px;display:flex;flex-direction:column;gap:12px;">
+            {interactions.length === 0 ? (
+              <p style="text-align:center;color:var(--muted);font-size:13px;padding:40px;">Nenhuma interação registrada.</p>
+            ) : (
+              interactions.map((msg) => {
+                const isJolie = msg.role === "jolie" || msg.role === "assistant";
+                const isHuman = msg.role === "human";
+                return (
+                  <div style={`display:flex;flex-direction:column;${isJolie || isHuman ? "align-items:flex-start;" : "align-items:flex-end;"}`}>
+                    <div style={`max-width:80%;padding:10px 14px;border-radius:${isJolie || isHuman ? "4px 14px 14px 14px" : "14px 4px 14px 14px"};font-size:13px;line-height:1.5;${isJolie ? "background:var(--bg-card);border:1px solid var(--border);color:var(--text);" : isHuman ? "background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);color:#a78bfa;" : "background:rgba(201,168,76,0.08);border:1px solid var(--gold-line);color:var(--text);"}`}>
+                      {msg.content}
+                    </div>
+                    <span style="font-size:10px;color:var(--muted);margin-top:4px;">{msg.role} · {fmtTime(msg.createdAt)}</span>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      ) : (
+        <div style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);font-size:13px;">
+          Selecione um lead para ver a conversa.
+        </div>
+      )}
+    </div>
+  </div>
+</AdminLayout>

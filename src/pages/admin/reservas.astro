@@ -1,0 +1,122 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+const url = new URL(Astro.request.url);
+const selectedMonth = url.searchParams.get("month") ?? (() => {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+})();
+
+const [yearStr, monthStr] = selectedMonth.split("-");
+const year = parseInt(yearStr);
+const month = parseInt(monthStr) - 1;
+const startOfMonth = new Date(Date.UTC(year, month, 1));
+const endOfMonth = new Date(Date.UTC(year, month + 1, 1));
+
+const bookings = await prisma.booking.findMany({
+  where: {
+    OR: [
+      { idaDate: { gte: startOfMonth, lt: endOfMonth } },
+      { idaDate: null, voltaDate: { gte: startOfMonth, lt: endOfMonth } },
+      { createdAt: { gte: startOfMonth, lt: endOfMonth } },
+    ],
+  },
+  orderBy: { createdAt: "desc" },
+  take: 100,
+  select: {
+    id: true,
+    createdAt: true,
+    status: true,
+    tripType: true,
+    vehicleType: true,
+    passengerCount: true,
+    hotel: true,
+    idaDate: true,
+    idaFlightTime: true,
+    idaFlightNumber: true,
+    voltaDate: true,
+    voltaFlightTime: true,
+    voltaFlightNumber: true,
+    totalCents: true,
+    payMethod: true,
+    affiliateCode: true,
+    remainderCents: true,
+    idaConcluida: true,
+    voltaConcluida: true,
+    customer: { select: { name: true, phone: true } },
+  },
+});
+
+function brl(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function fmtDate(d: Date | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+function tripLabel(t: string) {
+  if (t === "so_citytour") return "City Tour";
+  if (t === "ida_volta") return "Ida + Volta";
+  if (t === "volta") return "Retorno";
+  return "Chegada";
+}
+function statusBadge(s: string) {
+  if (s === "CONFIRMED") return { label: "Confirmada", color: "#3ecf8e", bg: "rgba(62,207,142,0.1)", border: "rgba(62,207,142,0.25)" };
+  if (s === "CANCELLED") return { label: "Cancelada", color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)" };
+  return { label: "Pendente", color: "#c9a84c", bg: "rgba(201,168,76,0.1)", border: "rgba(201,168,76,0.3)" };
+}
+
+const confirmed = bookings.filter((b) => b.status === "CONFIRMED");
+const faturamento = confirmed.reduce((s, b) => s + b.totalCents, 0);
+---
+
+<AdminLayout title="Contratos | Admin">
+  <div style="padding: 32px 40px;">
+    <div style="max-width: 1200px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">Contratos</h1>
+          <p style="font-size:13px;color:var(--muted);">{bookings.length} contratos · Faturamento confirmado: {brl(faturamento)}</p>
+        </div>
+        <a href="/admin/nova-reserva" style="background:var(--gold);color:#05080d;padding:10px 18px;border-radius:10px;font-weight:700;font-size:13px;text-decoration:none;">+ Novo Contrato</a>
+      </div>
+
+      {bookings.length === 0 ? (
+        <div style="text-align:center;padding:60px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:14px;">
+          Nenhum contrato encontrado para este período.
+        </div>
+      ) : (
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          {bookings.map((b) => {
+            const badge = statusBadge(b.status);
+            return (
+              <a href={`/admin/reservas/${b.id}`} style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px 24px;display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:16px;align-items:center;text-decoration:none;color:inherit;">
+                <div>
+                  <p style="font-size:14px;font-weight:600;">{b.customer?.name || "Sem Nome"}</p>
+                  <p style="font-size:12px;color:var(--muted);margin-top:2px;">{b.customer?.phone || "—"}</p>
+                  <p style="font-size:11px;color:var(--muted);margin-top:4px;">Criada em {fmtDate(b.createdAt)}</p>
+                </div>
+                <div>
+                  <p style="font-size:13px;font-weight:500;">{tripLabel(b.tripType)}</p>
+                  <p style="font-size:12px;color:var(--muted);margin-top:2px;">{b.vehicleType} · {b.passengerCount} pax</p>
+                  {b.idaDate && <p style="font-size:11px;margin-top:4px;">✈️ {fmtDate(b.idaDate)}{b.idaFlightTime ? ` às ${b.idaFlightTime}` : ""}</p>}
+                  {b.voltaDate && <p style="font-size:11px;margin-top:2px;">↩️ {fmtDate(b.voltaDate)}{b.voltaFlightTime ? ` às ${b.voltaFlightTime}` : ""}</p>}
+                </div>
+                <div>
+                  <p style="font-size:16px;font-weight:700;color:#3ecf8e;">{brl(b.totalCents)}</p>
+                  <p style="font-size:11px;color:var(--muted);margin-top:2px;text-transform:uppercase;">{b.payMethod === "pix" ? "PIX" : "Cartão"}</p>
+                  {b.remainderCents > 0 && <p style="font-size:11px;color:var(--muted);margin-top:4px;">Restante: {brl(b.remainderCents)}</p>}
+                </div>
+                <span style={`padding:4px 10px;border-radius:100px;font-size:11px;font-weight:600;color:${badge.color};background:${badge.bg};border:1px solid ${badge.border};white-space:nowrap;`}>
+                  {badge.label}
+                </span>
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  </div>
+</AdminLayout>

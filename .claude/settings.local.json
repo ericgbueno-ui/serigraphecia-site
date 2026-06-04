@@ -20,7 +20,11 @@
       "Bash(git commit -m ' *)",
       "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__web_fetch_vercel_url",
       "Bash(Remove-Item \"C:\\\\Produção de Site\\\\serigraph-site\\\\src\\\\pages\\\\admin\\\\index.astro\" -Force)",
-      "Bash(Remove-Item \"C:\\\\Produção de Site\\\\serigraph-site\\\\src\\\\pages\\\\admin\" -Force)"
+      "Bash(Remove-Item \"C:\\\\Produção de Site\\\\serigraph-site\\\\src\\\\pages\\\\admin\" -Force)",
+      "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__get_project",
+      "WebSearch",
+      "Bash(npm install *)",
+      "Bash(npm cache *)"
     ]
   }
 }

@@ -1,0 +1,68 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+
+const now = new Date();
+const hora = now.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "numeric", hour12: false });
+const horaNum = parseInt(hora);
+const saudacao = horaNum < 12 ? "Bom dia" : horaNum < 18 ? "Boa tarde" : "Boa noite";
+const dateStr = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" });
+
+const MENU_CARDS = [
+  { href: "/admin/nova-reserva", icon: "＋", label: "Nova Reserva", description: "Criar uma reserva manual diretamente no sistema.", color: "var(--mt-gold)", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.25)" },
+  { href: "/admin/agenda", icon: "📅", label: "Agenda", description: "Visualizar o calendário de viagens e compromissos.", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.20)" },
+  { href: "/admin/reservas", icon: "🗓️", label: "Contratos", description: "Ver, filtrar e gerenciar todos os contratos ativos e passados.", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.20)" },
+  { href: "/admin/motoristas", icon: "🚙", label: "Motoristas / Frota", description: "Gerenciar veículos, motoristas parceiros e escalas.", color: "#4ade80", bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.20)" },
+  { href: "/admin/leads", icon: "🎯", label: "Leads", description: "Acompanhar contatos e oportunidades em aberto.", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.20)" },
+  { href: "/admin/clientes", icon: "🤎", label: "Clientes", description: "Base de clientes, histórico e dados de contato.", color: "#f9a8d4", bg: "rgba(249,168,212,0.08)", border: "rgba(249,168,212,0.20)" },
+  { href: "/admin/afiliados", icon: "🤝", label: "Afiliados", description: "Gerenciar parceiros, comissões e links de indicação.", color: "#3ecf8e", bg: "rgba(62,207,142,0.08)", border: "rgba(62,207,142,0.20)" },
+  { href: "/admin/caixa", icon: "💰", label: "Financeiro", description: "Gerenciar caixa, transações e fluxo financeiro do sistema.", color: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.20)" },
+];
+---
+
+<AdminLayout title="Painel | Admin">
+  <div class="px-8 py-10" style="max-width: 1000px;">
+    <div style="margin-bottom: 40px;">
+      <p style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.25em;color:var(--muted);margin-bottom:8px;">Admin · Serigraph e Cia</p>
+      <h1 style="font-size:28px;font-weight:700;color:var(--text);margin-bottom:4px;">{saudacao}! 👋</h1>
+      <p style="font-size:13px;color:var(--muted);">{dateStr}</p>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
+      {MENU_CARDS.map((card) => (
+        <a
+          href={card.href}
+          style={`display:flex;flex-direction:column;gap:16px;border-radius:16px;padding:24px;text-decoration:none;color:inherit;background:${card.bg};border:1px solid ${card.border};transition:transform 0.2s,box-shadow 0.2s;`}
+          class="card-hover"
+        >
+          <div style="font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:rgba(0,0,0,0.25);">
+            {card.icon}
+          </div>
+          <div>
+            <h2 style={`font-size:16px;font-weight:700;margin-bottom:4px;color:${card.color};`}>{card.label}</h2>
+            <p style="font-size:12px;color:var(--muted);line-height:1.5;">{card.description}</p>
+          </div>
+          <div style={`font-size:12px;font-weight:600;color:${card.color};opacity:0;`} class="card-arrow">Acessar →</div>
+        </a>
+      ))}
+    </div>
+
+    <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--border);display:flex;gap:16px;font-size:12px;color:var(--muted);">
+      <span>serigraphecia.com.br/admin</span>
+      <span>·</span>
+      <a href="/" style="color:var(--muted);text-decoration:none;">Ver site público →</a>
+      <span>·</span>
+      <a href="/api/admin/logout" style="color:var(--red);text-decoration:none;">Sair</a>
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  .card-hover:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .card-hover:hover .card-arrow {
+    opacity: 1 !important;
+  }
+</style>

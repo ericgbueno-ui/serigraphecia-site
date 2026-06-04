@@ -1,0 +1,68 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+import { ClientesClient } from "../../components/admin/ClientesClient";
+
+const affiliates = await prisma.affiliate.findMany({ select: { id: true, name: true, code: true } });
+const affiliateMap = new Map<string, { id: string; name: string }>();
+for (const aff of affiliates) {
+  if (aff.code) {
+    affiliateMap.set(aff.code.toUpperCase(), { id: aff.id, name: aff.name });
+    affiliateMap.set(aff.code.toLowerCase(), { id: aff.id, name: aff.name });
+  }
+}
+
+const bookings = await prisma.booking.findMany({
+  where: { status: "CONFIRMED" },
+  select: {
+    id: true,
+    totalCents: true,
+    createdAt: true,
+    tripType: true,
+    vehicleType: true,
+    idaDate: true,
+    affiliateCode: true,
+    customer: { select: { id: true, name: true, phone: true, email: true, birthDate: true } },
+  },
+  orderBy: { createdAt: "desc" },
+});
+
+const customerMap = new Map<string, { customer: (typeof bookings)[0]["customer"]; bookings: any[]; totalCents: number }>();
+for (const b of bookings) {
+  const aff = b.affiliateCode ? (affiliateMap.get(b.affiliateCode) || affiliateMap.get(b.affiliateCode.toLowerCase()) || affiliateMap.get(b.affiliateCode.toUpperCase())) : null;
+  const enriched = { ...b, affiliateName: aff?.name ?? null, affiliateId: aff?.id ?? null };
+  const id = b.customer.id;
+  if (!customerMap.has(id)) customerMap.set(id, { customer: b.customer, bookings: [], totalCents: 0 });
+  const entry = customerMap.get(id)!;
+  entry.bookings.push(enriched);
+  entry.totalCents += b.totalCents;
+}
+
+const customers = [...customerMap.values()].map((c) => ({
+  ...c,
+  customer: {
+    ...c.customer,
+    birthDate: c.customer.birthDate ? c.customer.birthDate.toISOString() : null,
+  },
+  bookings: c.bookings.map((b) => ({
+    ...b,
+    createdAt: b.createdAt.toISOString(),
+    idaDate: b.idaDate ? b.idaDate.toISOString().slice(0, 10) : null,
+  })),
+}));
+---
+
+<AdminLayout title="Clientes | Admin">
+  <div style="padding:32px 40px;max-width:1100px;">
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:28px;">
+      <a href="/admin/painel" style="color:var(--muted);font-size:13px;text-decoration:none;">← Admin</a>
+      <span style="color:var(--border);">|</span>
+      <div>
+        <h1 style="font-size:22px;font-weight:700;margin-bottom:2px;">🤎 Clientes Recorrentes</h1>
+        <p style="font-size:12px;color:var(--muted);">Lifetime value, classificação e histórico de viagens.</p>
+      </div>
+    </div>
+    <ClientesClient initialCustomers={customers as any} client:load />
+  </div>
+</AdminLayout>
