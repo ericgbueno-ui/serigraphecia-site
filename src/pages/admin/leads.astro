@@ -38,12 +38,15 @@ function fmtDate(d: Date) {
 const totalPages = Math.ceil(total / perPage);
 ---
 
-<AdminLayout title="Leads | Admin">
+<AdminLayout title="Orçamentos | Admin" currentPath="/admin/leads">
   <div style="padding:32px 40px;">
     <div style="max-width:1100px;">
-      <div style="margin-bottom:24px;">
-        <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">🎯 Leads & Pipeline</h1>
-        <p style="font-size:13px;color:var(--muted);">{total} leads {statusFilter ? `com status "${statusFilter}"` : "no total"}</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">🎯 Orçamentos</h1>
+          <p style="font-size:13px;color:var(--muted);">{total} orçamentos {statusFilter ? `com status "${statusFilter}"` : "no total"}</p>
+        </div>
+        <a href="/admin/leads/novo" style="background:var(--gold);color:#05080d;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">+ Novo Orçamento</a>
       </div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
@@ -60,7 +63,7 @@ const totalPages = Math.ceil(total / perPage);
 
       {leads.length === 0 ? (
         <div style="text-align:center;padding:60px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:14px;">
-          Nenhum lead encontrado.
+          Nenhum orçamento encontrado.
         </div>
       ) : (
         <div style="display:flex;flex-direction:column;gap:10px;">
