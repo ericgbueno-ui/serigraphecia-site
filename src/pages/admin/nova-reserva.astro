@@ -8,6 +8,29 @@ const representantes = await prisma.affiliate.findMany({
   select: { id: true, name: true, code: true },
   orderBy: { name: "asc" },
 });
+
+const tabelaPrecos = await prisma.tabelaPreco.findMany({
+  where: { ativo: true },
+  orderBy: [{ tipo: "asc" }, { qtdMin: "asc" }],
+  select: { tipo: true, qtdMin: true, qtdMax: true, precoUnitario: true },
+});
+
+// Monta mapa de tamanhos por tipo base
+const tipoMap: Record<string, string[]> = {};
+for (const p of tabelaPrecos) {
+  const base = p.tipo.replace(/ \d+x\d+$/, "");
+  const tam  = p.tipo.match(/(\d+x\d+)$/)?.[1];
+  if (!tam) continue;
+  if (!tipoMap[base]) tipoMap[base] = [];
+  if (!tipoMap[base].includes(tam)) tipoMap[base].push(tam);
+}
+
+const precosJSON = JSON.stringify(tabelaPrecos.map(p => ({
+  tipo: p.tipo,
+  qtdMin: p.qtdMin,
+  qtdMax: p.qtdMax,
+  preco: Number(p.precoUnitario),
+})));
 ---
 
 <AdminLayout title="Novo Pedido | Admin" currentPath="/admin/nova-reserva">
@@ -50,7 +73,7 @@ const representantes = await prisma.affiliate.findMany({
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tipo de sacola *</label>
-              <select name="tripType" required style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+              <select id="sel-tipo" name="tripType" required style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
                 <option value="alca_vazada">Alça Vazada</option>
                 <option value="alca_fita">Alça Fita</option>
                 <option value="alca_camiseta">Alça Camiseta</option>
@@ -60,11 +83,13 @@ const representantes = await prisma.affiliate.findMany({
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Quantidade *</label>
-              <input name="passengerCount" type="number" min="50" required placeholder="Ex: 200" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <input id="inp-qtd" name="passengerCount" type="number" min="50" required placeholder="Ex: 200" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tamanho</label>
-              <input name="vehicleType" placeholder="Ex: 30x40cm" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <select id="sel-tam" name="vehicleType" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+                <option value="">Selecione o tipo primeiro</option>
+              </select>
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cores de impressão</label>
@@ -94,7 +119,8 @@ const representantes = await prisma.affiliate.findMany({
           <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Total (R$) *</label>
-              <input name="totalCents" type="number" step="0.01" required placeholder="0.00" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <input id="inp-total" name="totalCents" type="number" step="0.01" required placeholder="0.00" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <p id="preco-info" style="font-size:11px;color:var(--gold);margin-top:4px;min-height:16px;"></p>
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Sinal (R$)</label>
@@ -129,4 +155,61 @@ const representantes = await prisma.affiliate.findMany({
       </form>
     </div>
   </div>
+
+  <script define:vars={{ precosJSON, tipoMap }}>
+    const precos = JSON.parse(precosJSON);
+
+    const TIPO_LABEL = {
+      alca_vazada:   "Alça Vazada",
+      alca_fita:     "Alça Fita",
+      alca_camiseta: "Alça Camiseta",
+    };
+
+    const selTipo  = document.getElementById("sel-tipo");
+    const selTam   = document.getElementById("sel-tam");
+    const inpQtd   = document.getElementById("inp-qtd");
+    const inpTotal = document.getElementById("inp-total");
+    const info     = document.getElementById("preco-info");
+
+    function atualizarTamanhos() {
+      const label = TIPO_LABEL[selTipo.value];
+      const tamanhos = tipoMap[label] || [];
+      selTam.innerHTML = tamanhos.length
+        ? tamanhos.map(t => `<option value="${t}">${t.replace("x", " × ")} cm</option>`).join("")
+        : `<option value="">Tamanho livre</option>`;
+      calcular();
+    }
+
+    function calcular() {
+      const label = TIPO_LABEL[selTipo.value];
+      const tam   = selTam.value;
+      const qtd   = parseInt(inpQtd.value) || 0;
+      if (!label || !tam || !qtd) { info.textContent = ""; return; }
+
+      const chave = `${label} ${tam}`;
+      const faixa = precos.find(p =>
+        p.tipo === chave &&
+        qtd >= p.qtdMin &&
+        (p.qtdMax === null || qtd <= p.qtdMax)
+      );
+
+      if (faixa) {
+        const total = (faixa.preco * qtd).toFixed(2);
+        inpTotal.value = total;
+        info.textContent = `${qtd} un × R$ ${faixa.preco.toFixed(2)} = R$ ${Number(total).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+      } else {
+        info.textContent = "Quantidade fora das faixas — verifique a tabela.";
+        info.style.color = "#f87171";
+        return;
+      }
+      info.style.color = "var(--gold)";
+    }
+
+    selTipo.addEventListener("change", atualizarTamanhos);
+    selTam.addEventListener("change", calcular);
+    inpQtd.addEventListener("input", calcular);
+
+    // Inicializa
+    atualizarTamanhos();
+  </script>
 </AdminLayout>
