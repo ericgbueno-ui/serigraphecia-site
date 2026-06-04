@@ -59,8 +59,8 @@ const customers = [...customerMap.values()].map((c) => ({
       <a href="/admin/painel" style="color:var(--muted);font-size:13px;text-decoration:none;">← Admin</a>
       <span style="color:var(--border);">|</span>
       <div>
-        <h1 style="font-size:22px;font-weight:700;margin-bottom:2px;">🤎 Clientes Recorrentes</h1>
-        <p style="font-size:12px;color:var(--muted);">Lifetime value, classificação e histórico de viagens.</p>
+        <h1 style="font-size:22px;font-weight:700;margin-bottom:2px;">🤎 Clientes</h1>
+        <p style="font-size:12px;color:var(--muted);">Lifetime value, classificação e histórico de pedidos.</p>
       </div>
     </div>
     <ClientesClient initialCustomers={customers as any} client:load />

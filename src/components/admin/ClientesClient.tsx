@@ -121,9 +121,9 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "28px" }}>
         {[
-          { label: "Total Clientes", value: totalCustomers, color: "#fff", sub: "com contrato confirmado" },
-          { label: "Recorrentes", value: recorrentes, color: "#c9a84c", sub: "2+ viagens" },
-          { label: "Embaixadores", value: embaixadores, color: "#f97316", sub: "3+ viagens ou R$1.500+" },
+          { label: "Total Clientes", value: totalCustomers, color: "#fff", sub: "com pedido confirmado" },
+          { label: "Recorrentes", value: recorrentes, color: "#c9a84c", sub: "2+ pedidos" },
+          { label: "Embaixadores", value: embaixadores, color: "#f97316", sub: "3+ pedidos ou R$1.500+" },
           { label: "LTV Médio", value: brl(ticketMedioGeral), color: "#3ecf8e", sub: "por cliente" },
         ].map((k) => (
           <div key={k.label} style={{ ...cardStyle, borderTop: `3px solid ${k.color}33` }}>
@@ -137,9 +137,9 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
       <div style={{ display: "flex", flexWrap: "wrap" as const, justifyContent: "space-between", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
         <div style={{ ...cardStyle, flex: "1 1 500px", display: "flex", gap: "20px", flexWrap: "wrap" as const, padding: "12px 20px", fontSize: "11px", alignItems: "center" }}>
           {[
-            { icon: "👑", label: "Embaixador", desc: "3+ viagens ou R$1.500+", color: "#f97316" },
-            { icon: "⭐", label: "VIP", desc: "2+ viagens ou R$800+", color: "#c9a84c" },
-            { icon: "🤎", label: "Regular", desc: "1 viagem", color: "#3ecf8e" },
+            { icon: "👑", label: "Embaixador", desc: "3+ pedidos ou R$1.500+", color: "#f97316" },
+            { icon: "⭐", label: "VIP", desc: "2+ pedidos ou R$800+", color: "#c9a84c" },
+            { icon: "🤎", label: "Regular", desc: "1 pedido", color: "#3ecf8e" },
           ].map((c) => (
             <div key={c.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 13 }}>{c.icon}</span>
@@ -164,7 +164,7 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
         <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 100px", gap: 12, padding: "14px 20px", borderBottom: "1px solid var(--border)", background: "rgba(255,255,255,0.02)" }}>
           {(["name", "ltv", "date", "class"] as const).map((field, i) => (
             <button key={field} onClick={() => handleSort(field)} style={{ background: "none", border: "none", textAlign: "left", padding: 0, fontSize: 10, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: sortBy === field ? "var(--gold)" : "var(--muted)", cursor: "pointer" }}>
-              {["Cliente", "LTV Total", "Última viagem", "Classe"][i]}{getSortIndicator(field)}
+              {["Cliente", "LTV Total", "Último pedido", "Classe"][i]}{getSortIndicator(field)}
             </button>
           ))}
         </div>
@@ -191,11 +191,11 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
               </div>
               <div>
                 <p style={{ fontSize: 16, fontWeight: 700, color: c.bookings.length >= 2 ? color : "var(--text)" }}>{c.bookings.length}</p>
-                <p style={{ fontSize: 10, color: "var(--muted)" }}>{c.bookings.map((b) => vehicleLabelShort(b.vehicleType)).join(", ")}</p>
+                <p style={{ fontSize: 10, color: "var(--muted)" }}>{c.bookings.length} {c.bookings.length === 1 ? "pedido" : "pedidos"}</p>
               </div>
               <div>
                 <p style={{ fontSize: 14, fontWeight: 700, color: "#c9a84c" }}>{brl(c.totalCents)}</p>
-                <p style={{ fontSize: 10, color: "var(--muted)" }}>{brl(Math.round(c.totalCents / c.bookings.length))} / viagem</p>
+                <p style={{ fontSize: 10, color: "var(--muted)" }}>{brl(Math.round(c.totalCents / c.bookings.length))} / pedido</p>
               </div>
               <div>
                 <p style={{ fontSize: 12, color: "var(--text)" }}>{fmtDate(lastBooking?.idaDate ?? lastBooking?.createdAt ?? null)}</p>
@@ -228,7 +228,7 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
               <a href={`https://wa.me/55${selectedCust.customer.phone}`} target="_blank" rel="noreferrer" style={{ color: "#3ecf8e", textDecoration: "none" }}>💬 {selectedCust.customer.phone}</a>
             </div>
             <div>
-              <h3 style={{ fontSize: "13px", fontWeight: 700, color: "var(--muted)", marginBottom: "16px" }}>📋 Histórico de Contratos ({selectedCust.bookings.length})</h3>
+              <h3 style={{ fontSize: "13px", fontWeight: 700, color: "var(--muted)", marginBottom: "16px" }}>📋 Histórico de Pedidos ({selectedCust.bookings.length})</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {selectedCust.bookings.map((b) => (
                   <a key={b.id} href={`/admin/reservas/${b.id}`} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: 4 }}>
@@ -236,8 +236,7 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
                       <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--gold)" }}>{b.idaDate ? fmtDate(b.idaDate) : fmtDate(b.createdAt)}</span>
                       <span style={{ fontSize: "13px", fontWeight: 700, color: "#3ecf8e" }}>{brl(b.totalCents)}</span>
                     </div>
-                    <div style={{ fontSize: "12px", color: "var(--text)" }}>{tripLabel(b.tripType)}</div>
-                    <div style={{ fontSize: "11px", color: "var(--muted)" }}>🚗 {vehicleLabel(b.vehicleType)}</div>
+                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>Pedido de sacolas</div>
                   </a>
                 ))}
               </div>
