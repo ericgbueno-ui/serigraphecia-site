@@ -24,7 +24,14 @@
       "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__get_project",
       "WebSearch",
       "Bash(npm install *)",
-      "Bash(npm cache *)"
+      "Bash(npm cache *)",
+      "Bash(node -e \"console.log\\(require\\('crypto'\\).randomBytes\\(64\\).toString\\('hex'\\)\\)\")",
+      "Bash(set DATABASE_URL=postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv-pooler.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require^)",
+      "Bash(set POSTGRES_PRISMA_URL=postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv-pooler.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require^)",
+      "Bash(set POSTGRES_URL_NON_POOLING=postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require^)",
+      "Bash(npx prisma *)",
+      "Bash(git commit *)",
+      "PowerShell($env:POSTGRES_PRISMA_URL=\"postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv-pooler.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require&connect_timeout=15&sslmode=require\"; $env:POSTGRES_URL_NON_POOLING=\"postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require\"; cd \"C:\\\\Produção de Site\\\\serigraph-site\"; npx prisma db push 2>&1)"
     ]
   }
 }

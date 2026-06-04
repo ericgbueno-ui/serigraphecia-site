@@ -29,6 +29,9 @@ const SECTIONS: MenuSection[] = [
   {
     label: "GESTÃO",
     items: [
+      { href: "/admin/precos", label: "Tabela de Valores", icon: "💲" },
+      { href: "/admin/fornecedores", label: "Fornecedores", icon: "🏭" },
+      { href: "/admin/estoque", label: "Estoque", icon: "📦" },
       { href: "/admin/caixa", label: "Financeiro", icon: "💰" },
     ],
   },

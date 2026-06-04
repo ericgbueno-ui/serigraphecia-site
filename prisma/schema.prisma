@@ -616,3 +616,47 @@ model AutomationRun {
   @@index([createdAt])
 }
 
+
+// ─────────────────────────────────────────────
+// SERIGRAPH — FORNECEDORES, ESTOQUE, PREÇOS
+// ─────────────────────────────────────────────
+
+model Fornecedor {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nome      String
+  contato   String?
+  whatsapp  String?
+  email     String?
+  produto   String?
+  notas     String?  @db.Text
+  ativo     Boolean  @default(true)
+}
+
+model Estoque {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  produto      String
+  tipo         String
+  quantidade   Int      @default(0)
+  minimo       Int      @default(0)
+  unidade      String   @default("un")
+  notas        String?  @db.Text
+}
+
+model TabelaPreco {
+  id           String   @id @default(cuid())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tipo         String
+  qtdMin       Int
+  qtdMax       Int?
+  precoUnitario Decimal  @db.Decimal(10, 2)
+  ativo        Boolean  @default(true)
+  notas        String?
+}
