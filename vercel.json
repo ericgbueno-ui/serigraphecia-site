@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/admin/:path*",
-      "destination": "https://multitrip-site-git-main-eric-buenos-projects.vercel.app/admin/:path*"
+      "destination": "https://multitrip.com.br/admin/:path*"
     }
   ]
 }
