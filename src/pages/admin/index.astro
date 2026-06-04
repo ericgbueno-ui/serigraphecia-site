@@ -1,6 +1,0 @@
----
-// Redireciona para o painel admin (Next.js) em produção
-// Em desenvolvimento, o admin roda em http://localhost:3000/admin
-const ADMIN_URL = import.meta.env.ADMIN_URL ?? 'http://localhost:3000/admin';
-return Astro.redirect(ADMIN_URL, 302);
----

@@ -9,7 +9,18 @@
       "mcp__Claude_in_Chrome__javascript_tool",
       "mcp__Claude_in_Chrome__computer",
       "mcp__Claude_in_Chrome__tabs_context_mcp",
-      "Bash(vercel deploy *)"
+      "Bash(vercel deploy *)",
+      "mcp__Claude_Preview__preview_start",
+      "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__deploy_to_vercel",
+      "Bash(Rename-Item \"C:\\\\Produção de Site\\\\serigraph-site\\\\adim-lite\" \"admin\")",
+      "Bash(git add *)",
+      "Bash(git push *)",
+      "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__list_projects",
+      "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__list_deployments",
+      "Bash(git commit -m ' *)",
+      "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__web_fetch_vercel_url",
+      "Bash(Remove-Item \"C:\\\\Produção de Site\\\\serigraph-site\\\\src\\\\pages\\\\admin\\\\index.astro\" -Force)",
+      "Bash(Remove-Item \"C:\\\\Produção de Site\\\\serigraph-site\\\\src\\\\pages\\\\admin\" -Force)"
     ]
   }
 }
