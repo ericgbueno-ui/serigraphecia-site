@@ -13,6 +13,7 @@ const representantes = await prisma.affiliate.findMany({
     code: true,
     active: true,
     commIda: true,
+    comissaoPct: true,
     createdAt: true,
     payments: { select: { amountCents: true } },
   },
@@ -71,7 +72,11 @@ function brl(cents: number) {
               </div>
               <div>
                 <p style="font-size:11px;color:var(--muted);">Comissão</p>
-                <p style="font-size:14px;font-weight:600;color:var(--text);">{brl(r.commIda)}</p>
+                {r.comissaoPct != null ? (
+                  <p style="font-size:20px;font-weight:700;color:var(--gold);">{Number(r.comissaoPct).toFixed(1)}%</p>
+                ) : (
+                  <p style="font-size:14px;font-weight:600;color:var(--text);">{brl(r.commIda)}</p>
+                )}
                 <p style="font-size:11px;color:var(--muted);">por pedido</p>
               </div>
               <div>

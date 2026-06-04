@@ -130,6 +130,7 @@ model Affiliate {
   type         String    @default("agency")
   commIda      Int       @default(2500)
   commIdaVolta Int       @default(5000)
+  comissaoPct  Decimal?  @db.Decimal(5, 2)
 
   payments     AffiliatePayment[]
 
