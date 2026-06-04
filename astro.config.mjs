@@ -10,4 +10,7 @@ export default defineConfig({
     react(),
     tailwind(),
   ],
+  security: {
+    checkOrigin: false,
+  },
 });
