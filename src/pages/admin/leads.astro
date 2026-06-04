@@ -4,107 +4,125 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 import { prisma } from "../../lib/prisma";
 
 const url = new URL(Astro.request.url);
-const statusFilter = url.searchParams.get("status") ?? undefined;
-const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
-const perPage = 50;
+const statusFilter = url.searchParams.get("status") ?? "PENDING";
 
-const whereClause = statusFilter ? { status: statusFilter } : {};
+const orcamentos = await prisma.booking.findMany({
+  where: { status: statusFilter === "todos" ? undefined : statusFilter },
+  orderBy: { createdAt: "desc" },
+  take: 100,
+  select: {
+    id: true,
+    numeroPedido: true,
+    createdAt: true,
+    status: true,
+    totalCents: true,
+    tripType: true,
+    vehicleType: true,
+    passengerCount: true,
+    idaFlightTime: true,
+    affiliateCode: true,
+    customer: { select: { name: true, phone: true } },
+  },
+});
 
-const [leads, total] = await Promise.all([
-  prisma.lead.findMany({
-    where: whereClause,
-    orderBy: { updatedAt: "desc" },
-    skip: (page - 1) * perPage,
-    take: perPage,
-    include: {
-      interactions: { orderBy: { createdAt: "desc" }, take: 3 },
-    },
-  }),
-  prisma.lead.count({ where: whereClause }),
-]);
+const total = orcamentos.length;
 
-const statusColors: Record<string, { color: string; bg: string; border: string }> = {
-  frio: { color: "#6b7280", bg: "rgba(107,114,128,0.1)", border: "rgba(107,114,128,0.25)" },
-  interessado: { color: "#60a5fa", bg: "rgba(96,165,250,0.1)", border: "rgba(96,165,250,0.25)" },
-  quente: { color: "#f97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.25)" },
-  pronto: { color: "#a78bfa", bg: "rgba(167,139,250,0.1)", border: "rgba(167,139,250,0.25)" },
-  convertido: { color: "#3ecf8e", bg: "rgba(62,207,142,0.1)", border: "rgba(62,207,142,0.25)" },
+const tipoLabel: Record<string, string> = {
+  alca_vazada: "Alça Vazada",
+  alca_fita: "Alça Fita",
+  alca_camiseta: "Alça Camiseta",
+  boca_palhaço: "Boca de Palhaço",
+  outro: "Outro",
 };
 
+function brl(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 function fmtDate(d: Date) {
   return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-const totalPages = Math.ceil(total / perPage);
+const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
+  PENDING:   { label: "Aguardando", color: "#c9a84c", bg: "rgba(201,168,76,0.1)",   border: "rgba(201,168,76,0.3)" },
+  CONFIRMED: { label: "Convertido",  color: "#3ecf8e", bg: "rgba(62,207,142,0.1)",  border: "rgba(62,207,142,0.25)" },
+  CANCELLED: { label: "Cancelado",   color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)" },
+};
 ---
 
 <AdminLayout title="Orçamentos | Admin" currentPath="/admin/leads">
   <div style="padding:32px 40px;">
     <div style="max-width:1100px;">
+
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div>
           <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">🎯 Orçamentos</h1>
-          <p style="font-size:13px;color:var(--muted);">{total} orçamentos {statusFilter ? `com status "${statusFilter}"` : "no total"}</p>
+          <p style="font-size:13px;color:var(--muted);">{total} orçamento{total !== 1 ? "s" : ""} encontrado{total !== 1 ? "s" : ""}</p>
         </div>
         <a href="/admin/leads/novo" style="background:var(--gold);color:#05080d;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">+ Novo Orçamento</a>
       </div>
 
+      <!-- Filtros -->
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;">
-        <a href="/admin/leads" style={`padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid var(--border);${!statusFilter ? "background:var(--gold);color:#05080d;" : "color:var(--muted);"}`}>Todos</a>
-        {["frio","interessado","quente","pronto","convertido"].map((s) => {
-          const c = statusColors[s] ?? { color: "var(--text)", bg: "var(--bg-card)", border: "var(--border)" };
-          return (
-            <a href={`/admin/leads?status=${s}`} style={`padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;background:${statusFilter === s ? c.bg : "transparent"};color:${statusFilter === s ? c.color : "var(--muted)"};border:1px solid ${statusFilter === s ? c.border : "var(--border)"};`}>
-              {s.charAt(0).toUpperCase() + s.slice(1)}
-            </a>
-          );
-        })}
+        {[
+          { value: "PENDING",   label: "Aguardando" },
+          { value: "CONFIRMED", label: "Convertidos" },
+          { value: "CANCELLED", label: "Cancelados" },
+          { value: "todos",     label: "Todos" },
+        ].map(f => (
+          <a href={`/admin/leads?status=${f.value}`}
+             style={`padding:7px 16px;border-radius:8px;font-size:12px;font-weight:600;text-decoration:none;border:1px solid var(--border);transition:all 0.15s;${statusFilter === f.value ? "background:var(--gold);color:#05080d;border-color:var(--gold);" : "color:var(--muted);"}`}>
+            {f.label}
+          </a>
+        ))}
       </div>
 
-      {leads.length === 0 ? (
+      {orcamentos.length === 0 ? (
         <div style="text-align:center;padding:60px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:14px;">
           Nenhum orçamento encontrado.
         </div>
       ) : (
         <div style="display:flex;flex-direction:column;gap:10px;">
-          {leads.map((lead) => {
-            const c = statusColors[lead.status] ?? statusColors["frio"];
-            const lastInteraction = lead.interactions[0];
+          {orcamentos.map((o) => {
+            const sc = statusConfig[o.status] ?? statusConfig["PENDING"];
             return (
-              <a href={`/admin/conversas?id=${lead.id}`} style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;text-decoration:none;color:inherit;display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:16px;align-items:center;">
+              <div style={`background:var(--bg-card);border:1px solid ${o.status === "PENDING" ? "rgba(201,168,76,0.2)" : "var(--border)"};border-radius:14px;padding:18px 24px;display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:16px;align-items:center;`}>
                 <div>
-                  <p style="font-size:14px;font-weight:600;">{lead.name || "Sem nome"}</p>
-                  <p style="font-size:12px;color:var(--muted);margin-top:2px;">📱 {lead.whatsapp}</p>
-                  {lead.email && <p style="font-size:11px;color:var(--muted);margin-top:2px;">✉️ {lead.email}</p>}
+                  <div style="display:flex;align-items:center;gap:8px;margin-bottom:2px;">
+                    <p style="font-size:14px;font-weight:600;">{o.customer?.name || "Cliente não informado"}</p>
+                    {o.numeroPedido && <span style="font-size:11px;font-weight:700;color:var(--gold);background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);padding:2px 8px;border-radius:20px;">{o.numeroPedido}</span>}
+                  </div>
+                  <p style="font-size:12px;color:var(--muted);">{o.customer?.phone || "—"}</p>
+                  <p style="font-size:11px;color:var(--muted);margin-top:3px;">
+                    {tipoLabel[o.tripType] || o.tripType}
+                    {o.vehicleType && o.vehicleType !== "n/a" ? ` · ${o.vehicleType}` : ""}
+                    {o.passengerCount ? ` · ${o.passengerCount} un` : ""}
+                  </p>
+                  {o.idaFlightTime && <p style="font-size:11px;color:var(--muted);margin-top:2px;">📝 {o.idaFlightTime.slice(0, 60)}{o.idaFlightTime.length > 60 ? "..." : ""}</p>}
                 </div>
                 <div>
-                  {lastInteraction ? (
-                    <p style="font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;">
-                      {lastInteraction.content.slice(0, 80)}...
-                    </p>
-                  ) : <p style="font-size:12px;color:var(--muted);">Sem interações</p>}
+                  <p style="font-size:11px;color:var(--muted);">Data</p>
+                  <p style="font-size:13px;margin-top:2px;">{fmtDate(o.createdAt)}</p>
                 </div>
                 <div>
-                  <p style="font-size:11px;color:var(--muted);">Atualizado em</p>
-                  <p style="font-size:12px;color:var(--text);">{fmtDate(lead.updatedAt)}</p>
+                  <p style="font-size:16px;font-weight:700;color:#3ecf8e;">{o.totalCents > 0 ? brl(o.totalCents) : <span style="color:var(--muted);font-size:13px;">A definir</span>}</p>
                 </div>
-                <span style={`padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap;color:${c.color};background:${c.bg};border:1px solid ${c.border};`}>
-                  {lead.status}
-                </span>
-              </a>
-            );
-          })}
-        </div>
-      )}
-
-      {totalPages > 1 && (
-        <div style="display:flex;justify-content:center;gap:8px;margin-top:24px;">
-          {Array.from({ length: totalPages }).map((_, i) => {
-            const p = i + 1;
-            return (
-              <a href={`/admin/leads?${statusFilter ? `status=${statusFilter}&` : ""}page=${p}`} style={`display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:8px;border:1px solid var(--border);font-size:13px;font-weight:600;text-decoration:none;${p === page ? "background:var(--gold-dim);color:var(--gold);border-color:var(--gold-line);" : "background:var(--bg-card);color:var(--text);"}`}>
-                {p}
-              </a>
+                <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
+                  <span style={`padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap;color:${sc.color};background:${sc.bg};border:1px solid ${sc.border};`}>
+                    {sc.label}
+                  </span>
+                  {o.status === "PENDING" && (
+                    <form action="/api/admin/converter-pedido" method="POST">
+                      <input type="hidden" name="id" value={o.id} />
+                      <button type="submit" style="background:var(--gold);color:#05080d;border:none;border-radius:8px;padding:6px 12px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;">
+                        ✓ Converter em Pedido
+                      </button>
+                    </form>
+                  )}
+                  {o.status === "CONFIRMED" && (
+                    <a href={`/admin/reservas/${o.id}`} style="font-size:11px;color:var(--muted);text-decoration:none;">Ver pedido →</a>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
