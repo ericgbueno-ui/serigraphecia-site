@@ -48,6 +48,15 @@ const currentPath = new URL(Astro.request.url).pathname;
         overflow-x: hidden;
       }
       a { color: inherit; }
+
+      /* Select options legíveis em todos os sistemas */
+      select option {
+        background: #1a1f2e;
+        color: #e8eaf0;
+      }
+      select {
+        color-scheme: dark;
+      }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
