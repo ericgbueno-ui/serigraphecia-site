@@ -1,0 +1,26 @@
+{
+  "mentores": [
+    {
+      "autor": "Steve Jobs",
+      "video_id": "UF8uR6Z6KLc",
+      "titulo_referencia": "Steve Jobs Stanford Commencement Speech (Foco em Visão e Propósito)"
+    },
+    {
+      "autor": "Robert Cialdini",
+      "video_id": "1H3pA4U_yR8",
+      "titulo_referencia": "As Armas da Persuasão e Gatilhos Mentais"
+    }
+  ],
+  "influenciadores": [
+    {
+      "canal": "Tati Marmon",
+      "video_id": "dQw4w9WgXcQ",
+      "titulo_referencia": "Dicas de Gramado e Planejamento Prático"
+    },
+    {
+      "canal": "Gramado Sua Viagem",
+      "video_id": "dQw4w9WgXcQ",
+      "titulo_referencia": "Guia Honesto de Atrações na Serra Gaúcha"
+    }
+  ]
+}

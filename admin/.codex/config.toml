@@ -1,0 +1,6 @@
+[mcp_servers.vercel]
+type = "http"
+url = "https://mcp.vercel.com"
+
+[mcp_servers.meta-ads]
+url = "https://mcp.facebook.com/ads"

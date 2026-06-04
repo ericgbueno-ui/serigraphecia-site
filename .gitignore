@@ -29,5 +29,5 @@ Thumbs.db
 # Vercel
 .vercel
 
-# Admin (projeto Next.js separado — tem seu próprio repo)
-/admin/
+# Admin (subprojeto Next.js — rastreado neste repo, deploy separado no Vercel)
+# /admin/
