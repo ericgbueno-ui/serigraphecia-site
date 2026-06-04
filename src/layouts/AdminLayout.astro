@@ -50,9 +50,12 @@ const currentPath = new URL(Astro.request.url).pathname;
       a { color: inherit; }
 
       /* Select options legíveis em todos os sistemas */
+      select {
+        color-scheme: light;
+      }
       select option {
-        background: #ffffff;
-        color: #000000;
+        background: #ffffff !important;
+        color: #000000 !important;
       }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
