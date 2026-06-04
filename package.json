@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "prisma generate && astro build",
+    "postinstall": "prisma generate",
     "preview": "astro preview",
     "admin:dev": "npm run dev --workspace=admin",
     "admin:build": "npm run build --workspace=admin",
