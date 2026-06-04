@@ -11,20 +11,19 @@ type MenuSection = {
 
 const SECTIONS: MenuSection[] = [
   {
-    label: "OPERAÇÃO",
+    label: "PRODUÇÃO",
     items: [
-      { href: "/admin/nova-reserva", label: "Novo Contrato", icon: "＋" },
+      { href: "/admin/nova-reserva", label: "Novo Pedido", icon: "＋" },
+      { href: "/admin/reservas", label: "Pedidos", icon: "🛍️" },
       { href: "/admin/agenda", label: "Agenda", icon: "📅" },
-      { href: "/admin/reservas", label: "Contratos", icon: "🗓️" },
-      { href: "/admin/motoristas", label: "Motoristas / Frota", icon: "🚙" },
     ],
   },
   {
     label: "COMERCIAL",
     items: [
-      { href: "/admin/leads", label: "Leads & Pipeline", icon: "🎯" },
+      { href: "/admin/leads", label: "Orçamentos", icon: "🎯" },
       { href: "/admin/clientes", label: "Clientes", icon: "🤎" },
-      { href: "/admin/afiliados", label: "Afiliados", icon: "🤝" },
+      { href: "/admin/afiliados", label: "Revendedores", icon: "🤝" },
     ],
   },
   {
@@ -40,7 +39,7 @@ export function AdminShell({ children, currentPath }: { children: ReactNode; cur
   const [menuOpen, setMenuOpen] = useState(false);
 
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    OPERAÇÃO: true,
+    PRODUÇÃO: true,
     COMERCIAL: false,
     GESTÃO: false,
   });
@@ -144,8 +143,8 @@ export function AdminShell({ children, currentPath }: { children: ReactNode; cur
         <div className="admin-topbar">
           <a href="/admin/painel" style={{ display: "inline-block" }}>
             <img
-              src="/brand/logo-horizontal.webp"
-              alt="Multi Trip"
+              src="/logo.png"
+              alt="Serigraph e Cia"
               style={{ height: "28px", width: "auto", display: "block" }}
             />
           </a>
@@ -169,8 +168,8 @@ export function AdminShell({ children, currentPath }: { children: ReactNode; cur
           <div style={{ padding: "20px 20px 16px", borderBottom: "1px solid var(--border)" }}>
             <a href="/admin/painel" aria-label="Painel" onClick={() => setMenuOpen(false)}>
               <img
-                src="/brand/logo-horizontal.webp"
-                alt="Multi Trip"
+                src="/logo.png"
+                alt="Serigraph e Cia"
                 style={{ height: "32px", width: "auto", display: "block" }}
               />
             </a>
