@@ -5,37 +5,41 @@ import crypto from "crypto";
 
 export const prerender = false;
 
+async function gerarNumeroPedido(): Promise<string> {
+  const count = await prisma.booking.count();
+  const num = String(count + 1).padStart(4, "0");
+  return `SG-${num}`;
+}
+
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const cookieVal = cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
   if (!getIsAdmin(cookieVal)) return redirect("/admin", 302);
 
   const formData = await request.formData();
 
-  const name = formData.get("name")?.toString().trim() || "";
-  const phone = formData.get("phone")?.toString().replace(/\D/g, "") || "";
-  const email = formData.get("email")?.toString().trim() || "";
-  const tripType = formData.get("tripType")?.toString() || "ida_volta";
-  const vehicleType = formData.get("vehicleType")?.toString() || "sedan";
-  const passengerCount = parseInt(formData.get("passengerCount")?.toString() || "2", 10);
-  const hotel = formData.get("hotel")?.toString().trim() || null;
-  const idaDateRaw = formData.get("idaDate")?.toString();
+  const name        = formData.get("name")?.toString().trim() || "";
+  const phone       = formData.get("phone")?.toString().replace(/\D/g, "") || "";
+  const email       = formData.get("email")?.toString().trim() || "";
+  const tripType    = formData.get("tripType")?.toString() || "alca_vazada";
+  const vehicleType = formData.get("vehicleType")?.toString().trim() || "";
+  const passengerCount = parseInt(formData.get("passengerCount")?.toString() || "50", 10);
+  const hotel       = formData.get("hotel")?.toString().trim() || null;
+  const idaDateRaw  = formData.get("idaDate")?.toString();
   const idaFlightTime = formData.get("idaFlightTime")?.toString().trim() || null;
-  const voltaDateRaw = formData.get("voltaDate")?.toString();
-  const voltaFlightTime = formData.get("voltaFlightTime")?.toString().trim() || null;
-  const payMethod = formData.get("payMethod")?.toString() || "pix";
+  const voltaDate_raw = formData.get("voltaDate")?.toString();
+  const payMethod   = formData.get("payMethod")?.toString() || "pix";
   const affiliateCode = formData.get("affiliateCode")?.toString() || null;
 
-  const totalCentsRaw = parseFloat(formData.get("totalCents")?.toString().replace(",", ".") || "0");
-  const totalCents = Math.round(totalCentsRaw * 100);
+  const totalCentsRaw   = parseFloat(formData.get("totalCents")?.toString().replace(",", ".") || "0");
+  const totalCents      = Math.round(totalCentsRaw * 100);
   const depositCentsRaw = parseFloat(formData.get("depositCents")?.toString().replace(",", ".") || "0");
-  const depositCents = Math.round(depositCentsRaw * 100);
-  const remainderCents = Math.max(0, totalCents - depositCents);
+  const depositCents    = Math.round(depositCentsRaw * 100);
+  const remainderCents  = Math.max(0, totalCents - depositCents);
 
-  const idaDate = idaDateRaw ? new Date(`${idaDateRaw}T12:00:00-03:00`) : null;
-  const voltaDate = voltaDateRaw ? new Date(`${voltaDateRaw}T12:00:00-03:00`) : null;
+  const idaDate   = idaDateRaw   ? new Date(`${idaDateRaw}T12:00:00-03:00`)   : null;
+  const voltaDate = voltaDate_raw ? new Date(`${voltaDate_raw}T12:00:00-03:00`) : null;
 
   try {
-    // Upsert customer by phone
     let customer = await prisma.customer.findUnique({ where: { phone } });
     if (!customer) {
       customer = await prisma.customer.create({
@@ -43,35 +47,35 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       });
     }
 
-    const publicToken = crypto.randomBytes(16).toString("hex");
+    const publicToken   = crypto.randomBytes(16).toString("hex");
+    const numeroPedido  = await gerarNumeroPedido();
 
     const booking = await prisma.booking.create({
       data: {
         publicToken,
+        numeroPedido,
         customerId: customer.id,
         tripType,
-        vehicleType,
+        vehicleType: vehicleType || "n/a",
         passengerCount,
-        hotel: hotel || undefined,
-        idaDate: idaDate || undefined,
-        idaFlightTime: idaFlightTime || undefined,
-        voltaDate: voltaDate || undefined,
-        voltaFlightTime: voltaFlightTime || undefined,
-        origin: "Aeroporto de Porto Alegre (POA)",
-        dest: "Gramado / Canela",
-        routeLabel: "Transfer POA → Gramado/Canela",
+        hotel:          hotel          || undefined,
+        idaDate:        idaDate        || undefined,
+        idaFlightTime:  idaFlightTime  || undefined,
+        voltaDate:      voltaDate      || undefined,
+        origin: "Serigraph e Cia",
+        dest:   "Cliente",
         payMethod,
         totalCents,
         depositCents,
         remainderCents,
         status: "CONFIRMED",
-        affiliateCode: affiliateCode || undefined,
+        affiliateCode:  affiliateCode  || undefined,
       },
     });
 
     return redirect(`/admin/reservas/${booking.id}`, 302);
   } catch (err) {
-    console.error("Erro ao criar reserva:", err);
+    console.error("Erro ao criar pedido:", err);
     return redirect("/admin/nova-reserva?error=1", 302);
   }
 };

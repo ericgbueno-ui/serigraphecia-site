@@ -151,6 +151,7 @@ model Booking {
   id                      String     @id @default(cuid())
   createdAt               DateTime   @default(now())
   updatedAt               DateTime   @updatedAt
+  numeroPedido            String?    @unique
   publicToken             String     @unique
   affiliateCode           String?
   commissionCents         Int?
