@@ -23,7 +23,7 @@ const SECTIONS: MenuSection[] = [
     items: [
       { href: "/admin/leads", label: "Orçamentos", icon: "🎯" },
       { href: "/admin/clientes", label: "Clientes", icon: "🤎" },
-      { href: "/admin/afiliados", label: "Revendedores", icon: "🤝" },
+      { href: "/admin/afiliados", label: "Representantes", icon: "🤝" },
     ],
   },
   {

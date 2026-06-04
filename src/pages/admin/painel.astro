@@ -9,14 +9,16 @@ const saudacao = horaNum < 12 ? "Bom dia" : horaNum < 18 ? "Boa tarde" : "Boa no
 const dateStr = now.toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "long", year: "numeric", timeZone: "America/Sao_Paulo" });
 
 const MENU_CARDS = [
-  { href: "/admin/nova-reserva", icon: "＋", label: "Nova Reserva", description: "Criar uma reserva manual diretamente no sistema.", color: "var(--mt-gold)", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.25)" },
-  { href: "/admin/agenda", icon: "📅", label: "Agenda", description: "Visualizar o calendário de viagens e compromissos.", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.20)" },
-  { href: "/admin/reservas", icon: "🗓️", label: "Contratos", description: "Ver, filtrar e gerenciar todos os contratos ativos e passados.", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.20)" },
-  { href: "/admin/motoristas", icon: "🚙", label: "Motoristas / Frota", description: "Gerenciar veículos, motoristas parceiros e escalas.", color: "#4ade80", bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.20)" },
-  { href: "/admin/leads", icon: "🎯", label: "Leads", description: "Acompanhar contatos e oportunidades em aberto.", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.20)" },
+  { href: "/admin/nova-reserva", icon: "＋", label: "Novo Pedido", description: "Registrar um novo pedido de sacolas manualmente.", color: "var(--gold)", bg: "rgba(201,168,76,0.08)", border: "rgba(201,168,76,0.25)" },
+  { href: "/admin/reservas", icon: "🛍️", label: "Pedidos", description: "Ver, filtrar e gerenciar todos os pedidos ativos e passados.", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.20)" },
+  { href: "/admin/agenda", icon: "📅", label: "Agenda", description: "Visualizar o calendário de entregas e compromissos.", color: "#60a5fa", bg: "rgba(96,165,250,0.08)", border: "rgba(96,165,250,0.20)" },
+  { href: "/admin/leads", icon: "🎯", label: "Orçamentos", description: "Acompanhar solicitações de orçamento em aberto.", color: "#a78bfa", bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.20)" },
   { href: "/admin/clientes", icon: "🤎", label: "Clientes", description: "Base de clientes, histórico e dados de contato.", color: "#f9a8d4", bg: "rgba(249,168,212,0.08)", border: "rgba(249,168,212,0.20)" },
-  { href: "/admin/afiliados", icon: "🤝", label: "Afiliados", description: "Gerenciar parceiros, comissões e links de indicação.", color: "#3ecf8e", bg: "rgba(62,207,142,0.08)", border: "rgba(62,207,142,0.20)" },
-  { href: "/admin/caixa", icon: "💰", label: "Financeiro", description: "Gerenciar caixa, transações e fluxo financeiro do sistema.", color: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.20)" },
+  { href: "/admin/afiliados", icon: "🤝", label: "Representantes", description: "Gerenciar representantes comerciais e comissões.", color: "#3ecf8e", bg: "rgba(62,207,142,0.08)", border: "rgba(62,207,142,0.20)" },
+  { href: "/admin/precos", icon: "💲", label: "Tabela de Valores", description: "Gerenciar preços por tipo e quantidade de sacola.", color: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.20)" },
+  { href: "/admin/fornecedores", icon: "🏭", label: "Fornecedores", description: "Cadastro e contatos dos fornecedores de matéria-prima.", color: "#fb923c", bg: "rgba(251,146,60,0.08)", border: "rgba(251,146,60,0.20)" },
+  { href: "/admin/estoque", icon: "📦", label: "Estoque", description: "Controle de materiais, sacolas e insumos disponíveis.", color: "#4ade80", bg: "rgba(74,222,128,0.08)", border: "rgba(74,222,128,0.20)" },
+  { href: "/admin/caixa", icon: "💰", label: "Financeiro", description: "Gerenciar caixa, entradas e fluxo financeiro.", color: "#fbbf24", bg: "rgba(251,191,36,0.08)", border: "rgba(251,191,36,0.20)" },
 ];
 ---
 
