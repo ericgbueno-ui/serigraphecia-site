@@ -345,7 +345,12 @@ import Layout from '../layouts/Layout.astro';
           WhatsApp
         </a>
         <a href="https://www.instagram.com/serigraphecia" target="_blank" rel="noopener" class="footer-insta">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
           Instagram
+        </a>
+        <a href="/admin" class="footer-admin">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          Admin
         </a>
       </div>
     </div>
@@ -854,6 +859,17 @@ import Layout from '../layouts/Layout.astro';
   }
   .footer-wa:hover    { color: #25D366; }
   .footer-insta:hover { color: var(--pink); }
+
+  .footer-admin {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255,255,255,0.3);
+    text-decoration: none;
+    font-size: 0.85rem;
+    transition: color 0.2s;
+  }
+  .footer-admin:hover { color: rgba(255,255,255,0.7); }
 
   .footer-assinatura {
     text-align: center;
