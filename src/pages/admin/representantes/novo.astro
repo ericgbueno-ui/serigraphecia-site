@@ -1,0 +1,61 @@
+---
+export const prerender = false;
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+---
+
+<AdminLayout title="Novo Representante | Admin" currentPath="/admin/representantes/novo">
+  <div style="padding:32px 40px;">
+    <div style="max-width:700px;">
+      <div style="margin-bottom:28px;">
+        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:var(--muted);margin-bottom:6px;">Admin · Representantes</p>
+        <h1 style="font-size:22px;font-weight:700;">🤝 Novo Representante</h1>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Cadastre um representante comercial da Serigraph e Cia.</p>
+      </div>
+
+      <form action="/api/admin/representante" method="POST" style="display:flex;flex-direction:column;gap:24px;">
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <h2 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold);">Dados Pessoais</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Nome completo *</label>
+              <input name="name" required style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">WhatsApp *</label>
+              <input name="whatsapp" required placeholder="5511999999999" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">E-mail *</label>
+              <input name="email" type="email" required style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Código de indicação *</label>
+              <input name="code" required placeholder="Ex: JOAO10" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;text-transform:uppercase;" />
+            </div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <h2 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold);">Comissão</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Porcentagem (%) *</label>
+              <input name="comissaoPct" type="number" step="0.1" min="0" max="100" required placeholder="Ex: 10.0" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Senha de acesso *</label>
+              <input name="password" type="password" required placeholder="Senha para o portal" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;justify-content:flex-end;">
+          <a href="/admin/afiliados" style="padding:12px 20px;border:1px solid var(--border);border-radius:10px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;">Cancelar</a>
+          <button type="submit" style="padding:12px 24px;background:var(--gold);color:#05080d;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">Cadastrar Representante →</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</AdminLayout>
