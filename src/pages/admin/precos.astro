@@ -3,44 +3,84 @@ export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { prisma } from "../../lib/prisma";
 
-const precos = await prisma.tabelaPreco.findMany({ orderBy: [{ tipo: "asc" }, { qtdMin: "asc" }] });
+const precos = await prisma.tabelaPreco.findMany({
+  where: { ativo: true },
+  orderBy: [{ tipo: "asc" }, { qtdMin: "asc" }],
+});
+
+// Agrupa por tipo
+const grupos = new Map<string, typeof precos>();
+for (const p of precos) {
+  const base = p.tipo.replace(/ \d+x\d+$/, ""); // ex: "Alça Camiseta"
+  if (!grupos.has(base)) grupos.set(base, []);
+  grupos.get(base)!.push(p);
+}
+
+// Sub-agrupa por tamanho dentro de cada tipo
+function porTamanho(itens: typeof precos) {
+  const map = new Map<string, typeof precos>();
+  for (const i of itens) {
+    const tam = i.tipo.match(/\d+x\d+/)?.[0] ?? "Outro";
+    if (!map.has(tam)) map.set(tam, []);
+    map.get(tam)!.push(i);
+  }
+  return map;
+}
+
+function brl(v: any) {
+  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 ---
-<AdminLayout title="Tabela de Valores" currentPath="/admin/precos">
-  <div style="padding:32px;max-width:900px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
-      <h1 style="font-size:22px;font-weight:700">Tabela de Valores</h1>
-      <a href="/admin/precos/novo" style="background:var(--gold);color:#000;padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px">+ Novo preço</a>
+
+<AdminLayout title="Tabela de Valores | Admin" currentPath="/admin/precos">
+  <div style="padding:32px 40px;max-width:1100px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+      <div>
+        <h1 style="font-size:22px;font-weight:700;">💲 Tabela de Valores</h1>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">{precos.length} faixas de preço cadastradas · 1 cor de impressão</p>
+      </div>
     </div>
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-      <table style="width:100%;border-collapse:collapse;font-size:13px">
-        <thead>
-          <tr style="border-bottom:1px solid var(--border)">
-            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Tipo de Sacola</th>
-            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Qtd Mín</th>
-            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Qtd Máx</th>
-            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Preço Unit.</th>
-            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {precos.length === 0 && (
-            <tr><td colspan="5" style="padding:32px;text-align:center;color:var(--muted)">Nenhum preço cadastrado ainda.</td></tr>
-          )}
-          {precos.map(p => (
-            <tr style="border-bottom:1px solid var(--border)">
-              <td style="padding:12px 16px;font-weight:500">{p.tipo}</td>
-              <td style="padding:12px 16px">{p.qtdMin}</td>
-              <td style="padding:12px 16px">{p.qtdMax ?? "—"}</td>
-              <td style="padding:12px 16px;color:var(--gold)">R$ {Number(p.precoUnitario).toFixed(2)}</td>
-              <td style="padding:12px 16px">
-                <span style={`background:${p.ativo ? "rgba(34,197,94,0.15)" : "rgba(255,59,48,0.15)"};color:${p.ativo ? "#22c55e" : "#ff3b30"};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600`}>
-                  {p.ativo ? "Ativo" : "Inativo"}
-                </span>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+
+    {[...grupos.entries()].map(([tipo, itens]) => {
+      const tamanhos = porTamanho(itens);
+      const nota = itens.find(i => i.notas)?.notas;
+      return (
+        <div style="margin-bottom:32px;">
+          <h2 style="font-size:16px;font-weight:700;color:var(--gold);margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+            🛍️ {tipo}
+            {nota && <span style="font-size:11px;font-weight:500;color:#3ecf8e;background:rgba(62,207,142,0.1);border:1px solid rgba(62,207,142,0.2);padding:2px 8px;border-radius:20px;">{nota}</span>}
+          </h2>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
+            {[...tamanhos.entries()].map(([tam, faixas]) => (
+              <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+                <div style="background:rgba(201,168,76,0.08);border-bottom:1px solid var(--border);padding:10px 16px;">
+                  <p style="font-size:13px;font-weight:700;color:var(--gold);">Tamanho {tam.replace("x", " × ")}</p>
+                </div>
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                  <thead>
+                    <tr style="border-bottom:1px solid var(--border);">
+                      <th style="text-align:left;padding:8px 16px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;">Quantidade</th>
+                      <th style="text-align:right;padding:8px 16px;color:var(--muted);font-weight:600;font-size:10px;text-transform:uppercase;">Unit.</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {faixas.map((f, i) => (
+                      <tr style={`border-bottom:${i < faixas.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none"};`}>
+                        <td style="padding:9px 16px;">
+                          {f.qtdMin}{f.qtdMax ? `–${f.qtdMax}` : "+"} un
+                        </td>
+                        <td style="padding:9px 16px;text-align:right;font-weight:700;color:var(--gold);">
+                          {brl(f.precoUnitario)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    })}
   </div>
 </AdminLayout>
