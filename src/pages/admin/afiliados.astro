@@ -3,7 +3,7 @@ export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { prisma } from "../../lib/prisma";
 
-const affiliates = await prisma.affiliate.findMany({
+const representantes = await prisma.affiliate.findMany({
   orderBy: { createdAt: "desc" },
   select: {
     id: true,
@@ -12,31 +12,29 @@ const affiliates = await prisma.affiliate.findMany({
     whatsapp: true,
     code: true,
     active: true,
-    type: true,
     commIda: true,
-    commIdaVolta: true,
     createdAt: true,
     payments: { select: { amountCents: true } },
   },
 });
 
-const bookings = await prisma.booking.findMany({
-  where: { affiliateCode: { in: affiliates.map((a) => a.code) }, status: { notIn: ["CANCELLED", "PENDING"] } },
+const pedidos = await prisma.booking.findMany({
+  where: { affiliateCode: { in: representantes.map((r) => r.code) }, status: { notIn: ["CANCELLED", "PENDING"] } },
   select: { affiliateCode: true, commissionCents: true },
 });
 
-const bookingsByAffiliate: Record<string, typeof bookings> = {};
-for (const b of bookings) {
-  if (!b.affiliateCode) continue;
-  if (!bookingsByAffiliate[b.affiliateCode]) bookingsByAffiliate[b.affiliateCode] = [];
-  bookingsByAffiliate[b.affiliateCode].push(b);
+const pedidosPorRep: Record<string, typeof pedidos> = {};
+for (const p of pedidos) {
+  if (!p.affiliateCode) continue;
+  if (!pedidosPorRep[p.affiliateCode]) pedidosPorRep[p.affiliateCode] = [];
+  pedidosPorRep[p.affiliateCode].push(p);
 }
 
-const affiliatesData = affiliates.map((aff) => {
-  const affBookings = bookingsByAffiliate[aff.code] || [];
-  const totalComm = affBookings.reduce((s, b) => s + (b.commissionCents || 0), 0);
-  const totalPaid = aff.payments.reduce((s, p) => s + p.amountCents, 0);
-  return { ...aff, totalComm, paidComm: totalPaid, pendingComm: totalComm - totalPaid, bookingCount: affBookings.length };
+const dados = representantes.map((r) => {
+  const rPedidos = pedidosPorRep[r.code] || [];
+  const totalComm = rPedidos.reduce((s, p) => s + (p.commissionCents || 0), 0);
+  const totalPago = r.payments.reduce((s, p) => s + p.amountCents, 0);
+  return { ...r, totalComm, totalPago, pendente: totalComm - totalPago, totalPedidos: rPedidos.length };
 });
 
 function brl(cents: number) {
@@ -44,49 +42,49 @@ function brl(cents: number) {
 }
 ---
 
-<AdminLayout title="Afiliados | Admin">
+<AdminLayout title="Representantes | Admin" currentPath="/admin/afiliados">
   <div style="padding:32px 40px;">
     <div style="max-width:1100px;">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px;">
         <div>
-          <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">🤝 Afiliados</h1>
-          <p style="font-size:13px;color:var(--muted);">Gerencie parceiros, comissões e pagamentos.</p>
+          <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">🤝 Representantes</h1>
+          <p style="font-size:13px;color:var(--muted);">Gerencie representantes comerciais e comissões por vendas.</p>
         </div>
-        <a href="/admin/afiliados/novo" style="background:var(--gold);color:#05080d;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">+ Adicionar Afiliado</a>
+        <a href="/admin/afiliados/novo" style="background:var(--gold);color:#05080d;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:600;text-decoration:none;">+ Novo Representante</a>
       </div>
 
-      {affiliatesData.length === 0 ? (
+      {dados.length === 0 ? (
         <div style="text-align:center;padding:60px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:14px;">
-          Nenhum afiliado cadastrado ainda.
+          Nenhum representante cadastrado ainda.
         </div>
       ) : (
         <div style="display:flex;flex-direction:column;gap:12px;">
-          {affiliatesData.map((aff) => (
-            <div style={`background:var(--bg-card);border:1px solid ${aff.active ? "var(--border)" : "rgba(248,113,113,0.2)"};border-radius:14px;padding:20px 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:16px;align-items:center;`}>
+          {dados.map((r) => (
+            <div style={`background:var(--bg-card);border:1px solid ${r.active ? "var(--border)" : "rgba(248,113,113,0.2)"};border-radius:14px;padding:20px 24px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:16px;align-items:center;`}>
               <div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-                  <p style="font-size:14px;font-weight:600;">{aff.name}</p>
-                  {!aff.active && <span style="font-size:10px;font-weight:700;color:#f87171;background:rgba(248,113,113,0.1);padding:2px 6px;border-radius:4px;">Inativo</span>}
+                  <p style="font-size:14px;font-weight:600;">{r.name}</p>
+                  {!r.active && <span style="font-size:10px;font-weight:700;color:#f87171;background:rgba(248,113,113,0.1);padding:2px 6px;border-radius:4px;">Inativo</span>}
                 </div>
-                <p style="font-size:12px;color:var(--muted);">Código: <strong style="color:var(--gold);">{aff.code}</strong></p>
-                <p style="font-size:11px;color:var(--muted);margin-top:2px;">📱 {aff.whatsapp}</p>
+                <p style="font-size:12px;color:var(--muted);">Código: <strong style="color:var(--gold);">{r.code}</strong></p>
+                <p style="font-size:11px;color:var(--muted);margin-top:2px;">📱 {r.whatsapp ?? r.email ?? "—"}</p>
               </div>
               <div>
-                <p style="font-size:11px;color:var(--muted);">Comissão IDA</p>
-                <p style="font-size:14px;font-weight:600;color:var(--text);">{brl(aff.commIda)}</p>
-                <p style="font-size:11px;color:var(--muted);">IDA + VOLTA: {brl(aff.commIdaVolta)}</p>
+                <p style="font-size:11px;color:var(--muted);">Comissão</p>
+                <p style="font-size:14px;font-weight:600;color:var(--text);">{brl(r.commIda)}</p>
+                <p style="font-size:11px;color:var(--muted);">por pedido</p>
               </div>
               <div>
                 <p style="font-size:11px;color:var(--muted);">Total Comissões</p>
-                <p style="font-size:14px;font-weight:600;color:#3ecf8e;">{brl(aff.totalComm)}</p>
-                <p style="font-size:11px;color:var(--muted);">{aff.bookingCount} reservas</p>
+                <p style="font-size:14px;font-weight:600;color:#3ecf8e;">{brl(r.totalComm)}</p>
+                <p style="font-size:11px;color:var(--muted);">{r.totalPedidos} pedidos</p>
               </div>
               <div>
                 <p style="font-size:11px;color:var(--muted);">A Pagar</p>
-                <p style={`font-size:14px;font-weight:600;${aff.pendingComm > 0 ? "color:#c9a84c;" : "color:var(--muted);"}`}>{brl(aff.pendingComm)}</p>
-                <p style="font-size:11px;color:var(--muted);">Pago: {brl(aff.paidComm)}</p>
+                <p style={`font-size:14px;font-weight:600;${r.pendente > 0 ? "color:#c9a84c;" : "color:var(--muted);"}`}>{brl(r.pendente)}</p>
+                <p style="font-size:11px;color:var(--muted);">Pago: {brl(r.totalPago)}</p>
               </div>
-              <a href={`/admin/afiliados/${aff.id}`} style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);text-decoration:none;color:var(--text);">👁️</a>
+              <a href={`/admin/afiliados/${r.id}`} style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);text-decoration:none;color:var(--text);">👁️</a>
             </div>
           ))}
         </div>
