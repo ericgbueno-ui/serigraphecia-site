@@ -6,6 +6,12 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
       "port": 4321
+    },
+    {
+      "name": "serigraphecia-admin-test",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": ["-NoProfile", "-Command", "$env:ADMIN_PASSWORD='test-local'; npm run dev"],
+      "port": 4321
     }
   ]
 }

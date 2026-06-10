@@ -48,14 +48,17 @@ const currentPath = new URL(Astro.request.url).pathname;
         overflow-x: hidden;
       }
       a { color: inherit; }
-
-      /* Select options legíveis em todos os sistemas */
+    </style>
+    <!-- is:global: estilos de <style> são escopados pelo Astro e não alcançam
+         os <select> renderizados pelas páginas via <slot> -->
+    <style is:global>
       select {
-        color-scheme: light;
+        color-scheme: dark;
       }
-      select option {
-        background: #ffffff !important;
-        color: #000000 !important;
+      select option,
+      select optgroup {
+        background-color: #0d1117;
+        color: #e8eaf0;
       }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
