@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../../lib/server/adminAuth";
 import { prisma } from "../../../lib/prisma";
+import { calculatePrintPrice, formatCents } from "../../../lib/pricing";
 import crypto from "crypto";
 
 export const prerender = false;
@@ -35,6 +36,27 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       });
     }
 
+    // Support optional print pricing when provided in the quote form
+    const printBaseRaw = formData.get("printBase")?.toString();
+    const printSides = formData.get("printSides")?.toString() || "one";
+    const colorsSideA = formData.get("colorsSideA")?.toString() || "0";
+    const colorsSideB = formData.get("colorsSideB")?.toString() || "0";
+
+    let computedTotalCents = totalCents;
+    let optionalsObj: Record<string, unknown> = {};
+    let optionalsCentsVal = 0;
+    if (printBaseRaw) {
+      const baseCents = Math.round(parseFloat(printBaseRaw.replace(",", ".")) * 100);
+      const printResult = calculatePrintPrice(baseCents, {
+        sides: printSides === "two" ? "two" : "one",
+        colorsSideA: parseInt(colorsSideA || "0", 10) || 0,
+        colorsSideB: parseInt(colorsSideB || "0", 10) || 0,
+      });
+      computedTotalCents += printResult.finalCents;
+      optionalsObj.print = printResult;
+      optionalsCentsVal = printResult.finalCents;
+    }
+
     await prisma.booking.create({
       data: {
         publicToken:    crypto.randomBytes(16).toString("hex"),
@@ -49,9 +71,11 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         origin:         "Serigraph e Cia",
         dest:           "Cliente",
         payMethod:      "a_definir",
-        totalCents,
+        totalCents:     computedTotalCents,
         depositCents:   0,
-        remainderCents: totalCents,
+        remainderCents: computedTotalCents,
+        optionalsJson:  Object.keys(optionalsObj).length ? JSON.stringify(optionalsObj) : undefined,
+        optionalsCents: optionalsCentsVal,
         affiliateCode:  affiliateCode || undefined,
       },
     });

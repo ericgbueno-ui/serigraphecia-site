@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../../lib/server/adminAuth";
 import { prisma } from "../../../lib/prisma";
+import { calculatePrintPrice, formatCents } from "../../../lib/pricing";
 import crypto from "crypto";
 
 export const prerender = false;
@@ -54,6 +55,29 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     const publicToken   = crypto.randomBytes(16).toString("hex");
     const numeroPedido  = await gerarNumeroPedido();
 
+    // --- Impressão (opcional) ---
+    const printBaseRaw = formData.get("printBase")?.toString();
+    const printSides = formData.get("printSides")?.toString() || "one";
+    const colorsSideA = formData.get("colorsSideA")?.toString() || "0";
+    const colorsSideB = formData.get("colorsSideB")?.toString() || "0";
+
+    let computedTotalCents = totalCents;
+    let optionalsObj: Record<string, unknown> = {};
+    let optionalsCentsVal = 0;
+    if (printBaseRaw) {
+      const baseCents = Math.round(parseFloat(printBaseRaw.replace(",", ".")) * 100);
+      const printResult = calculatePrintPrice(baseCents, {
+        sides: printSides === "two" ? "two" : "one",
+        colorsSideA: parseInt(colorsSideA || "0", 10) || 0,
+        colorsSideB: parseInt(colorsSideB || "0", 10) || 0,
+      });
+      computedTotalCents += printResult.finalCents;
+      optionalsObj.print = printResult;
+      optionalsCentsVal = printResult.finalCents;
+    }
+
+    const finalRemainderCents = Math.max(0, computedTotalCents - depositCents);
+
     const booking = await prisma.booking.create({
       data: {
         publicToken,
@@ -69,9 +93,12 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         origin: "Serigraph e Cia",
         dest:   "Cliente",
         payMethod,
-        totalCents,
+        // Totais (incluindo possíveis opcionais de impressão)
+        totalCents: computedTotalCents,
         depositCents,
-        remainderCents,
+        remainderCents: finalRemainderCents,
+        optionalsJson: Object.keys(optionalsObj).length ? JSON.stringify(optionalsObj) : undefined,
+        optionalsCents: optionalsCentsVal,
         status: "CONFIRMED",
         affiliateCode:  affiliateCode  || undefined,
       },
