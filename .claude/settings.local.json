@@ -31,7 +31,25 @@
       "Bash(set POSTGRES_URL_NON_POOLING=postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require^)",
       "Bash(npx prisma *)",
       "Bash(git commit *)",
-      "PowerShell($env:POSTGRES_PRISMA_URL=\"postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv-pooler.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require&connect_timeout=15&sslmode=require\"; $env:POSTGRES_URL_NON_POOLING=\"postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require\"; cd \"C:\\\\Produção de Site\\\\serigraph-site\"; npx prisma db push 2>&1)"
+      "PowerShell($env:POSTGRES_PRISMA_URL=\"postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv-pooler.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require&connect_timeout=15&sslmode=require\"; $env:POSTGRES_URL_NON_POOLING=\"postgresql://neondb_owner:npg_CZD5UlwL6rNX@ep-weathered-star-apkz6gnv.c-7.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require\"; cd \"C:\\\\Produção de Site\\\\serigraph-site\"; npx prisma db push 2>&1)",
+      "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__get_deployment_build_logs",
+      "mcp__8d8c79ab-3bbd-433b-89c1-68e5259f8dc6__get_runtime_logs",
+      "Bash(git -C \"C:/Produção de Site/serigraph-site\" ls-files --error-unmatch dist/)",
+      "Bash(git -C \"C:/Produção de Site/serigraph-site\" status --short)",
+      "Bash(Remove-Item -Force \"C:/Produção de Site/serigraph-site/admin/public/ads/meta-create-ads.py\")",
+      "Bash(Remove-Item -Force \"C:/Produção de Site/serigraph-site/admin/public/ads/meta-import.xlsx\")",
+      "Bash(Remove-Item -Force \"C:/Produção de Site/serigraph-site/admin/.github/workflows/backup.yml\")",
+      "Bash(Remove-Item -Force \"C:/Produção de Site/serigraph-site/admin/.github/workflows/neon-branch-backup.yml\")",
+      "Bash(Remove-Item -Force \"C:/Produção de Site/serigraph-site/admin/.github/workflows/youtube_sync.yml\")",
+      "Bash(git -C \"C:/Produção de Site/serigraph-site\" ls-files --error-unmatch \"admin/.qr-connect.html\")",
+      "Bash(git -C \"C:/Produção de Site/serigraph-site\" add admin/.github/workflows/backup.yml admin/.github/workflows/neon-branch-backup.yml admin/.github/workflows/youtube_sync.yml \"admin/public/ads/meta-create-ads.py\" \"admin/public/ads/meta-import.xlsx\" \"admin/public/brand/agencia de viagem/pacote 9 \\(2\\).webp\" admin/src/lib/generate-contract-pdf.tsx \"public/sacolas/alça-boda -de-palhaço.webp\" \"public/sacolas/alça-boda-de-palhaço.webp\" src/pages/index.astro)",
+      "Bash(git -C \"C:/Produção de Site/serigraph-site\" add -u)",
+      "Bash(git -C \"C:/Produção de Site/serigraph-site\" restore --staged .claude/settings.local.json)",
+      "Bash(git -C 'C:/Produção de Site/serigraph-site' commit -m ' *)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"https://serigraphecia.com.br/admin/login\" -UseBasicParsing -MaximumRedirection 2; if \\($r.Content -match 'color-scheme'\\) { \"color-scheme PRESENTE no HTML de producao\" } else { \"color-scheme AUSENTE em producao\" })",
+      "PowerShell(Test-NetConnection -ComputerName localhost -Port 4321 -InformationLevel Quiet)",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:4321/api/admin/login\" -Method POST -Body @{password='test-local'} -UseBasicParsing -MaximumRedirection 0 -ErrorAction SilentlyContinue; \"status: $\\($r.StatusCode\\)\"; \"location: $\\($r.Headers.Location\\)\"; \"setcookie: $\\($r.Headers['Set-Cookie']\\)\")",
+      "PowerShell($s = New-Object Microsoft.PowerShell.Commands.WebRequestSession; $c = New-Object System.Net.Cookie\\('mt_admin_token','25898a5ec1f744900e3fcaa0ebc894dc8a52a6eeb630d455211296063058a834','/','localhost'\\); $s.Cookies.Add\\($c\\); $r = Invoke-WebRequest -Uri \"http://localhost:4321/admin/representantes/novo\" -UseBasicParsing -WebSession $s; \\($r.Content | Select-String -Pattern 'select[^{<]{0,60}\\\\{[^}]+\\\\}' -AllMatches\\).Matches.Value)"
     ]
   }
 }

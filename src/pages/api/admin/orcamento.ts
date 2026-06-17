@@ -17,7 +17,11 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const vehicleType  = formData.get("vehicleType")?.toString().trim() || "";
   const passengerCount = parseInt(formData.get("passengerCount")?.toString() || "50", 10);
   const hotel        = formData.get("hotel")?.toString().trim() || null;
-  const detalhes     = formData.get("idaFlightTime")?.toString().trim() || null;
+  
+  const corSacola    = formData.get("corSacola")?.toString().trim() || "";
+  const detailsRaw   = formData.get("idaFlightTime")?.toString().trim() || "";
+  const detalhes     = corSacola ? `Cor da Sacola: ${corSacola}${detailsRaw ? ` | ${detailsRaw}` : ""}` : (detailsRaw || null);
+
   const cores        = formData.get("voltaDate")?.toString() || null;
   const affiliateCode = formData.get("affiliateCode")?.toString() || null;
   const totalRaw     = parseFloat(formData.get("totalCents")?.toString().replace(",", ".") || "0");

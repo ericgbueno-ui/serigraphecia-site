@@ -307,6 +307,73 @@ import Layout from '../layouts/Layout.astro';
           <label for="f-whatsapp">Seu WhatsApp *</label>
           <input type="tel" id="f-whatsapp" placeholder="(51) 99999-9999" required />
         </div>
+        
+        <div class="form-label-group">
+          <label>Modelo de Alça *</label>
+          <div class="model-grid">
+            <label class="model-option">
+              <input type="radio" name="f-modelo" value="Alça Vazada" checked required />
+              <div class="model-card">
+                <span class="model-icon">🕳️</span>
+                <span class="model-name">Alça Vazada</span>
+              </div>
+            </label>
+            <label class="model-option">
+              <input type="radio" name="f-modelo" value="Alça Fita" required />
+              <div class="model-card">
+                <span class="model-icon">🎗️</span>
+                <span class="model-name">Alça Fita</span>
+              </div>
+            </label>
+            <label class="model-option">
+              <input type="radio" name="f-modelo" value="Alça Camiseta" required />
+              <div class="model-card">
+                <span class="model-icon">👕</span>
+                <span class="model-name">Alça Camiseta</span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-label-group">
+          <label>Cor da Sacola *</label>
+          <div class="color-grid">
+            <label class="color-option" title="Rosa">
+              <input type="radio" name="f-cor" value="Rosa" checked required />
+              <span class="color-dot" style="background-color: #FF2D78;"></span>
+            </label>
+            <label class="color-option" title="Branco">
+              <input type="radio" name="f-cor" value="Branco" required />
+              <span class="color-dot" style="background-color: #FFFFFF; border: 1px solid rgba(255,255,255,0.3);"></span>
+            </label>
+            <label class="color-option" title="Preto">
+              <input type="radio" name="f-cor" value="Preto" required />
+              <span class="color-dot" style="background-color: #121212; border: 1px solid rgba(255,255,255,0.3);"></span>
+            </label>
+            <label class="color-option" title="Amarelo">
+              <input type="radio" name="f-cor" value="Amarelo" required />
+              <span class="color-dot" style="background-color: #FFD600;"></span>
+            </label>
+            <label class="color-option" title="Lilás">
+              <input type="radio" name="f-cor" value="Lilás" required />
+              <span class="color-dot" style="background-color: #D1A3FF;"></span>
+            </label>
+            <label class="color-option" title="Transparente">
+              <input type="radio" name="f-cor" value="Transparente" required />
+              <span class="color-dot color-dot--trans"></span>
+            </label>
+            <label class="color-option" title="Azul">
+              <input type="radio" name="f-cor" value="Azul" required />
+              <span class="color-dot" style="background-color: #3B82F6;"></span>
+            </label>
+            <label class="color-option" title="Rosa Bebê">
+              <input type="radio" name="f-cor" value="Rosa Bebê" required />
+              <span class="color-dot" style="background-color: #FFB6C1;"></span>
+            </label>
+          </div>
+          <p id="selected-color-name" class="color-name-display">Cor selecionada: Rosa</p>
+        </div>
+
         <div class="form-row">
           <div class="form-label-group">
             <label for="f-quantidade">Quantidade</label>
@@ -319,7 +386,7 @@ import Layout from '../layouts/Layout.astro';
         </div>
         <div class="form-label-group">
           <label for="f-mensagem">Detalhes da sacola</label>
-          <textarea id="f-mensagem" placeholder="Cor, referências, uso, algum detalhe especial..." rows="3"></textarea>
+          <textarea id="f-mensagem" placeholder="Referências, uso, ou algum detalhe especial..." rows="3"></textarea>
         </div>
         <button type="submit" class="btn btn-whatsapp btn-full btn-lg">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.527 5.845L.057 23.882l6.198-1.625A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.893a9.866 9.866 0 01-5.031-1.378l-.361-.214-3.735.979 1.004-3.638-.235-.374A9.837 9.837 0 012.108 12C2.108 6.527 6.527 2.108 12 2.108c5.473 0 9.893 4.42 9.893 9.892 0 5.473-4.42 9.893-9.893 9.893z"/></svg>
@@ -375,6 +442,18 @@ import Layout from '../layouts/Layout.astro';
       (el as HTMLAnchorElement).href = waBase + '?text=' + waMsg;
     });
 
+    // Atualiza dinamicamente o nome da cor selecionada no formulário
+    const colorInputs = document.querySelectorAll('input[name="f-cor"]');
+    const colorDisplay = document.getElementById('selected-color-name');
+    colorInputs.forEach(input => {
+      input.addEventListener('change', (e) => {
+        const target = e.target as HTMLInputElement;
+        if (colorDisplay && target.checked) {
+          colorDisplay.textContent = `Cor selecionada: ${target.parentElement?.getAttribute('title') || target.value}`;
+        }
+      });
+    });
+
     const form = document.getElementById('form-orcamento') as HTMLFormElement;
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -384,12 +463,19 @@ import Layout from '../layouts/Layout.astro';
       const tamanho  = (document.getElementById('f-tamanho')   as HTMLInputElement).value.trim();
       const msg      = (document.getElementById('f-mensagem')  as HTMLTextAreaElement).value.trim();
 
+      const modeloEl = form.querySelector('input[name="f-modelo"]:checked') as HTMLInputElement;
+      const modelo   = modeloEl ? modeloEl.value : '';
+      const corEl    = form.querySelector('input[name="f-cor"]:checked') as HTMLInputElement;
+      const cor      = corEl ? corEl.value : '';
+
       const linhas = [
         '✨ Olá! Vim pelo site da Serigraph e Cia.',
         '',
         'Estou buscando sacolas com acabamento premium para a minha loja e gostaria de solicitar um orçamento exclusivo.',
         `🏪 Loja: ${nome}`,
         whatsapp ? `📱 WhatsApp: ${whatsapp}`        : '',
+        modelo   ? `🛍️ Modelo: ${modelo}`            : '',
+        cor      ? `🎨 Cor da Sacola: ${cor}`        : '',
         qtd      ? `📦 Quantidade: ${qtd} unidades`  : '',
         tamanho  ? `📐 Tamanho: ${tamanho}`          : '',
         msg      ? `💬 Detalhes: ${msg}`             : '',
@@ -813,6 +899,116 @@ import Layout from '../layouts/Layout.astro';
   }
   .form-label-group { display: flex; flex-direction: column; gap: 0.3rem; }
   .form-label-group label { font-size: 0.8rem; color: rgba(255,255,255,0.45); }
+  
+  /* Seletores de modelo de sacola */
+  .model-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+  }
+  .model-option {
+    cursor: pointer;
+    position: relative;
+    display: block;
+  }
+  .model-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .model-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 0.75rem 0.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+  }
+  .model-option input:checked + .model-card {
+    border-color: var(--pink);
+    background: rgba(255, 45, 120, 0.08);
+    box-shadow: 0 0 12px rgba(255, 45, 120, 0.25);
+  }
+  .model-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .model-option input:checked + .model-card:hover {
+    border-color: var(--pink);
+    background: rgba(255, 45, 120, 0.12);
+  }
+  .model-icon {
+    font-size: 1.25rem;
+  }
+  .model-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.75);
+  }
+  .model-option input:checked + .model-card .model-name {
+    color: var(--white);
+  }
+
+  /* Seletores de cores */
+  .color-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-top: 0.2rem;
+    margin-bottom: 0.2rem;
+  }
+  .color-option {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+  }
+  .color-option input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  .color-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: block;
+    border: 2px solid transparent;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+  .color-dot--trans {
+    background-color: #e0e0e0;
+    background-image: linear-gradient(45deg, #555 25%, transparent 25%),
+                      linear-gradient(-45deg, #555 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #555 75%),
+                      linear-gradient(-45deg, transparent 75%, #555 75%);
+    background-size: 8px 8px;
+    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+  .color-option:hover .color-dot {
+    transform: scale(1.1);
+  }
+  .color-option input:checked + .color-dot {
+    border-color: var(--pink);
+    box-shadow: 0 0 10px var(--pink);
+    transform: scale(1.15);
+  }
+  .color-name-display {
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 0.3rem;
+    font-style: italic;
+  }
+
   .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
