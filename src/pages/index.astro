@@ -437,6 +437,68 @@ import Layout from '../layouts/Layout.astro';
     const WA = '5551843971' + '76'; // +55 51 8439-7176
     const waBase = 'https://wa.me/' + WA;
     const waMsg  = encodeURIComponent('✨ Olá! Vim pelo site da Serigraph e Cia.\n\nEstou buscando sacolas com acabamento premium para a minha loja e gostaria de solicitar um orçamento exclusivo.');
+    const leadCaptureUrl = '/api/leads';
+
+    function getUtmValue(name) {
+      const value = new URLSearchParams(window.location.search).get(name);
+      return value ? value.trim() : '';
+    }
+
+    function normalizeLeadPhone(raw) {
+      const digits = String(raw || '').replace(/\D/g, '');
+      if (!digits) return '';
+      if (digits.length >= 12 && digits.length <= 13 && digits.startsWith('55')) return digits;
+      if (digits.length >= 10 && digits.length <= 11) return `55${digits}`;
+      return digits;
+    }
+
+    function collectLeadPayload() {
+      const nome     = (document.getElementById('f-nome')      as HTMLInputElement).value.trim();
+      const whatsapp = (document.getElementById('f-whatsapp')  as HTMLInputElement).value.trim();
+      const qtd      = (document.getElementById('f-quantidade') as HTMLInputElement).value.trim();
+      const tamanho  = (document.getElementById('f-tamanho')   as HTMLInputElement).value.trim();
+      const msg      = (document.getElementById('f-mensagem')   as HTMLTextAreaElement).value.trim();
+
+      const modeloEl = document.querySelector('input[name="f-modelo"]:checked') as HTMLInputElement;
+      const corEl    = document.querySelector('input[name="f-cor"]:checked') as HTMLInputElement;
+
+      return {
+        name: nome,
+        whatsapp: normalizeLeadPhone(whatsapp),
+        model: modeloEl ? modeloEl.value : '',
+        color: corEl ? corEl.value : '',
+        quantity: qtd,
+        size: tamanho,
+        message: msg,
+        pagePath: window.location.pathname,
+        source: 'site',
+        utmSource: getUtmValue('utm_source'),
+        utmMedium: getUtmValue('utm_medium'),
+        utmCampaign: getUtmValue('utm_campaign'),
+      };
+    }
+
+    function captureLead() {
+      const payload = collectLeadPayload();
+      if (!payload.whatsapp) return;
+
+      try {
+        if (navigator.sendBeacon) {
+          const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
+          const sent = navigator.sendBeacon(leadCaptureUrl, blob);
+          if (sent) return;
+        }
+      } catch {
+        // fallback below
+      }
+
+      void fetch(leadCaptureUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        keepalive: true,
+      });
+    }
 
     document.querySelectorAll('.js-wa-link').forEach((el) => {
       (el as HTMLAnchorElement).href = waBase + '?text=' + waMsg;
@@ -481,6 +543,7 @@ import Layout from '../layouts/Layout.astro';
         msg      ? `💬 Detalhes: ${msg}`             : '',
       ].filter(Boolean).join('\n');
 
+      captureLead();
       window.open(waBase + '?text=' + encodeURIComponent(linhas), '_blank');
     });
   </script>

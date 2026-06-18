@@ -12,7 +12,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     cookies.set(ADMIN_COOKIE_NAME, createAdminToken(secret), {
       httpOnly: true,
       sameSite: "lax",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
       maxAge: ADMIN_COOKIE_TTL,
       path: "/",
     });

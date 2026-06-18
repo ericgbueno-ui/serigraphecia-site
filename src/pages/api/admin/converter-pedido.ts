@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../../lib/server/adminAuth";
 import { prisma } from "../../../lib/prisma";
+import { gerarNumeroPedido } from "../../../lib/pedido";
 
 export const prerender = false;
 
@@ -13,12 +14,18 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   if (!id) return redirect("/admin/leads", 302);
 
-  const count = await prisma.booking.count();
-  const numeroPedido = `SG-${String(count).padStart(4, "0")}`;
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    select: { numeroPedido: true },
+  });
+  const numeroPedido = booking?.numeroPedido ?? await gerarNumeroPedido(prisma);
 
   await prisma.booking.update({
     where: { id },
-    data: { status: "CONFIRMED", numeroPedido },
+    data: {
+      status: "CONFIRMED",
+      numeroPedido,
+    },
   });
 
   return redirect(`/admin/reservas/${id}`, 302);

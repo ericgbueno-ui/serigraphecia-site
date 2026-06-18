@@ -1,16 +1,11 @@
 import type { APIRoute } from "astro";
 import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../../lib/server/adminAuth";
 import { prisma } from "../../../lib/prisma";
-import { calculatePrintPrice, formatCents } from "../../../lib/pricing";
+import { calculatePrintPrice } from "../../../lib/pricing";
+import { gerarNumeroPedido } from "../../../lib/pedido";
 import crypto from "crypto";
 
 export const prerender = false;
-
-async function gerarNumeroPedido(): Promise<string> {
-  const count = await prisma.booking.count();
-  const num = String(count + 1).padStart(4, "0");
-  return `SG-${num}`;
-}
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const cookieVal = cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
@@ -53,7 +48,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     }
 
     const publicToken   = crypto.randomBytes(16).toString("hex");
-    const numeroPedido  = await gerarNumeroPedido();
+    const numeroPedido  = await gerarNumeroPedido(prisma);
 
     // --- Impressão (opcional) ---
     const printBaseRaw = formData.get("printBase")?.toString();
