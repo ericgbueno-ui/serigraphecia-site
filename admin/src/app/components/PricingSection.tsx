@@ -10,49 +10,19 @@ import { calcularTransfer, brl } from "@/lib/pricing";
 const WHATS_ERIC_RITA = "5551986876557";
 
 export function PricingSection() {
+  // Pricing calculations disabled in consolidated admin.
   const executivoWaLink = waLink(
     "Olá! 👋 Tenho interesse em uma categoria Executiva / SUV / SUV Elétrico. Podem me passar disponibilidade e valores?",
     WHATS_ERIC_RITA
   );
 
-  const sedanPix = calcularTransfer({
-    pax: "sedan",
-    tripType: "ida_volta",
-    payMethod: "pix",
-    routeId: "poa_gramado",
-  }).total;
-  const sedanCartao = calcularTransfer({
-    pax: "sedan",
-    tripType: "ida_volta",
-    payMethod: "cartao",
-    routeId: "poa_gramado",
-  }).total;
-
-  const vanPix = calcularTransfer({
-    pax: "van",
-    tripType: "ida_volta",
-    payMethod: "pix",
-    routeId: "poa_gramado",
-  }).total;
-  const vanCartao = calcularTransfer({
-    pax: "van",
-    tripType: "ida_volta",
-    payMethod: "cartao",
-    routeId: "poa_gramado",
-  }).total;
-
-  const execPix = calcularTransfer({
-    pax: "executivo",
-    tripType: "ida_volta",
-    payMethod: "pix",
-    routeId: "poa_gramado",
-  }).total;
-  const execCartao = calcularTransfer({
-    pax: "executivo",
-    tripType: "ida_volta",
-    payMethod: "cartao",
-    routeId: "poa_gramado",
-  }).total;
+  // Stub values — all prices disabled, direct users to WhatsApp
+  const sedanPix = 0;
+  const sedanCartao = 0;
+  const vanPix = 0;
+  const vanCartao = 0;
+  const execPix = 0;
+  const execCartao = 0;
 
   return (
     <Section className="py-20 px-6 bg-black/20 border-y border-white/5" id="valores">
@@ -66,9 +36,9 @@ export function PricingSection() {
               Compare os valores e siga para a reserva com clareza.
             </p>
             <p className="text-sm text-white/50">
-              Precisa só da chegada ou só da saída?{" "}
+              Para informações sobre valores e formas de pagamento,{" "}
               <span className="text-[color:var(--mt-gold)] font-semibold">
-                Somente ida a partir de {brl(sedanPix / 2)} no PIX.
+                contate nossa equipe via WhatsApp.
               </span>
             </p>
           </div>

@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/server/adminAuth";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { toBrtDateString } from "@/lib/meta-ads";
 
 export const dynamic = "force-dynamic";
 
@@ -59,7 +60,7 @@ export default async function AdminCaixaMotoristasPage() {
     },
   });
 
-  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+  const today = toBrtDateString();
   const currentMonth = today.slice(0, 7);
 
   // Mapeamento e cálculo de todos os trechos

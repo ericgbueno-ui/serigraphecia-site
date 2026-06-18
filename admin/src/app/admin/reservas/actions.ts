@@ -3,10 +3,25 @@
 import { prisma } from "@/lib/db";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { notifyTeam, notifyCliente } from "@/lib/notify";
+import { sendWhatsApp, sendWhatsAppTemplate } from "@/lib/meta-whatsapp";
+import { criarEventoZoho, editarEventoZoho, excluirEventoZoho } from "@/lib/zoho-calendar";
 import { getIsAdmin } from "@/lib/server/adminAuth";
+import { markLeadConverted } from "@/lib/lead";
 
 export async function deleteBooking(id: string) {
   if (!(await getIsAdmin())) throw new Error("Acesso negado.");
+
+  // Exclui evento do Zoho Calendar se existir
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    select: { zohoEventUid: true },
+  });
+  if (booking?.zohoEventUid) {
+    await excluirEventoZoho(booking.zohoEventUid).catch((err) =>
+      console.error("[BOOKING] Falha ao excluir evento Zoho:", err.message)
+    );
+  }
 
   // Delete dependents first (passengers, payments)
   await prisma.passenger.deleteMany({ where: { bookingId: id } });
@@ -50,6 +65,65 @@ export async function updateBookingStatus(
 
   await prisma.booking.update({ where: { id }, data: { status } });
 
+  if (status === "CONFIRMED") {
+    // Marca lead como convertido se existir no CRM
+    if (booking?.customer?.phone) {
+      markLeadConverted(booking.customer.phone, id).catch(() => {});
+    }
+
+    const msg =
+      `🔄 *STATUS ATUALIZADO → CONFIRMADO*\n\n` +
+      `🔗 Reserva: https://multitrip.com.br/admin/reservas/${id}`;
+    notifyTeam(msg).catch(() => {});
+
+    // Se não tem evento no Zoho ainda, cria agora
+    if (booking && !booking.zohoEventUid) {
+      let cityTourDate = null;
+      try {
+        const optObj = JSON.parse(booking.optionalsJson || "{}");
+        if (optObj.cityTour?.enabled && optObj.cityTour?.date) {
+          cityTourDate = optObj.cityTour.date;
+        }
+      } catch {}
+
+      criarEventoZoho({
+        bookingId: id,
+        clienteName: booking.customer?.name ?? "Cliente",
+        clientePhone: booking.customer?.phone ?? "",
+        veiculo: booking.vehicleType ?? "Não informado",
+        idaDate: booking.idaDate,
+        idaFlightTime: booking.idaFlightTime,
+        idaFlightNumber: booking.idaFlightNumber,
+        voltaDate: booking.voltaDate,
+        voltaFlightTime: booking.voltaFlightTime,
+        voltaFlightNumber: booking.voltaFlightNumber,
+        cityTourDate,
+        hotel: booking.hotel,
+        hotelAddress: booking.hotelAddress,
+        routeLabel: booking.routeLabel,
+        payMethod: booking.payMethod,
+        depositCents: booking.depositCents,
+        remainderCents: booking.remainderCents,
+        partida: booking.origin ?? "Aeroporto Salgado Filho (POA)",
+        destino: booking.dest ?? "Gramado/Canela",
+        passengerCount: booking.passengerCount ?? 1,
+        totalCents: booking.totalCents ?? 0,
+        optionalsJson: booking.optionalsJson,
+        origem: "manual",
+      })
+        .then((uid) => {
+          if (uid && typeof uid === "string") {
+            prisma.booking.update({ where: { id }, data: { zohoEventUid: uid } }).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
+  if (status === "CANCELLED" && booking?.zohoEventUid) {
+    excluirEventoZoho(booking.zohoEventUid).catch(() => {});
+    await prisma.booking.update({ where: { id }, data: { zohoEventUid: null } });
+  }
 
   redirect(`/admin/reservas/${id}`);
 }
@@ -193,6 +267,78 @@ export async function updateBooking(id: string, formData: FormData) {
     },
   });
 
+  // ── Notifica equipe e cliente sobre atualização ──────────────────────────
+  notifyTeam(
+    `🔄 *RESERVA ATUALIZADA (Admin)*\n\n` +
+      `🔗 https://multitrip.com.br/admin/reservas/${id}\n` +
+      (idaDate
+        ? `📅 Data IDA: ${idaDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n`
+        : "") +
+      (voltaDate
+        ? `↩️ Data VOLTA: ${voltaDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n`
+        : "")
+  ).catch((err) => console.error("[BOOKING] Falha notifyTeam updateBooking:", err.message));
+
+  if (phone) {
+    const primeiroNome = (name || "Cliente").split(" ")[0];
+    notifyCliente(
+      phone,
+      `${primeiroNome}, sua reserva foi atualizada! 🤎\n\n` +
+        (idaDate
+          ? `📅 Data: ${idaDate.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" })}\n`
+          : "") +
+        `Qualquer dúvida é só me chamar aqui. — Jolie | Multi Trip`
+    ).catch((err) => console.error("[BOOKING] Falha notifyCliente updateBooking:", err.message));
+  }
+
+  // ── saveDriverInfo adicionado abaixo ──
+
+  // Sincroniza Zoho Calendar
+  const eventoData = {
+    bookingId: id,
+    clienteName: name,
+    clientePhone: phone,
+    veiculo: vehicleType,
+    idaDate,
+    idaFlightTime,
+    idaFlightNumber,
+    voltaDate,
+    voltaFlightTime,
+    voltaFlightNumber,
+    cityTourDate,
+    hotel,
+    hotelAddress,
+    routeLabel: booking.routeLabel,
+    payMethod,
+    depositCents,
+    remainderCents,
+    partida: booking.origin ?? "Aeroporto Salgado Filho (POA)",
+    destino: booking.dest ?? "Gramado/Canela",
+    passengerCount,
+    totalCents,
+    optionalsJson: booking.optionalsJson,
+    origem: "manual" as const,
+  };
+
+  if (booking.zohoEventUid) {
+    // Atualiza evento existente
+    editarEventoZoho(booking.zohoEventUid, eventoData)
+      .then((newUid) => {
+        if (newUid && typeof newUid === "string" && newUid !== booking.zohoEventUid) {
+          prisma.booking.update({ where: { id }, data: { zohoEventUid: newUid } }).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  } else if (idaDate || voltaDate || cityTourDate) {
+    // Cria evento se ainda não existe e temos data
+    criarEventoZoho(eventoData)
+      .then((uid) => {
+        if (uid && typeof uid === "string")
+          prisma.booking.update({ where: { id }, data: { zohoEventUid: uid } }).catch(() => {});
+      })
+      .catch(() => {});
+  }
+
   redirect(`/admin/reservas/${id}`);
 }
 
@@ -279,6 +425,187 @@ export async function saveDriverInfo(id: string, formData: FormData) {
       });
     } catch (err) {
       console.error("[saveDriverInfo] Erro ao salvar pagamento motorista:", err);
+    }
+  }
+
+  if (notify && (driverInName || driverOutName || driverCityTourName)) {
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      select: {
+        customer: { select: { name: true, phone: true } },
+        tripType: true,
+        vehicleType: true,
+        passengerCount: true,
+        hotel: true,
+        hotelAddress: true,
+        origin: true,
+        dest: true,
+        idaDate: true,
+        idaFlightTime: true,
+        idaFlightNumber: true,
+        voltaDate: true,
+        voltaFlightTime: true,
+        voltaFlightNumber: true,
+        optionalsJson: true,
+      },
+    });
+
+    if (!booking) {
+      redirect(`/admin/reservas/${id}`);
+      return;
+    }
+
+    const fmtDate = (d: Date | null | undefined) =>
+      d ? new Date(d).toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—";
+
+    const fmtPickup = (time: string | null) => {
+      if (!time) return null;
+      const m = time.match(/^(\d{1,2}):(\d{2})/);
+      if (!m) return null;
+      let h = parseInt(m[1], 10) - 4;
+      if (h < 0) h += 24;
+      return `${String(h).padStart(2, "0")}:${m[2]}`;
+    };
+
+    const acessorios = (() => {
+      try {
+        const opt = JSON.parse(booking.optionalsJson || "{}");
+        const s = opt.childSeats || {};
+        const parts: string[] = [];
+        if (s.bebe_conforto) parts.push(`${s.bebe_conforto}x Bebê Conforto`);
+        if (s.cadeirinha) parts.push(`${s.cadeirinha}x Cadeirinha`);
+        if (s.assento_elevacao) parts.push(`${s.assento_elevacao}x Assento de elevação`);
+        return parts.length ? parts.join(", ") : null;
+      } catch { return null; }
+    })();
+
+    const clienteNome = booking.customer?.name || "—";
+    const clienteTel = booking.customer?.phone || "";
+    const hotelDestino = [booking.hotel, booking.hotelAddress].filter(Boolean).join(" — ") || "—";
+    const veiculo = booking.vehicleType || "—";
+    const pax = booking.passengerCount ?? 1;
+    const origem = booking.origin || "Aeroporto Salgado Filho (POA)";
+
+    // ── Notifica motorista IN ──────────────────────────────────────────────────
+    if (driverInWhatsapp && driverInName && booking.tripType !== "volta") {
+      sendWhatsAppTemplate(
+        driverInWhatsapp,
+        "multitrip_motorista_in",
+        "pt_BR",
+        [{
+          type: "body",
+          parameters: [
+            { type: "text", text: fmtDate(booking.idaDate) },
+            { type: "text", text: booking.idaFlightTime || "—" },
+            { type: "text", text: booking.idaFlightNumber || "—" },
+            { type: "text", text: veiculo },
+            { type: "text", text: String(pax) },
+            { type: "text", text: clienteNome },
+            { type: "text", text: clienteTel ? `+55 ${clienteTel}` : "—" },
+            { type: "text", text: origem },
+            { type: "text", text: hotelDestino },
+          ],
+        }]
+      ).catch((err) => console.error("[BOOKING] Falha notificar motorista IN:", err.message));
+    }
+
+    // ── Notifica motorista OUT ─────────────────────────────────────────────────
+    if (driverOutWhatsapp && driverOutName && booking.tripType !== "ida") {
+      const pickupTime = fmtPickup(booking.voltaFlightTime) || "—";
+      sendWhatsAppTemplate(
+        driverOutWhatsapp,
+        "multitrip_motorista_out",
+        "pt_BR",
+        [{
+          type: "body",
+          parameters: [
+            { type: "text", text: fmtDate(booking.voltaDate) },
+            { type: "text", text: pickupTime },
+            { type: "text", text: booking.voltaFlightTime || "—" },
+            { type: "text", text: booking.voltaFlightNumber || "—" },
+            { type: "text", text: veiculo },
+            { type: "text", text: String(pax) },
+            { type: "text", text: clienteNome },
+            { type: "text", text: clienteTel ? `+55 ${clienteTel}` : "—" },
+            { type: "text", text: hotelDestino },
+            { type: "text", text: origem },
+          ],
+        }]
+      ).catch((err) => console.error("[BOOKING] Falha notificar motorista OUT:", err.message));
+    }
+
+    // ── Notifica motorista City Tour ───────────────────────────────────────────
+    if (driverCityTourWhatsapp && driverCityTourName) {
+      let cityTourDate = "—";
+      try {
+        const opt = JSON.parse(booking.optionalsJson || "{}");
+        if (opt.cityTour?.date) cityTourDate = opt.cityTour.date;
+      } catch {}
+
+      const msgCity =
+        `🏙️ *CITY TOUR — Multi Trip*\n\n` +
+        `📅 Data: ${cityTourDate}\n` +
+        `⏰ Horário: 09:00 às 17:00\n` +
+        `\n🚗 Veículo: ${veiculo}\n` +
+        `👥 Passageiros: ${pax}\n` +
+        (acessorios ? `🧒 Acessórios: ${acessorios}\n` : "") +
+        `\n👤 Cliente: ${clienteNome}\n` +
+        (clienteTel ? `📱 WhatsApp: +55 ${clienteTel}\n` : "") +
+        `\n📍 Local: ${hotelDestino}\n` +
+        `\nDúvidas: (51) 9 8687-6557`;
+
+      sendWhatsApp(driverCityTourWhatsapp, msgCity).catch((err) =>
+        console.error("[BOOKING] Falha notificar motorista City Tour:", err.message)
+      );
+    }
+
+    // ── Notifica cliente sobre motoristas designados ───────────────────────────
+    if (booking.customer?.phone) {
+      const clienteNomeCurto = clienteNome.split(" ")[0];
+      let msgCliente =
+        `Olá, ${clienteNomeCurto}! 🤎 Aqui é a Jolie da Multi Trip.\n\n` +
+        `Sua viagem está confirmada e seus motoristas já estão designados:\n\n`;
+
+      if (driverInName && booking.tripType !== "volta") {
+        msgCliente +=
+          `🛬 *Chegada (IN):*\n` +
+          `🧑‍✈️ ${driverInName}\n` +
+          `🚗 ${driverInCar ?? "—"}\n` +
+          (driverInWhatsapp ? `📱 +55 ${driverInWhatsapp}\n` : "") +
+          `📅 ${fmtDate(booking.idaDate)}\n` +
+          (booking.idaFlightTime ? `⏰ Voo: ${booking.idaFlightTime}\n` : "") +
+          `\n`;
+      }
+
+      if (driverOutName && booking.tripType !== "ida") {
+        const pickupTime = fmtPickup(booking.voltaFlightTime);
+        msgCliente +=
+          `🛫 *Retorno (OUT):*\n` +
+          `🧑‍✈️ ${driverOutName}\n` +
+          `🚗 ${driverOutCar ?? "—"}\n` +
+          (driverOutWhatsapp ? `📱 +55 ${driverOutWhatsapp}\n` : "") +
+          `📅 ${fmtDate(booking.voltaDate)}\n` +
+          (pickupTime ? `⏰ Pick-up: ${pickupTime}\n` : "") +
+          `\n`;
+      }
+
+      if (driverCityTourName) {
+        msgCliente +=
+          `🏙️ *City Tour:*\n` +
+          `🧑‍✈️ ${driverCityTourName}\n` +
+          `🚗 ${driverCityTourCar ?? "—"}\n` +
+          (driverCityTourWhatsapp ? `📱 +55 ${driverCityTourWhatsapp}\n` : "") +
+          `\n`;
+      }
+
+      msgCliente += `Qualquer dúvida é só chamar aqui. Boa viagem! ✈️`;
+
+      sendWhatsApp(booking.customer.phone, msgCliente).catch(() => {});
+
+      await prisma.booking.update({
+        where: { id },
+        data: { driverNotifiedAt: new Date() },
+      });
     }
   }
 
@@ -375,7 +702,87 @@ export async function marcarRestantePago(id: string) {
   redirect(`/admin/reservas/${id}`);
 }
 
+// ─── Forçar sincronização com o Zoho Calendar ────────────────────────────────
+
 export async function forceSyncZoho(id: string) {
   if (!(await getIsAdmin())) throw new Error("Acesso negado.");
-  redirect(`/admin/reservas/${id}`);
+
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    include: { customer: true },
+  });
+
+  if (!booking) throw new Error("Reserva nao encontrada.");
+
+  let errorMessage = "";
+  let zohoUid = "";
+  let cityTourDate = null;
+  try {
+    const optObj = JSON.parse(booking.optionalsJson || "{}");
+    if (optObj.cityTour?.enabled && optObj.cityTour?.date) {
+      cityTourDate = optObj.cityTour.date;
+    }
+  } catch {}
+
+  if (!booking.idaDate && !booking.voltaDate && !cityTourDate) {
+    redirect(
+      `/admin/reservas/${id}?error=zoho_sync_attempted&message=${encodeURIComponent("Reserva sem data operacional para sincronizar.")}`
+    );
+  }
+
+  const eventoData = {
+    bookingId: booking.id,
+    clienteName: booking.customer?.name || "Sem nome",
+    clientePhone: booking.customer?.phone || "-",
+    veiculo: booking.vehicleType,
+    idaDate: booking.idaDate,
+    idaFlightTime: booking.idaFlightTime,
+    idaFlightNumber: booking.idaFlightNumber,
+    voltaDate: booking.voltaDate,
+    voltaFlightTime: booking.voltaFlightTime,
+    voltaFlightNumber: booking.voltaFlightNumber,
+    cityTourDate,
+    hotel: booking.hotel,
+    hotelAddress: booking.hotelAddress,
+    routeLabel: booking.routeLabel,
+    payMethod: booking.payMethod,
+    depositCents: booking.depositCents,
+    remainderCents: booking.remainderCents,
+    partida: booking.origin || "Aeroporto Salgado Filho (POA)",
+    destino: booking.dest || "Gramado/Canela",
+    passengerCount: booking.passengerCount,
+    totalCents: booking.totalCents,
+    optionalsJson: booking.optionalsJson,
+    origem: booking.id.startsWith("wabk_")
+      ? "whatsapp"
+      : booking.id.startsWith("bk_")
+        ? "site"
+        : "manual",
+  } as const;
+
+  try {
+    if (booking.zohoEventUid) {
+      // Já existe evento → atualiza
+      const newUid = await editarEventoZoho(booking.zohoEventUid, eventoData);
+      zohoUid = (newUid && typeof newUid === "string") ? newUid : booking.zohoEventUid;
+    } else {
+      // Não existe → cria
+      const uid = await criarEventoZoho(eventoData);
+      if (uid) zohoUid = uid;
+    }
+  } catch (err: any) {
+    errorMessage = err.message || "Erro desconhecido";
+  }
+
+  if (zohoUid) {
+    await prisma.booking.update({
+      where: { id },
+      data: { zohoEventUid: zohoUid },
+    });
+    redirect(`/admin/reservas/${id}`);
+  }
+
+  redirect(
+    `/admin/reservas/${id}?error=zoho_sync_attempted&message=${encodeURIComponent(errorMessage)}`
+  );
 }

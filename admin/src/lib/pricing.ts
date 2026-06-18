@@ -8,13 +8,15 @@
 
 import { z } from "zod";
 
-export const TRIP_TYPES = ["ida", "volta", "ida_volta", "so_citytour"] as const;
+// Transfer-specific trip types removed. Keep minimal placeholder for compatibility.
+export const TRIP_TYPES = ["generic"] as const;
 export type TripType = (typeof TRIP_TYPES)[number];
 
-export type PaxTier = "sedan" | "van" | "executivo" | "suv" | "suv_eletrico";
-export const PAX_TIERS = ["sedan", "van", "executivo", "suv", "suv_eletrico"] as const;
-export const PAY_METHODS = ["pix", "cartao"] as const;
-export type PayMethod = (typeof PAY_METHODS)[number];
+// Replace concrete vehicle tiers and payment methods with lightweight stubs.
+export type PaxTier = string;
+export const PAX_TIERS: PaxTier[] = [];
+export const PAY_METHODS: string[] = [];
+export type PayMethod = string;
 
 export const MIN_PASSENGERS = 1;
 export const MAX_PASSENGERS = 6;
@@ -22,63 +24,21 @@ export const MAX_PASSENGERS = 6;
 /**
  * Base prices by season and vehicle tier.
  */
-// Tabelas oficiais de preço por trecho (ida ou volta)
-const BASE_PRICES: Record<CanonicalRoute, Record<PaxTier, Record<PayMethod, number>>> = {
-  poa_gramado: {
-    sedan: { pix: 249.9, cartao: 299.94 },
-    van: { pix: 449.9, cartao: 502.63 },
-    executivo: { pix: 349.9, cartao: 390.63 },
-    suv: { pix: 349.9, cartao: 390.63 },
-    suv_eletrico: { pix: 349.9, cartao: 390.63 },
-  },
-  caxias_gramado: {
-    sedan: { pix: 299.9, cartao: 349.94 },
-    van: { pix: 499.9, cartao: 552.63 },
-    executivo: { pix: 399.9, cartao: 440.63 },
-    suv: { pix: 399.9, cartao: 440.63 },
-    suv_eletrico: { pix: 399.9, cartao: 440.63 },
-  },
-};
+const BASE_PRICES: Record<string, Record<string, Record<string, number>>> = {};
 
 function getSeason(_date: Date): "low" | "high" {
   return "low"; // Preço único — sem sazonalidade
 }
 
-export const PAX_LABELS: Record<PaxTier, string> = {
-  sedan: "Sedan Premium - até 4 pessoas",
-  van: "Spin - até 6 pessoas",
-  executivo: "Executivo - até 4 pessoas",
-  suv_eletrico: "SUV Elétrico - até 4 pessoas",
-  suv: "SUV - até 4 pessoas",
-};
+export const PAX_LABELS: Record<string, string> = {};
 
-export const VEHICLE_TITLES: Record<PaxTier, string> = {
-  sedan: "Sedan Premium (até 4 clientes)",
-  van: "Spin (até 6 clientes)",
-  executivo: "Executivo (até 4 clientes)",
-  suv_eletrico: "SUV Elétrico (até 4 clientes)",
-  suv: "SUV (até 4 clientes)",
-};
+export const VEHICLE_TITLES: Record<string, string> = {};
 
-export const VEHICLE_CAPACITY: Record<PaxTier, { max: number; luggage: string }> = {
-  sedan: { max: 4, luggage: "2x23kg + 2x10kg" },
-  van: { max: 6, luggage: "6x23kg + 6x10kg" },
-  suv: { max: 4, luggage: "3x23kg + 3x10kg" },
-  suv_eletrico: { max: 4, luggage: "2x23kg + 3x10kg" },
-  executivo: { max: 4, luggage: "2x23kg + 2x10kg" },
-};
+export const VEHICLE_CAPACITY: Record<string, { max: number; luggage: string }> = {};
 
-export const TRIP_LABELS: Record<TripType, string> = {
-  ida: "Somente Chegada In",
-  volta: "Somente Retorno Out",
-  ida_volta: "Chegada In + Retorno Out",
-  so_citytour: "Só City Tour Privativo",
-};
+export const TRIP_LABELS: Record<string, string> = {};
 
-export const PAY_LABELS: Record<PayMethod, string> = {
-  cartao: "Cartao (ate 4x sem juros)",
-  pix: "Pix",
-};
+export const PAY_LABELS: Record<string, string> = {};
 
 export type AddonId =
   | "romantica"
@@ -93,57 +53,14 @@ export const CHILD_SEAT_TYPES = ["bebe_conforto", "cadeirinha", "assento_elevaca
 export type ChildSeatId = (typeof CHILD_SEAT_TYPES)[number];
 export type ChildSeatSelections = Partial<Record<ChildSeatId, number>>;
 
-export const ADDONS: Record<
-  AddonId,
-  { label: string; price: number; maxQty: number; note?: string; free?: boolean }
-> = {
-  romantica: { label: "Rota Romantica", price: 190.9, maxQty: 1 },
-  recepcao: { label: "Recepcao no aeroporto (placa com nome)", price: 35, maxQty: 1 },
-  equipamento_infantil: {
-    label: "Uso de equipamento de seguranca infantil",
-    price: 25,
-    maxQty: 6,
-    note: "Valor por dispositivo solicitado para o transfer.",
-    free: true,
-  },
-  hotel_porto_alegre: {
-    label: "Saida ou retorno a hotel em Porto Alegre",
-    price: 50,
-    maxQty: 1,
-  },
-  chaves: { label: "Retirada/entrega de chaves (imobiliaria)", price: 20, maxQty: 1 },
-  duas_hospedagens: { label: "Duas hospedagens (2 enderecos)", price: 20, maxQty: 1 },
-  city_tour: { 
-    label: "City Tour Privativo (Gramado e Canela)", 
-    price: 399.9, 
-    maxQty: 1, 
-    note: "Um dia inteiro dedicado a você. Data agendada via WhatsApp." 
-  },
-};
+export const ADDONS: Record<string, { label: string; price: number; maxQty: number; note?: string; free?: boolean }> = {};
 
-export const CHILD_SEAT_LABELS: Record<ChildSeatId, string> = {
-  bebe_conforto: "Bebe conforto",
-  cadeirinha: "Cadeirinha",
-  assento_elevacao: "Assento de elevacao",
-};
+export const CHILD_SEAT_LABELS: Record<string, string> = {};
 
-export const CHILD_SEAT_DETAILS: Record<ChildSeatId, { label: string; hint: string }> = {
-  bebe_conforto: {
-    label: "Bebe conforto",
-    hint: "Para bebes que precisam viajar com o equipamento apropriado.",
-  },
-  cadeirinha: {
-    label: "Cadeirinha",
-    hint: "Para criancas pequenas que precisam de retencao infantil adequada.",
-  },
-  assento_elevacao: {
-    label: "Assento de elevacao",
-    hint: "Para criancas que ja usam elevacao no banco traseiro.",
-  },
-};
+export const CHILD_SEAT_DETAILS: Record<string, { label: string; hint: string }> = {};
 
-export function paxToTier(count: number): PaxTier {
-  return count <= 4 ? "sedan" : "van";
+export function paxToTier(_count: number): PaxTier {
+  return "unknown";
 }
 
 export function isPaxTier(value: unknown): value is PaxTier {
@@ -167,10 +84,8 @@ export function isPassengerCount(value: unknown): value is number {
   );
 }
 
-export function canVehicleHandlePassengers(vehicle: PaxTier, passengerCount: number) {
-  const capacity = VEHICLE_CAPACITY[vehicle];
-  if (!capacity) return false;
-  return passengerCount > 0 && passengerCount <= capacity.max;
+export function canVehicleHandlePassengers(_vehicle: PaxTier, _passengerCount: number) {
+  return true;
 }
 
 export function isChildSeatId(value: unknown): value is ChildSeatId {
@@ -230,24 +145,9 @@ export function resolveEffectiveAddons(
   return effectiveAddons;
 }
 
-export type CanonicalRoute = "poa_gramado" | "caxias_gramado";
-export const CANONICAL_ROUTES: CanonicalRoute[] = ["poa_gramado", "caxias_gramado"];
-
-export const ROUTE_LABELS: Record<
-  CanonicalRoute,
-  { originName: string; destName: string; label: string }
-> = {
-  poa_gramado: {
-    originName: "Aeroporto Porto Alegre (POA)",
-    destName: "Gramado / Canela",
-    label: "Aeroporto POA ↔ Gramado/Canela",
-  },
-  caxias_gramado: {
-    originName: "Aeroporto de Caxias do Sul",
-    destName: "Gramado / Canela",
-    label: "Aeroporto Caxias ↔ Gramado/Canela",
-  },
-};
+export type CanonicalRoute = string;
+export const CANONICAL_ROUTES: CanonicalRoute[] = [];
+export const ROUTE_LABELS: Record<string, { originName: string; destName: string; label: string }> = {};
 
 export function canonicalTransferRoute(
   tripType: TripType,

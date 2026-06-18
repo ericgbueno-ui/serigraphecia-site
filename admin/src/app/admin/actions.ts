@@ -4,10 +4,22 @@ import { prisma } from "@/lib/db";
 import { canonicalTransferRoute } from "@/lib/pricing";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { notifyTeam } from "@/lib/notify";
+import { sendWhatsApp } from "@/lib/meta-whatsapp";
+import { criarEventoZoho, editarEventoZoho, excluirEventoZoho } from "@/lib/zoho-calendar";
 import { getIsAdmin } from "@/lib/server/adminAuth";
 
 export async function deleteBooking(id: string) {
   if (!(await getIsAdmin())) throw new Error("Acesso negado.");
+
+  // Exclui evento do Zoho Calendar se existir
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    select: { zohoEventUid: true },
+  });
+  if (booking?.zohoEventUid) {
+    excluirEventoZoho(booking.zohoEventUid).catch(() => {});
+  }
 
   // Delete dependents first (passengers, payments)
   await prisma.passenger.deleteMany({ where: { bookingId: id } });
@@ -51,6 +63,60 @@ export async function updateBookingStatus(
 
   await prisma.booking.update({ where: { id }, data: { status } });
 
+  if (status === "CONFIRMED") {
+    const msg =
+      `🔄 *STATUS ATUALIZADO → CONFIRMADO*\n\n` +
+      `🔗 Reserva: https://multitrip.com.br/admin/reservas/${id}`;
+    notifyTeam(msg).catch(() => {});
+
+    // Se não tem evento no Zoho ainda, cria agora
+    if (booking && !booking.zohoEventUid) {
+      let cityTourDate = null;
+      try {
+        const optObj = JSON.parse(booking.optionalsJson || "{}");
+        if (optObj.cityTour?.enabled && optObj.cityTour?.date) {
+          cityTourDate = optObj.cityTour.date;
+        }
+      } catch {}
+
+      criarEventoZoho({
+        bookingId: id,
+        clienteName: booking.customer?.name ?? "Cliente",
+        clientePhone: booking.customer?.phone ?? "",
+        veiculo: booking.vehicleType ?? "Não informado",
+        idaDate: booking.idaDate,
+        idaFlightTime: booking.idaFlightTime,
+        idaFlightNumber: booking.idaFlightNumber,
+        voltaDate: booking.voltaDate,
+        voltaFlightTime: booking.voltaFlightTime,
+        voltaFlightNumber: booking.voltaFlightNumber,
+        cityTourDate,
+        hotel: booking.hotel,
+        hotelAddress: booking.hotelAddress,
+        routeLabel: booking.routeLabel,
+        payMethod: booking.payMethod,
+        depositCents: booking.depositCents,
+        remainderCents: booking.remainderCents,
+        partida: booking.origin ?? "Aeroporto Salgado Filho (POA)",
+        destino: booking.dest ?? "Gramado/Canela",
+        passengerCount: booking.passengerCount ?? 1,
+        totalCents: booking.totalCents ?? 0,
+        optionalsJson: booking.optionalsJson,
+        origem: "manual",
+      })
+        .then((uid) => {
+          if (uid && typeof uid === "string") {
+            prisma.booking.update({ where: { id }, data: { zohoEventUid: uid } }).catch(() => {});
+          }
+        })
+        .catch(() => {});
+    }
+  }
+
+  if (status === "CANCELLED" && booking?.zohoEventUid) {
+    excluirEventoZoho(booking.zohoEventUid).catch(() => {});
+    await prisma.booking.update({ where: { id }, data: { zohoEventUid: null } });
+  }
 
   redirect(`/admin/reservas/${id}`);
 }
@@ -220,6 +286,54 @@ export async function updateBooking(id: string, formData: FormData) {
     },
   });
 
+  // ── saveDriverInfo adicionado abaixo ──
+
+  // Sincroniza Zoho Calendar
+  const eventoData = {
+    bookingId: id,
+    clienteName: name,
+    clientePhone: phone,
+    veiculo: vehicleType,
+    idaDate,
+    idaFlightTime,
+    idaFlightNumber,
+    voltaDate,
+    voltaFlightTime,
+    voltaFlightNumber,
+    cityTourDate,
+    hotel,
+    hotelAddress,
+    routeLabel: booking.routeLabel,
+    payMethod,
+    depositCents,
+    remainderCents,
+    partida: booking.origin ?? "Aeroporto Salgado Filho (POA)",
+    destino: booking.dest ?? "Gramado/Canela",
+    passengerCount,
+    totalCents,
+    optionalsJson: booking.optionalsJson,
+    origem: "manual" as const,
+  };
+
+  if (booking.zohoEventUid) {
+    // Atualiza evento existente
+    editarEventoZoho(booking.zohoEventUid, eventoData)
+      .then((newUid) => {
+        if (newUid && typeof newUid === "string" && newUid !== booking.zohoEventUid) {
+          prisma.booking.update({ where: { id }, data: { zohoEventUid: newUid } }).catch(() => {});
+        }
+      })
+      .catch(() => {});
+  } else if (idaDate || voltaDate || cityTourDate) {
+    // Cria evento se ainda não existe e temos data
+    criarEventoZoho(eventoData)
+      .then((uid) => {
+        if (uid && typeof uid === "string")
+          prisma.booking.update({ where: { id }, data: { zohoEventUid: uid } }).catch(() => {});
+      })
+      .catch(() => {});
+  }
+
   redirect(`/admin/reservas/${id}`);
 }
 
@@ -288,6 +402,11 @@ export async function saveDriverInfo(id: string, formData: FormData) {
     checkDriverConflict(driverCityTourWhatsapp, "CityTour", currentBooking?.idaDate),
   ]);
 
+  if (conflictWarnings.length > 0) {
+    const msg = conflictWarnings.join("\n") + `\nReserva atual: https://multitrip.com.br/admin/reservas/${id}`;
+    notifyTeam(msg).catch(() => {});
+  }
+
   await prisma.booking.update({
     where: { id },
     data: {
@@ -309,6 +428,79 @@ export async function saveDriverInfo(id: string, formData: FormData) {
       driverCityTourWhatsapp: driverCityTourWhatsapp ?? undefined,
     },
   });
+
+  if (notify && (driverInName || driverOutName)) {
+    const booking = await prisma.booking.findUnique({
+      where: { id },
+      select: {
+        customer: { select: { name: true, phone: true } },
+        tripType: true,
+        idaDate: true,
+        idaFlightTime: true,
+        voltaDate: true,
+        voltaFlightTime: true,
+      },
+    });
+
+    if (booking?.customer?.phone) {
+      const clienteName = booking.customer.name.split(" ")[0];
+
+      const fmtDate = (d: Date | null | undefined) =>
+        d
+          ? new Date(d).toLocaleDateString("pt-BR", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })
+          : null;
+
+      let msg =
+        `Olá, ${clienteName}! 🤎 Aqui é a Jolie da Multi Trip.\n\n` +
+        `Sua viagem está confirmada e seus motoristas já estão designados:\n\n`;
+
+      if (driverInName && booking.tripType !== "volta") {
+        const dataIn = fmtDate(booking.idaDate);
+        msg +=
+          `🛬 *Chegada (IN):*\n` +
+          `🧑‍✈️ Motorista: ${driverInName}\n` +
+          `🚗 Veículo: ${driverInCar ?? "—"}\n` +
+          (driverInWhatsapp ? `📱 WhatsApp: +55 ${driverInWhatsapp}\n` : "") +
+          (dataIn ? `📅 Data: ${dataIn}\n` : "") +
+          (booking.idaFlightTime ? `⏰ Horário do voo: ${booking.idaFlightTime}\n` : "") +
+          `\n`;
+      }
+
+      if (driverOutName && booking.tripType !== "ida") {
+        const dataOut = fmtDate(booking.voltaDate);
+        msg +=
+          `🛫 *Retorno (OUT):*\n` +
+          `🧑‍✈️ Motorista: ${driverOutName}\n` +
+          `🚗 Veículo: ${driverOutCar ?? "—"}\n` +
+          (driverOutWhatsapp ? `📱 WhatsApp: +55 ${driverOutWhatsapp}\n` : "") +
+          (dataOut ? `📅 Data: ${dataOut}\n` : "") +
+          (booking.voltaFlightTime ? `⏰ Horário do voo: ${booking.voltaFlightTime}\n` : "") +
+          `\n`;
+      }
+
+      if (driverCityTourName) {
+        msg +=
+          `🏙️ *City Tour:*\n` +
+          `🧑‍✈️ Motorista: ${driverCityTourName}\n` +
+          `🚗 Veículo: ${driverCityTourCar ?? "—"}\n` +
+          (driverCityTourWhatsapp ? `📱 WhatsApp: +55 ${driverCityTourWhatsapp}\n` : "") +
+          `\n`;
+      }
+
+      msg += `Qualquer dúvida é só chamar aqui ou falar diretamente com seu motorista. Boa viagem! ✈️`;
+
+      sendWhatsApp(booking.customer.phone, msg).catch(() => {});
+
+      await prisma.booking.update({
+        where: { id },
+        data: { driverNotifiedAt: new Date() },
+      });
+    }
+  }
 
   redirect(`/admin/reservas/${id}`);
 }
@@ -403,7 +595,79 @@ export async function marcarRestantePago(id: string) {
   redirect(`/admin/reservas/${id}`);
 }
 
+// ─── Forçar sincronização com o Zoho Calendar ────────────────────────────────
+
 export async function forceSyncZoho(id: string) {
   if (!(await getIsAdmin())) throw new Error("Acesso negado.");
-  redirect(`/admin/reservas/${id}`);
+
+  const booking = await prisma.booking.findUnique({
+    where: { id },
+    include: { customer: true },
+  });
+
+  if (!booking) throw new Error("Reserva nao encontrada.");
+  if (booking.zohoEventUid) redirect(`/admin/reservas/${id}`);
+
+  let errorMessage = "";
+  let zohoUid = "";
+  let cityTourDate = null;
+  try {
+    const optObj = JSON.parse(booking.optionalsJson || "{}");
+    if (optObj.cityTour?.enabled && optObj.cityTour?.date) {
+      cityTourDate = optObj.cityTour.date;
+    }
+  } catch {}
+
+  if (!booking.idaDate && !booking.voltaDate && !cityTourDate) {
+    redirect(
+      `/admin/reservas/${id}?error=zoho_sync_attempted&message=${encodeURIComponent("Reserva sem data operacional para sincronizar.")}`
+    );
+  }
+
+  try {
+    const uid = await criarEventoZoho({
+      bookingId: booking.id,
+      clienteName: booking.customer?.name || "Sem nome",
+      clientePhone: booking.customer?.phone || "-",
+      veiculo: booking.vehicleType,
+      idaDate: booking.idaDate,
+      idaFlightTime: booking.idaFlightTime,
+      idaFlightNumber: booking.idaFlightNumber,
+      voltaDate: booking.voltaDate,
+      voltaFlightTime: booking.voltaFlightTime,
+      voltaFlightNumber: booking.voltaFlightNumber,
+      cityTourDate,
+      hotel: booking.hotel,
+      hotelAddress: booking.hotelAddress,
+      routeLabel: booking.routeLabel,
+      payMethod: booking.payMethod,
+      depositCents: booking.depositCents,
+      remainderCents: booking.remainderCents,
+      partida: booking.origin || "Aeroporto Salgado Filho (POA)",
+      destino: booking.dest || "Gramado/Canela",
+      passengerCount: booking.passengerCount,
+      totalCents: booking.totalCents,
+      optionalsJson: booking.optionalsJson,
+      origem: booking.id.startsWith("wabk_")
+        ? "whatsapp"
+        : booking.id.startsWith("bk_")
+          ? "site"
+          : "manual",
+    });
+    if (uid) zohoUid = uid;
+  } catch (err: any) {
+    errorMessage = err.message || "Erro desconhecido";
+  }
+
+  if (zohoUid) {
+    await prisma.booking.update({
+      where: { id },
+      data: { zohoEventUid: zohoUid },
+    });
+    redirect(`/admin/reservas/${id}`);
+  }
+
+  redirect(
+    `/admin/reservas/${id}?error=zoho_sync_attempted&message=${encodeURIComponent(errorMessage)}`
+  );
 }

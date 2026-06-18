@@ -16,136 +16,21 @@ import { StatsSection } from "@/app/components/StatsSection";
 
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE.url),
-  title: "Transfer Privativo Porto Alegre → Gramado | Multi Trip",
-  description:
-    "Transfer privativo de Porto Alegre para Gramado e Canela. Sem stress, sem espera — do aeroporto até a Serra Gaúcha com conforto, pontualidade e atendimento humano real.",
-  alternates: { canonical: SITE.url },
-  openGraph: {
-    type: "website",
-    locale: "pt_BR",
-    siteName: SITE.brand,
-    url: SITE.url,
-    title: "Transfer Privativo Porto Alegre → Gramado | Multi Trip",
-    description:
-      "Transfer privativo de Porto Alegre para Gramado e Canela. Sem stress, sem espera — do aeroporto até a Serra Gaúcha com conforto, pontualidade e atendimento humano real.",
-    images: [
-      {
-        url: `${SITE.url}/photos/serra/portico.webp`,
-        width: 1200,
-        height: 630,
-        alt: "Multi Trip — Transfer Privativo para a Serra Gaúcha",
-      },
-    ],
-  },
-};
-
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "LocalBusiness",
-      "@id": `${SITE.url}#business`,
-      name: SITE.legalName,
-      url: SITE.url,
-      telephone: `+${SITE.whatsE164}`,
-      email: "atendimento@multitrip.com.br",
-      description:
-        "Transfer privativo de Porto Alegre para Gramado e Canela. Atendimento 24h, conforto e pontualidade.",
-      image: `${SITE.url}/brand/logo-horizontal.webp`,
-      logo: `${SITE.url}/brand/logo-horizontal.webp`,
-      priceRange: "$$",
-      currenciesAccepted: "BRL",
-      paymentAccepted: "PIX, Cartão de Crédito",
-      address: {
-        "@type": "PostalAddress",
-        streetAddress: "Rua Nair Garcia Martins, 295/171",
-        addressLocality: "Porto Alegre",
-        addressRegion: "RS",
-        postalCode: "91760-430",
-        addressCountry: "BR",
-      },
-      geo: {
-        "@type": "GeoCoordinates",
-        latitude: -30.0346,
-        longitude: -51.2177,
-      },
-      openingHoursSpecification: [
-        {
-          "@type": "OpeningHoursSpecification",
-          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-          opens: "00:00",
-          closes: "23:59",
-        },
-      ],
-      areaServed: [
-        { "@type": "City", name: "Porto Alegre" },
-        { "@type": "City", name: "Gramado" },
-        { "@type": "City", name: "Canela" },
-        { "@type": "City", name: "Caxias do Sul" },
-        { "@type": "State", name: "Rio Grande do Sul" },
-      ],
-      aggregateRating: {
-        "@type": "AggregateRating",
-        ratingValue: "5.0",
-        reviewCount: "47",
-        bestRating: "5",
-        worstRating: "1",
-      },
-      sameAs: [SITE.instagramUrl],
-    },
-    {
-      "@type": "Service",
-      "@id": `${SITE.url}#service`,
-      name: "Transfer Privativo Porto Alegre → Gramado e Canela",
-      url: SITE.url,
-      provider: { "@id": `${SITE.url}#business` },
-      areaServed: [
-        { "@type": "City", name: "Porto Alegre" },
-        { "@type": "City", name: "Gramado" },
-        { "@type": "City", name: "Canela" },
-      ],
-    },
-    {
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Home", item: SITE.url },
-      ],
-    },
-  ],
+  title: "Serviço indisponível — Contato de suporte",
+  description: "As reservas e pagamentos foram temporariamente desativados. Entre em contato com nossa equipe.",
 };
 
 export default function HomePage() {
   return (
-    <>
-      <Script
-        id="jsonld-home"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-
-      <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
-        <Header />
-
-
-
-        <main className="overflow-x-hidden">
-          <Hero />
-          <StatsSection />
-          <PricingSection />
-          <BenefitsSection />
-          <RotaRomantica />
-          <HowItWorksSection whatsMessage="Olá, Jolie! Quero reservar meu transfer Porto Alegre → Gramado/Canela." />
-          <TestimonialsSection />
-          <div className="mx-auto max-w-6xl px-4 md:px-6 py-12">
-            <GoogleReviewsSection />
-          </div>
-          <ExperienceUpgradeSection />
-          <TrustBar />
-        </main>
-
-        <Footer />
+    <div className="min-h-screen flex items-center justify-center bg-white text-black">
+      <div style={{ maxWidth: 820 }} className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Serviço de reservas temporariamente desativado</h1>
+        <p className="mb-4">Removemos temporariamente a funcionalidade automática de reservas e pagamentos.</p>
+        <p className="mb-4">Para concluir reservas ou receber assistência, entre em contato com nossa equipe:</p>
+        <p className="mb-2">Telefone/WhatsApp: <strong>{SITE.support?.phone ?? SITE.whatsE164}</strong></p>
+        <p className="mb-6">E-mail: <strong>atendimento@multitrip.com.br</strong></p>
+        <a href="/admin" className="inline-block px-4 py-2 bg-black text-white rounded">Área Administrativa</a>
       </div>
-    </>
+    </div>
   );
 }

@@ -11,7 +11,11 @@ import {
 } from "@/lib/pricing";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { notifyTeam } from "@/lib/notify";
+import { sendWhatsAppTemplate } from "@/lib/meta-whatsapp";
+import { criarEventoZoho } from "@/lib/zoho-calendar";
 import { getIsAdmin } from "@/lib/server/adminAuth";
+import { markLeadConverted } from "@/lib/lead";
 
 export async function createManualBooking(formData: FormData) {
   if (!(await getIsAdmin())) throw new Error("Acesso negado.");
@@ -222,6 +226,11 @@ export async function createManualBooking(formData: FormData) {
   });
 
   if (isPaid) {
+    // Marca lead como convertido se existir no CRM
+    if (whatsapp) {
+      markLeadConverted(whatsapp, booking.id).catch(() => {});
+    }
+
     // Generate standard payment record if paid
     await prisma.payment.create({
       data: {
@@ -239,6 +248,111 @@ export async function createManualBooking(formData: FormData) {
   prisma.booking
     .update({ where: { id: booking.id }, data: { contractPdfUrl: `/api/contracts/${booking.id}` } })
     .catch(() => {});
+
+  const fmtDate = (d: Date | null) =>
+    d ? d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : "—";
+  const dataFormatada = fmtDate(idaDate);
+  const voltaFormatada = fmtDate(voltaDate);
+  const valorFormatado = (totalCents / 100).toFixed(2).replace(".", ",");
+
+  const msgReserva =
+    `📋 *NOVA RESERVA*\n\n` +
+    `👤 ${name}\n` +
+    `📱 ${whatsapp || "—"}\n` +
+    `👥 ${passengerCount} pessoa${passengerCount !== 1 ? "s" : ""}\n` +
+    `🚗 ${vehicleType}\n` +
+    `🏨 ${hotel || "—"}\n` +
+    (tripType === "ida_volta"
+      ? `✈️ Chegada: ${dataFormatada}${idaTime ? ` às ${idaTime}` : ""}\n` +
+        `🛫 Retorno: ${voltaFormatada}${voltaTime ? ` às ${voltaTime}` : ""}\n`
+      : tripType === "ida"
+        ? `✈️ Chegada: ${dataFormatada}${idaTime ? ` às ${idaTime}` : ""}\n`
+        : `🛫 Retorno: ${voltaFormatada}${voltaTime ? ` às ${voltaTime}` : ""}\n`) +
+    `💳 ${status === "paid_pix50" ? "PIX 50% (sinal)" : status === "paid_cartao" ? "Cartão integral" : status === "paid_pix" ? "PIX total" : rawPayMethod === "pix_50" ? "PIX 50% entrada" : rawPayMethod === "pix_total" ? "PIX total" : "Cartão"}\n` +
+    `💰 R$ ${valorFormatado}\n` +
+    `🔗 https://multitrip.com.br/admin/reservas/${booking.id}`;
+  await notifyTeam(msgReserva).catch((err) =>
+    console.error("[BOOKING] Falha notifyTeam nova-reserva:", err.message)
+  );
+
+  let cityTourDate = null;
+  try {
+    const optObj = JSON.parse(optionalsJson || "{}");
+    if (optObj.cityTour?.enabled && optObj.cityTour?.date) {
+      cityTourDate = optObj.cityTour.date;
+    }
+  } catch {}
+
+  // Cria evento no Zoho Calendar (só se tiver data confirmada)
+  if (idaDate || voltaDate || cityTourDate) {
+    const zohoUid = await criarEventoZoho({
+      bookingId: booking.id,
+      clienteName: name,
+      clientePhone: whatsapp,
+      veiculo: vehicleType,
+      idaDate,
+      idaFlightTime: idaTime || null,
+      idaFlightNumber: idaFlight || null,
+      voltaDate: voltaDate || null,
+      voltaFlightTime: voltaTime || null,
+      voltaFlightNumber: voltaFlight || null,
+      cityTourDate,
+      hotel,
+      hotelAddress: hotelAddress || null,
+      routeLabel,
+      payMethod: resolvedPayMethod,
+      depositCents,
+      remainderCents,
+      partida: hotel || "Aeroporto Salgado Filho (POA)",
+      destino: "Gramado/Canela",
+      passengerCount,
+      totalCents,
+      optionalsJson,
+      origem: "manual",
+    }).catch(() => null);
+
+    if (zohoUid && typeof zohoUid === "string") {
+      await prisma.booking
+        .update({
+          where: { id: booking.id },
+          data: { zohoEventUid: zohoUid },
+        })
+        .catch(() => {});
+    }
+  }
+
+  // Notifica o cliente via template WhatsApp (primeiro contato = precisa de template aprovado)
+  if (whatsapp) {
+    const primeiroNome = name.split(" ")[0] || "Cliente";
+    const isPaid = status === "paid";
+
+    const datasResumo =
+      tripType === "ida_volta"
+        ? `Chegada: ${dataFormatada}${idaTime ? ` às ${idaTime}` : ""} | Retorno: ${voltaFormatada}${voltaTime ? ` às ${voltaTime}` : ""}`
+        : tripType === "ida"
+          ? `Chegada: ${dataFormatada}${idaTime ? ` às ${idaTime}` : ""}`
+          : `Retorno: ${voltaFormatada}${voltaTime ? ` às ${voltaTime}` : ""}`;
+
+    await sendWhatsAppTemplate(
+      whatsapp,
+      "multitrip_reserva_cliente",
+      "pt_BR",
+      [{
+        type: "body",
+        parameters: [
+          { type: "text", text: primeiroNome },
+          { type: "text", text: String(passengerCount) },
+          { type: "text", text: vehicleType },
+          { type: "text", text: hotel || "—" },
+          { type: "text", text: datasResumo },
+          { type: "text", text: valorFormatado },
+          { type: "text", text: isPaid ? "Pagamento confirmado ✅" : "Aguardando pagamento ⏳" },
+        ],
+      }]
+    ).catch((err) =>
+      console.error("[BOOKING] Falha template cliente nova-reserva:", err.message)
+    );
+  }
 
   redirect("/admin");
 }

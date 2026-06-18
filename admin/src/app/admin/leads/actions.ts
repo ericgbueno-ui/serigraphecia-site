@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/db";
 import { getIsAdmin } from "@/lib/server/adminAuth";
 import { revalidatePath } from "next/cache";
+import { recalculateLeadScore } from "@/lib/lead";
 
 export async function deleteLead(id: string) {
   if (!(await getIsAdmin())) throw new Error("Acesso negado.");
@@ -77,6 +78,7 @@ export async function updateLeadDetails(
   });
 
   // Recalcula score após atualização de perfil
+  await recalculateLeadScore(id).catch(() => {});
 
   revalidatePath("/admin/leads");
 }

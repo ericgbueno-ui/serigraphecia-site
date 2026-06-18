@@ -1,16 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
 
 import {
-  calcularTransfer,
   brl,
   VEHICLE_CAPACITY,
   type CanonicalRoute,
   type PaxTier,
-  type TripType,
 } from "@/lib/pricing";
 import { waLink, SITE } from "@/lib/site";
 import { trackReserveClick, trackWhatsAppClick, trackInitiateCheckout } from "@/lib/tracking";
@@ -96,32 +92,18 @@ function buildWhatsMsg(opts: { vehicleLabel: string; routeLabel: string }) {
 }
 
 export function ReservaForm({ routeId = ROUTE_ID }: { routeId?: string }) {
-  const router = useRouter();
   const activeRouteId = routeId as CanonicalRoute;
   const routeLabel = ROUTE_LABELS[activeRouteId] ?? ROUTE_LABELS[ROUTE_ID];
 
   const handleSelectVehicle = (v: VehicleOption) => {
-    if (v.flow === "whatsapp") {
-      trackWhatsAppClick(`reserva_form_${v.id}`);
-      const msg = buildWhatsMsg({
-        vehicleLabel: v.label,
-        routeLabel,
-      });
-      window.open(waLink(msg, WHATS_ERIC_RITA), "_blank", "noopener");
-      return;
-    }
-
-    const basePrice = calcularTransfer({ pax: v.id, tripType: "ida_volta", payMethod: "pix", routeId: activeRouteId });
-    trackReserveClick(`reserva_form_${v.id}`);
-    trackInitiateCheckout(Math.round(basePrice.total * 100), v.label);
-
-    const params = new URLSearchParams({
-      routeId: activeRouteId,
-      pax: v.id,
-      fromWidget: "1",
+    // All vehicle selections route to WhatsApp for human support
+    // (automated checkout disabled in consolidated admin)
+    trackWhatsAppClick(`reserva_form_${v.id}`);
+    const msg = buildWhatsMsg({
+      vehicleLabel: v.label,
+      routeLabel,
     });
-
-    router.push(`/checkout?${params.toString()}`);
+    window.open(waLink(msg, WHATS_ERIC_RITA), "_blank", "noopener");
   };
 
   return (
@@ -138,13 +120,7 @@ export function ReservaForm({ routeId = ROUTE_ID }: { routeId?: string }) {
 
       <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {VEHICLES.map((v) => {
-          // Calculate starting prices for display (baseline: ida_volta, pix)
-          const basePrice = calcularTransfer({
-            pax: v.id,
-            tripType: "ida_volta",
-            payMethod: "pix",
-            routeId: activeRouteId,
-          });
+          // Pricing disabled — all vehicle options route to WhatsApp support
 
           return (
             <div
@@ -205,9 +181,7 @@ export function ReservaForm({ routeId = ROUTE_ID }: { routeId?: string }) {
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[color:var(--mt-gold)]">✓</span>{" "}
-                    {v.flow === "direct"
-                      ? `A partir de ${brl(basePrice.total)} no PIX`
-                      : "Valores e disponibilidade via WhatsApp"}
+                    Valores e disponibilidade via WhatsApp
                   </li>
                   <li className="flex items-center gap-2">
                     <span className="text-[color:var(--mt-gold)]">✓</span> Transfer privativo

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PaxTier, calcularTransfer, PAX_TIERS, TRIP_LABELS, VEHICLE_TITLES } from "@/lib/pricing";
+import { PaxTier, PAX_TIERS, TRIP_LABELS, VEHICLE_TITLES } from "@/lib/pricing";
 
 // ─────────────────────────────────────────────────────────────
 // CORES & TOKENS
@@ -236,13 +236,8 @@ export function TabelaPrecos({
         }}
       >
         {tripOptions.map((tripOpt) => {
-          const price = calcularTransfer({
-            pax: selectedVehicle as PaxTier,
-            tripType: tripOpt.id,
-            payMethod: selectedPay || "cartao",
-            date,
-          }).total;
-
+          // Pricing disabled in consolidated admin
+          const price = 0;
           const sel = selectedTrip === tripOpt.id;
 
           return (
@@ -301,23 +296,13 @@ export function TabelaPrecos({
               <div
                 style={{ fontSize: 24, fontWeight: 700, color: sel ? BRAND.goldLight : BRAND.gold }}
               >
-                {fmt(price)}
+                Contate suporte
               </div>
               {tripOpt.id === "ida_volta" && selectedVehicle && selectedPay && (
                 <div style={{ fontSize: 11, color: sel ? "#aaa" : BRAND.muted, marginTop: 2 }}>
-                  Economia de{" "}
-                  {fmt(
-                    calcularTransfer({
-                      pax: selectedVehicle,
-                      tripType: "ida",
-                      payMethod: selectedPay,
-                      date,
-                    }).total *
-                      2 -
-                      calcularTransfer({
-                        pax: selectedVehicle,
-                        tripType: "ida_volta",
-                        payMethod: selectedPay,
+                  Fale conosco para conhecer as opções de economia.
+                </div>
+              )}
                         date,
                       }).total
                   )}{" "}

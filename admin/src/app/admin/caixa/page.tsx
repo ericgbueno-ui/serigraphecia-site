@@ -1,6 +1,7 @@
 import { requireAdmin } from "@/lib/server/adminAuth";
 import Link from "next/link";
 import { prisma } from "@/lib/db";
+import { toBrtDateString, fetchMetaAdInsights } from "@/lib/meta-ads";
 import { AReceberCard } from "./AReceberCard";
 
 export const dynamic = "force-dynamic";
@@ -100,7 +101,7 @@ export default async function AdminCaixaPage() {
   });
 
   // ── Datas de referência ────────────────────────────────────────────────────
-  const today = new Date().toLocaleDateString("sv-SE", { timeZone: "America/Sao_Paulo" });
+  const today = toBrtDateString();
   const currentMonth = today.slice(0, 7);
 
   // ── Gastos com Motoristas — lê de optionalsJson (sem migration) ──────────
@@ -131,6 +132,43 @@ export default async function AdminCaixaPage() {
     .filter((r: any) => monthKey(new Date(r.createdAt)) === currentMonth)
     .reduce((s: number, r: any) => s + r.total, 0);
 
+  // ── Meta Ads — busca direta na API do Meta (dia 01 ao hoje) ──────────────
+  const [currentYear, currentMonthNum] = currentMonth.split("-").map(Number);
+  const lastDayOfMonth = new Date(currentYear, currentMonthNum, 0).getDate();
+  const monthStart = `${currentMonth}-01`;
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let adSpendRows: any[] = [];
+  let metaAdsError: string | null = null;
+
+  try {
+    const insights = await fetchMetaAdInsights(monthStart, today);
+    adSpendRows = insights.map((i) => ({
+      date: i.date,
+      spend: i.spend,
+      impressions: i.impressions,
+      clicks: i.clicks,
+      reach: i.reach,
+      fetchedAt: new Date(),
+    }));
+  } catch (err: any) {
+    metaAdsError = err?.message ?? "Erro ao buscar dados do Meta Ads";
+    console.error("[caixa] Meta Ads API:", metaAdsError);
+  }
+
+  const adSpendToday = adSpendRows.find((r) => r.date === today)?.spend ?? 0;
+  const adSpendMonth = adSpendRows.reduce((s: number, r: any) => s + (r.spend ?? 0), 0);
+  const adSpendTotal = adSpendMonth;
+  const lastFetch = adSpendRows.length > 0 ? new Date() : null;
+
+  // Reservas confirmadas do mês atual (para CPA) — mesmo filtro híbrido
+  const bookingsThisMonth = bookings.filter((b) =>
+    monthKey(getBookingDate(b)) === currentMonth
+  ).length;
+
+  const cpaMonth = bookingsThisMonth > 0
+    ? adSpendMonth / bookingsThisMonth
+    : null;
 
 
   // ── Roteiros e Cashbacks Calculations ──
@@ -204,7 +242,7 @@ export default async function AdminCaixaPage() {
 
   const recebidoFrotaMes = recebidoMes - recebidoRoteirosMes;
 
-  const lucroMes = recebidoMes - driverPaymentMonth;
+  const lucroMes = recebidoMes - driverPaymentMonth - Math.round(adSpendMonth * 100);
 
   // ── Breakdown por mês ──
   // Faturamento e recebido: agrupados por data de criação
@@ -404,6 +442,9 @@ export default async function AdminCaixaPage() {
                 </span>
                 <span style={{ fontSize: "12px", color: "#f87171" }}>
                   − Motoristas: <strong>{brl(driverPaymentMonth)}</strong>
+                </span>
+                <span style={{ fontSize: "12px", color: "#fb923c" }}>
+                  − Meta Ads: <strong>{brl(Math.round(adSpendMonth * 100))}</strong>
                 </span>
               </div>
             </div>

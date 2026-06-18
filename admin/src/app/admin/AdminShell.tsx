@@ -25,15 +25,27 @@ const SECTIONS: MenuSection[] = [
   {
     label: "COMERCIAL",
     items: [
+      { href: "/admin/painel/whatsapp", label: "WhatsApp CRM", icon: "💬" },
+      { href: "/admin/b2b", label: "CRM B2B", icon: "💼" },
+      { href: "/admin/afiliados", label: "Afiliados", icon: "🤝" },
+    ],
+  },
+  {
+    label: "INTELIGÊNCIA",
+    items: [
       { href: "/admin/leads", label: "Leads & Pipeline", icon: "🎯" },
       { href: "/admin/clientes", label: "Clientes", icon: "🤎" },
-      { href: "/admin/afiliados", label: "Afiliados", icon: "🤝" },
+      { href: "/admin/inteligencia", label: "Jolie Inteligência", icon: "🧠" },
+      { href: "/admin/tendencias", label: "Tendências", icon: "📈" },
+      { href: "/admin/analytics", label: "Analytics", icon: "📊" },
     ],
   },
   {
     label: "GESTÃO",
     items: [
       { href: "/admin/caixa", label: "Financeiro", icon: "💰" },
+      { href: "/admin/marketing", label: "Marketing", icon: "📣" },
+      { href: "/admin/automacoes", label: "Automações", icon: "⚡" },
     ],
   },
 ];
@@ -46,6 +58,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     OPERAÇÃO: true,
     COMERCIAL: false,
+    INTELIGÊNCIA: false,
     GESTÃO: false,
   });
 
