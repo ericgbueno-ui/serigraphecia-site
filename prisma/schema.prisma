@@ -112,6 +112,7 @@ model Customer {
 
   @@index([phone])
   @@index([cpf])
+  @@map("cliente")
 }
 
 model Affiliate {
@@ -132,6 +133,7 @@ model Affiliate {
   payments     AffiliatePayment[]
 
   @@index([active])
+  @@map("afiliado")
 }
 
 model AffiliatePayment {
@@ -217,6 +219,7 @@ model Booking {
   payments                Payment[]
 
   @@index([status])
+  @@map("reserva")
 }
 
 model Passenger {
