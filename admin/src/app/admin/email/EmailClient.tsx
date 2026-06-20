@@ -239,7 +239,12 @@ export default function EmailClient() {
     } finally { setLoadingJobs(false); }
   }, []);
 
-  useEffect(() => { if (view === "schedule") void loadBatchJobs(); }, [view, loadBatchJobs]);
+  useEffect(() => {
+    if (view === "schedule") {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      void loadBatchJobs();
+    }
+  }, [view, loadBatchJobs]);
 
   async function handleCreateJob() {
     if (!jobSubject.trim() || !jobBody.trim()) {
@@ -347,7 +352,10 @@ export default function EmailClient() {
     }
   }, []);
 
-  useEffect(() => { void loadCampaigns(); }, [loadCampaigns]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadCampaigns();
+  }, [loadCampaigns]);
 
   const fetchAudienceCount = useCallback(async (a: AudienceType) => {
     if (a === "manual") { setAudienceCount(null); return; }
@@ -358,7 +366,10 @@ export default function EmailClient() {
     } catch { setAudienceCount(null); }
   }, []);
 
-  useEffect(() => { void fetchAudienceCount(audience); }, [audience, fetchAudienceCount]);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void fetchAudienceCount(audience);
+  }, [audience, fetchAudienceCount]);
 
   function applyTemplate(id: string) {
     setSelectedTemplate(id);

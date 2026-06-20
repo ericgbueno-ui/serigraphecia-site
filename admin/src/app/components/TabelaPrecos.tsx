@@ -303,12 +303,6 @@ export function TabelaPrecos({
                   Fale conosco para conhecer as opções de economia.
                 </div>
               )}
-                        date,
-                      }).total
-                  )}{" "}
-                  vs separado
-                </div>
-              )}
             </button>
           );
         })}

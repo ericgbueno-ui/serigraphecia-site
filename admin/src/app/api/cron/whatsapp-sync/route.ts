@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import makeWASocket, { DisconnectReason, fetchLatestWaWebVersion } from '@whiskeysockets/baileys';
 import pino from 'pino';
-import { usePrismaAuthState } from '@/lib/whatsapp-auth';
+import { getPrismaAuthState } from '@/lib/whatsapp-auth';
 import { prisma } from '@/lib/db';
 import { trackLeadEvent } from '@/lib/lead';
 import { verifyCronAuth } from '@/lib/cron-auth';
@@ -16,7 +16,7 @@ export async function GET(req: Request) {
   const phone = '51986876557';
 
   try {
-    const { state, saveCreds } = await usePrismaAuthState(phone);
+    const { state, saveCreds } = await getPrismaAuthState(phone);
 
     if (!state.creds || !state.creds.registered) {
       return NextResponse.json({ success: false, message: 'WhatsApp session not authenticated' });

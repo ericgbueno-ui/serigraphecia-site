@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import makeWASocket, { DisconnectReason, fetchLatestWaWebVersion } from '@whiskeysockets/baileys';
 import pino from 'pino';
 import QRCode from 'qrcode';
-import { usePrismaAuthState } from '@/lib/whatsapp-auth';
+import { getPrismaAuthState } from '@/lib/whatsapp-auth';
 import { prisma } from '@/lib/db';
 
 // CRÍTICO: força runtime Node.js — Baileys usa ws/crypto/fs que não existem no Edge
@@ -17,7 +17,7 @@ export async function GET(req: Request) {
 
     // ── Status rápido ──────────────────────────────────────────────────────────
     if (action === 'status') {
-        const { state } = await usePrismaAuthState(phone);
+        const { state } = await getPrismaAuthState(phone);
         const isConnected = !!(state.creds?.me && state.creds?.registered);
         return NextResponse.json({
             isConnected,
@@ -48,6 +48,7 @@ export async function GET(req: Request) {
                 // a conexão SSE por inatividade (idle timeout típico: 30s).
                 // Enquanto o heartbeat chega, a Lambda fica viva e o Baileys também.
                 const startHeartbeat = () => {
+                    // eslint-disable-next-line react-hooks/immutability
                     heartbeatId = setInterval(() => {
                         try {
                             controller.enqueue(enc.encode(': heartbeat\n\n'));
@@ -66,7 +67,7 @@ export async function GET(req: Request) {
                 };
 
                 try {
-                    const { state, saveCreds, forceSave } = await usePrismaAuthState(phone);
+                    const { state, saveCreds, forceSave } = await getPrismaAuthState(phone);
 
                     // Já conectado — retorna imediatamente
                     if (state.creds?.me && state.creds?.registered) {

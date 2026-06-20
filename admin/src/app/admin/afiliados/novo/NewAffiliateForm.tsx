@@ -53,8 +53,8 @@ export function NewAffiliateForm({ error }: { error?: string }) {
   // Dynamic values
   const [finalName, setFinalName] = useState("");
 
-  // Synchronize dynamic combined name and code auto-fill
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (type === "agency") {
       const combined = agencyName && agentName ? `${agencyName} - ${agentName}` : agencyName || agentName || "";
       setFinalName(combined);
@@ -66,6 +66,7 @@ export function NewAffiliateForm({ error }: { error?: string }) {
         .trim();
       setCode(cleanHandle);
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [type, agentName, agencyName, influencerName, instagramHandle]);
 
   // Clean and format code input (only uppercase, letters, numbers, hyphens)

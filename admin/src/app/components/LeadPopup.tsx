@@ -15,11 +15,6 @@ export function LeadMagnetPopup() {
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle");
   const pathname = usePathname();
 
-  // Esconde o popup completamente na página de links
-  if (pathname?.startsWith("/links")) {
-    return null;
-  }
-
   useEffect(() => {
     if (typeof window === "undefined") return;
 
@@ -57,6 +52,11 @@ export function LeadMagnetPopup() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  // Esconde o popup completamente na página de links
+  if (pathname?.startsWith("/links")) {
+    return null;
+  }
 
   const dismiss = () => {
     setVisible(false);

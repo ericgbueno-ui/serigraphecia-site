@@ -30,7 +30,7 @@ export default function AdminMotoristasClient() {
     fetchDrivers();
   }, []);
 
-  const fetchDrivers = async () => {
+  async function fetchDrivers() {
     try {
       const res = await fetch("/api/admin/motoristas");
       if (res.ok) {
@@ -42,7 +42,7 @@ export default function AdminMotoristasClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }
 
   const updateStatus = async (id: string, status: string) => {
     try {

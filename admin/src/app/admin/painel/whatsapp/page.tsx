@@ -55,6 +55,7 @@ export default function WhatsAppCRMPage() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     checkStatus();
     return () => {
       esRef.current?.close();

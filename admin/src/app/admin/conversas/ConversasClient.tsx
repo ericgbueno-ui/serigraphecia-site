@@ -577,6 +577,7 @@ export default function ConversasClient({
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (selectedId) setMobileView("chat");
   }, [selectedId]);
 

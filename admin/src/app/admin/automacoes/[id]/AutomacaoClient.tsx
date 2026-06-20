@@ -53,6 +53,7 @@ export default function AutomacaoClient({ flow: initialFlow }: { flow: Flow }) {
   const [origin, setOrigin] = useState("");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrigin(window.location.origin);
   }, []);
 

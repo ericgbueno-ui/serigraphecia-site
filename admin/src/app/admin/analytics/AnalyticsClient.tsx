@@ -667,6 +667,7 @@ export default function AnalyticsClient() {
   }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void load(period);
   }, [period, load]);
 

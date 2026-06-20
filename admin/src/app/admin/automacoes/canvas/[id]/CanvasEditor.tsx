@@ -483,6 +483,7 @@ function CanvasEditorInner({ flow: initialFlow }: { flow: FlowData }) {
   function addActionNode(type: string) {
     const lib = ACTION_LIBRARY.find((a) => a.type === type);
     if (!lib) return;
+    // eslint-disable-next-line react-hooks/purity
     const newId = `step_${Date.now()}_${idCounter.current++}`;
     const maxX = Math.max(...nodes.filter((n) => n.id !== "end").map((n) => n.position.x), 0);
     const endNode = nodes.find((n) => n.id === "end");

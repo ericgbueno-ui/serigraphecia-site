@@ -230,6 +230,7 @@ export default function LeadsClient({ leads, total, page, perPage, statusFilter,
 
   useEffect(() => {
     if (selectedLead) {
+      /* eslint-disable react-hooks/set-state-in-effect */
       setEditName(selectedLead.name || "");
       setEditEmail(selectedLead.email || "");
       setEditWhatsApp(selectedLead.whatsapp || "");
@@ -243,6 +244,7 @@ export default function LeadsClient({ leads, total, page, perPage, statusFilter,
       setEditUtmMedium(selectedLead.utmMedium || "");
       setEditUtmCampaign(selectedLead.utmCampaign || "");
       setSaveSuccess(false);
+      /* eslint-enable react-hooks/set-state-in-effect */
     }
   }, [selectedLead]);
 

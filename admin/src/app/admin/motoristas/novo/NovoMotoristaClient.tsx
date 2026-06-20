@@ -90,7 +90,7 @@ export default function NovoMotoristaClient() {
         
         <h1 className="text-2xl font-bold text-white mb-2">Cadastrar Motorista Manualmente</h1>
         <p className="text-sm text-white/50 mb-8">
-          Preencha os dados do novo motorista parceiro. Ele entrará no sistema automaticamente como "Aprovado". O aceite dos termos será exigido no primeiro login dele (em breve).
+          Preencha os dados do novo motorista parceiro. Ele entrará no sistema automaticamente como &quot;Aprovado&quot;. O aceite dos termos será exigido no primeiro login dele (em breve).
         </p>
 
         <form onSubmit={handleSubmit} className="bg-[#111] border border-white/5 rounded-[24px] p-6 md:p-10 shadow-2xl">

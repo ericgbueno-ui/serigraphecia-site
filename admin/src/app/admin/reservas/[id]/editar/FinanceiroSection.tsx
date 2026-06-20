@@ -60,13 +60,16 @@ export function FinanceiroSection({
     let depositVal = parse(deposit);
     if (payMethod === "pix_50") {
       depositVal = Math.round(totalVal / 2);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDeposit(fmt(depositVal));
     } else if (payMethod === "pix") {
       depositVal = totalVal;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDeposit(fmt(depositVal));
     }
 
     const rem = Math.max(0, totalVal - depositVal - cashbackVal);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setRemainder(fmt(rem));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [payMethod, total, cashback]);
@@ -78,6 +81,7 @@ export function FinanceiroSection({
       const depositVal = parse(deposit);
       const cashbackVal = parse(cashback);
       const rem = Math.max(0, totalVal - depositVal - cashbackVal);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setRemainder(fmt(rem));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

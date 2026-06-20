@@ -1,7 +1,7 @@
 import { AuthenticationCreds, AuthenticationState, BufferJSON, initAuthCreds } from '@whiskeysockets/baileys';
 import { prisma } from '@/lib/db';
 
-export async function usePrismaAuthState(phone: string) {
+export async function getPrismaAuthState(phone: string) {
   let session = await prisma.whatsappSession.findUnique({
     where: { phone },
   });
