@@ -399,7 +399,7 @@ ${textoHistorico}
 Responda SOMENTE: {"data": "...", "pax": N, "trajeto": "...", "tipoTrip": "..."}`;
 
   try {
-    const availableModels = await getAvailableGeminiModels(geminiKey);
+    const availableModels = await getAvailableGeminiModels();
     const genAI = new GoogleGenerativeAI(geminiKey);
     for (const modelName of availableModels) {
       try {
@@ -560,7 +560,7 @@ async function callJolie(
   // ── 1º — Gemini (primário) ───────────────────────────────────────────────
   const geminiKey = getGeminiApiKey();
   if (geminiKey) {
-    const availableModels = await getAvailableGeminiModels(geminiKey);
+    const availableModels = await getAvailableGeminiModels();
     const genAI = new GoogleGenerativeAI(geminiKey);
 
     for (const modelName of availableModels) {
@@ -685,7 +685,7 @@ async function callJolie(
     ...historico.map((m) => `${m.role === "jolie" ? "Jolie" : "Cliente"}: ${m.content}`),
     `Cliente: ${userText}`,
   ].join("\n");
-  return { text: buildJolieFallbackReply(fallbackInput, "whatsapp"), engine: "fallback" };
+  return { text: buildJolieFallbackReply(fallbackInput), engine: "fallback" };
 }
 
 // ─────────────────────────────────────────────
@@ -807,7 +807,7 @@ async function describeImage(
   const geminiKey = getGeminiApiKey();
   if (!geminiKey) return null;
 
-  const availableModels = await getAvailableGeminiModels(geminiKey);
+  const availableModels = await getAvailableGeminiModels();
   const genAI = new GoogleGenerativeAI(geminiKey);
 
   const base64 = data.toString("base64");
@@ -930,7 +930,7 @@ Retorne APENAS JSON:
 
   const geminiKey = getGeminiApiKey();
   if (geminiKey) {
-    const availableModels = await getAvailableGeminiModels(geminiKey);
+    const availableModels = await getAvailableGeminiModels();
     const genAI = new GoogleGenerativeAI(geminiKey);
     for (const modelName of availableModels) {
       try {

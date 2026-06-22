@@ -8,8 +8,7 @@
 
 import { z } from "zod";
 
-// Transfer-specific trip types removed. Keep minimal placeholder for compatibility.
-export const TRIP_TYPES = ["generic"] as const;
+export const TRIP_TYPES = ["ida", "volta", "ida_volta", "so_citytour"] as const;
 export type TripType = (typeof TRIP_TYPES)[number];
 
 // Replace concrete vehicle tiers and payment methods with lightweight stubs.
