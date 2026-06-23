@@ -3,7 +3,7 @@ export const prerender = false;
 import AdminLayout from "../../../layouts/AdminLayout.astro";
 import { prisma } from "../../../lib/prisma";
 
-const representantes = await prisma.affiliate.findMany({
+const representantes = await prisma.representante.findMany({
   where: { active: true },
   select: { id: true, name: true, code: true },
   orderBy: { name: "asc" },

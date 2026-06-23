@@ -59,9 +59,9 @@ type BookingItem = {
   id: string;
   totalCents: number;
   createdAt: Date;
-  tripType: string;
-  vehicleType: string;
-  idaDate: string | null;
+  tipoProduto?: string;
+  quantidade?: number;
+  idaDate?: string | null;
   affiliateCode: string | null;
   affiliateName: string | null;
   affiliateId: string | null;
@@ -236,7 +236,7 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
                       <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--gold)" }}>{b.idaDate ? fmtDate(b.idaDate) : fmtDate(b.createdAt)}</span>
                       <span style={{ fontSize: "13px", fontWeight: 700, color: "#3ecf8e" }}>{brl(b.totalCents)}</span>
                     </div>
-                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>Pedido de sacolas</div>
+                    <div style={{ fontSize: "12px", color: "var(--muted)" }}>{b.tipoProduto ?? "Pedido"} {b.quantidade ? `· ${b.quantidade} un` : ""}</div>
                   </a>
                 ))}
               </div>

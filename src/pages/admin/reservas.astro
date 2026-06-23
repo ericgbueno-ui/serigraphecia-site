@@ -15,7 +15,7 @@ const month = parseInt(monthStr) - 1;
 const startOfMonth = new Date(Date.UTC(year, month, 1));
 const endOfMonth = new Date(Date.UTC(year, month + 1, 1));
 
-const pedidos = await prisma.booking.findMany({
+const pedidos = await prisma.pedido.findMany({
   where: { createdAt: { gte: startOfMonth, lt: endOfMonth } },
   orderBy: { createdAt: "desc" },
   take: 100,
@@ -28,7 +28,8 @@ const pedidos = await prisma.booking.findMany({
     payMethod: true,
     affiliateCode: true,
     remainderCents: true,
-    hotel: true,
+    tipoProduto: true,
+    quantidade: true,
     customer: { select: { name: true, phone: true } },
   },
 });
@@ -80,7 +81,7 @@ const monthLabel = new Date(year, month).toLocaleDateString("pt-BR", { month: "l
                   </div>
                   <p style="font-size:12px;color:var(--muted);">{p.customer?.phone || "—"}</p>
                   {p.affiliateCode && <p style="font-size:11px;color:var(--gold);margin-top:4px;">Rep: {p.affiliateCode}</p>}
-                  {p.hotel && <p style="font-size:11px;color:var(--muted);margin-top:2px;">📝 {p.hotel}</p>}
+                  <p style="font-size:11px;color:var(--muted);margin-top:2px;">{p.tipoProduto} · {p.quantidade} un</p>
                 </div>
                 <div>
                   <p style="font-size:11px;color:var(--muted);">Data do pedido</p>

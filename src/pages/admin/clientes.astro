@@ -4,39 +4,38 @@ import AdminLayout from "../../layouts/AdminLayout.astro";
 import { prisma } from "../../lib/prisma";
 import { ClientesClient } from "../../components/admin/ClientesClient";
 
-const affiliates = await prisma.affiliate.findMany({ select: { id: true, name: true, code: true } });
-const affiliateMap = new Map<string, { id: string; name: string }>();
-for (const aff of affiliates) {
-  if (aff.code) {
-    affiliateMap.set(aff.code.toUpperCase(), { id: aff.id, name: aff.name });
-    affiliateMap.set(aff.code.toLowerCase(), { id: aff.id, name: aff.name });
+const representantes = await prisma.representante.findMany({ select: { id: true, name: true, code: true } });
+const representanteMap = new Map<string, { id: string; name: string }>();
+for (const rep of representantes) {
+  if (rep.code) {
+    representanteMap.set(rep.code.toUpperCase(), { id: rep.id, name: rep.name });
+    representanteMap.set(rep.code.toLowerCase(), { id: rep.id, name: rep.name });
   }
 }
 
-const bookings = await prisma.booking.findMany({
+const pedidos = await prisma.pedido.findMany({
   where: { status: "CONFIRMED" },
   select: {
     id: true,
     totalCents: true,
     createdAt: true,
-    tripType: true,
-    vehicleType: true,
-    idaDate: true,
+    tipoProduto: true,
+    quantidade: true,
     affiliateCode: true,
     customer: { select: { id: true, name: true, phone: true, email: true, birthDate: true } },
   },
   orderBy: { createdAt: "desc" },
 });
 
-const customerMap = new Map<string, { customer: (typeof bookings)[0]["customer"]; bookings: any[]; totalCents: number }>();
-for (const b of bookings) {
-  const aff = b.affiliateCode ? (affiliateMap.get(b.affiliateCode) || affiliateMap.get(b.affiliateCode.toLowerCase()) || affiliateMap.get(b.affiliateCode.toUpperCase())) : null;
-  const enriched = { ...b, affiliateName: aff?.name ?? null, affiliateId: aff?.id ?? null };
-  const id = b.customer.id;
-  if (!customerMap.has(id)) customerMap.set(id, { customer: b.customer, bookings: [], totalCents: 0 });
+const customerMap = new Map<string, { customer: (typeof pedidos)[0]["customer"]; pedidos: any[]; totalCents: number }>();
+for (const p of pedidos) {
+  const aff = p.affiliateCode ? (representanteMap.get(p.affiliateCode) || representanteMap.get(p.affiliateCode.toLowerCase()) || representanteMap.get(p.affiliateCode.toUpperCase())) : null;
+  const enriched = { ...p, affiliateName: aff?.name ?? null, affiliateId: aff?.id ?? null };
+  const id = p.customer.id;
+  if (!customerMap.has(id)) customerMap.set(id, { customer: p.customer, pedidos: [], totalCents: 0 });
   const entry = customerMap.get(id)!;
-  entry.bookings.push(enriched);
-  entry.totalCents += b.totalCents;
+  entry.pedidos.push(enriched);
+  entry.totalCents += p.totalCents;
 }
 
 const customers = [...customerMap.values()].map((c) => ({
@@ -45,10 +44,9 @@ const customers = [...customerMap.values()].map((c) => ({
     ...c.customer,
     birthDate: c.customer.birthDate ? c.customer.birthDate.toISOString() : null,
   },
-  bookings: c.bookings.map((b) => ({
-    ...b,
-    createdAt: b.createdAt.toISOString(),
-    idaDate: b.idaDate ? b.idaDate.toISOString().slice(0, 10) : null,
+  bookings: c.pedidos.map((p) => ({
+    ...p,
+    createdAt: p.createdAt.toISOString(),
   })),
 }));
 ---

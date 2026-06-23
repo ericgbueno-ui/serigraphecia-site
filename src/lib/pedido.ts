@@ -29,7 +29,7 @@ function gerarSufixo(): string {
 export async function gerarNumeroPedido(prisma: PrismaClient): Promise<string> {
   for (let attempt = 0; attempt < 8; attempt++) {
     const numeroPedido = `SG-${formatDateParts(new Date())}-${gerarSufixo()}`;
-    const existente = await prisma.booking.findUnique({
+    const existente = await prisma.pedido.findUnique({
       where: { numeroPedido },
       select: { id: true },
     });

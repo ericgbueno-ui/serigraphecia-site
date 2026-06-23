@@ -25,7 +25,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const hashedPassword = crypto.createHash("sha256").update(password).digest("hex");
 
   try {
-    await prisma.affiliate.create({
+    await prisma.representante.create({
       data: {
         name,
         whatsapp,
@@ -33,8 +33,6 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         code,
         password: hashedPassword,
         type: "representante",
-        commIda: 0,
-        commIdaVolta: 0,
         comissaoPct,
         active: true,
       },

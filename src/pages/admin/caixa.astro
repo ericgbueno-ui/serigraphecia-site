@@ -3,16 +3,14 @@ export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { prisma } from "../../lib/prisma";
 
-const bookings = await prisma.booking.findMany({
+const pedidos = await prisma.pedido.findMany({
   where: { status: "CONFIRMED" },
   orderBy: { createdAt: "desc" },
   select: {
     id: true,
     createdAt: true,
-    tripType: true,
-    vehicleType: true,
-    idaDate: true,
-    voltaDate: true,
+    tipoProduto: true,
+    quantidade: true,
     totalCents: true,
     payMethod: true,
     remainderCents: true,
@@ -31,22 +29,16 @@ function fmtDate(d: Date | null) {
 function monthKey(d: Date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
-function tripLabel(t: string) {
-  if (t === "so_citytour") return "City Tour";
-  if (t === "ida_volta") return "Ida + Volta";
-  if (t === "volta") return "Retorno";
-  return "Ida";
-}
 
 const currentMonth = monthKey(new Date());
-const bookingsThisMonth = bookings.filter((b) => monthKey(b.createdAt) === currentMonth);
+const pedidosThisMonth = pedidos.filter((p) => monthKey(p.createdAt) === currentMonth);
 
-const faturamentoMes = bookingsThisMonth.reduce((s, b) => s + b.totalCents, 0);
-const recebidoMes = bookingsThisMonth.reduce((s, b) => s + (b.totalCents - b.remainderCents), 0);
-const aReceberMes = bookingsThisMonth.reduce((s, b) => s + b.remainderCents, 0);
-const ticketMedio = bookingsThisMonth.length > 0 ? Math.round(faturamentoMes / bookingsThisMonth.length) : 0;
-const pixCount = bookingsThisMonth.filter((b) => b.payMethod === "pix" || b.payMethod === "pix_50").length;
-const cartaoCount = bookingsThisMonth.filter((b) => b.payMethod === "cartao").length;
+const faturamentoMes = pedidosThisMonth.reduce((s, p) => s + p.totalCents, 0);
+const recebidoMes = pedidosThisMonth.reduce((s, p) => s + (p.totalCents - p.remainderCents), 0);
+const aReceberMes = pedidosThisMonth.reduce((s, p) => s + p.remainderCents, 0);
+const ticketMedio = pedidosThisMonth.length > 0 ? Math.round(faturamentoMes / pedidosThisMonth.length) : 0;
+const pixCount = pedidosThisMonth.filter((p) => p.payMethod === "pix" || p.payMethod === "pix_50").length;
+const cartaoCount = pedidosThisMonth.filter((p) => p.payMethod === "cartao").length;
 ---
 
 <AdminLayout title="Fluxo de Caixa | Admin">
@@ -55,17 +47,17 @@ const cartaoCount = bookingsThisMonth.filter((b) => b.payMethod === "cartao").le
       <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px;">
         <div>
           <h1 style="font-size:22px;font-weight:700;margin-bottom:4px;">💰 Fluxo de Caixa</h1>
-          <p style="font-size:13px;color:var(--muted);">Entradas das reservas confirmadas.</p>
+          <p style="font-size:13px;color:var(--muted);">Entradas dos pedidos confirmados.</p>
         </div>
-        <a href="/admin/reservas" style="font-size:12px;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);">← Reservas</a>
+        <a href="/admin/reservas" style="font-size:12px;color:var(--muted);text-decoration:none;padding:8px 14px;border-radius:10px;border:1px solid var(--border);background:var(--bg-card);">← Pedidos</a>
       </div>
 
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:32px;">
         {[
-          { label: "Faturamento (Mês)", value: brl(faturamentoMes), sub: `${bookingsThisMonth.length} reservas`, color: "var(--text)" },
+          { label: "Faturamento (Mês)", value: brl(faturamentoMes), sub: `${pedidosThisMonth.length} pedidos`, color: "var(--text)" },
           { label: "Já Entrou (Mês)", value: brl(recebidoMes), sub: faturamentoMes > 0 ? `${Math.round((recebidoMes / faturamentoMes) * 100)}% das vendas` : "—", color: "#3ecf8e" },
           { label: "A Receber (Mês)", value: brl(aReceberMes), sub: "saldo pendente", color: "#c9a84c" },
-          { label: "Ticket Médio", value: brl(ticketMedio), sub: "por reserva", color: "#a78bfa" },
+          { label: "Ticket Médio", value: brl(ticketMedio), sub: "por pedido", color: "#a78bfa" },
           { label: "Forma de Pgto", value: `${pixCount} PIX`, sub: `${cartaoCount} cartão`, color: "#60a5fa" },
         ].map((c) => (
           <div style={`background:var(--bg-card);border:1px solid var(--border);border-top:3px solid ${c.color}44;border-radius:14px;padding:18px 20px;`}>
@@ -76,38 +68,38 @@ const cartaoCount = bookingsThisMonth.filter((b) => b.payMethod === "cartao").le
         ))}
       </div>
 
-      <h2 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:12px;">Entradas (Reservas Confirmadas)</h2>
+      <h2 style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:12px;">Entradas (Pedidos Confirmados)</h2>
 
-      {bookings.length === 0 ? (
+      {pedidos.length === 0 ? (
         <div style="text-align:center;padding:60px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:14px;">
           Nenhuma entrada registrada.
         </div>
       ) : (
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
           <div style="display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1fr auto;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);">
-            {["Cliente", "Rota / Veículo", "Total", "Recebido", "A Receber", ""].map((h) => (
+            {["Cliente", "Produto", "Total", "Recebido", "A Receber", ""].map((h) => (
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">{h}</span>
             ))}
           </div>
-          {bookings.map((b, i) => {
-            const recebido = b.totalCents - b.remainderCents;
+          {pedidos.map((p, i) => {
+            const recebido = p.totalCents - p.remainderCents;
             return (
-              <a href={`/admin/reservas/${b.id}`} style={`display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1fr auto;gap:12px;padding:14px 20px;align-items:center;text-decoration:none;color:inherit;${i < bookings.length - 1 ? "border-bottom:1px solid var(--border);" : ""}`}>
+              <a href={`/admin/reservas/${p.id}`} style={`display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1fr auto;gap:12px;padding:14px 20px;align-items:center;text-decoration:none;color:inherit;${i < pedidos.length - 1 ? "border-bottom:1px solid var(--border);" : ""}`}>
                 <div>
-                  <p style="font-size:13px;font-weight:600;">{b.customer?.name || "—"}</p>
-                  <p style="font-size:11px;color:var(--muted);margin-top:2px;">{fmtDate(b.createdAt)}{b.idaDate ? ` · ✈️ ${fmtDate(b.idaDate)}` : ""}</p>
+                  <p style="font-size:13px;font-weight:600;">{p.customer?.name || "—"}</p>
+                  <p style="font-size:11px;color:var(--muted);margin-top:2px;">{fmtDate(p.createdAt)}</p>
                 </div>
                 <div>
-                  <p style="font-size:12px;">{tripLabel(b.tripType)}</p>
-                  <p style="font-size:11px;color:var(--muted);margin-top:2px;">{b.vehicleType}</p>
+                  <p style="font-size:12px;">{p.tipoProduto}</p>
+                  <p style="font-size:11px;color:var(--muted);margin-top:2px;">{p.quantidade} un</p>
                 </div>
-                <p style="font-size:14px;font-weight:700;">{brl(b.totalCents)}</p>
+                <p style="font-size:14px;font-weight:700;">{brl(p.totalCents)}</p>
                 <p style="font-size:14px;font-weight:600;color:#3ecf8e;">{brl(recebido)}</p>
-                <p style={`font-size:14px;font-weight:${b.remainderCents > 0 ? 600 : 400};color:${b.remainderCents > 0 ? "#c9a84c" : "var(--muted)"};`}>
-                  {b.remainderCents > 0 ? brl(b.remainderCents) : "—"}
+                <p style={`font-size:14px;font-weight:${p.remainderCents > 0 ? 600 : 400};color:${p.remainderCents > 0 ? "#c9a84c" : "var(--muted)"};`}>
+                  {p.remainderCents > 0 ? brl(p.remainderCents) : "—"}
                 </p>
-                <span style={`font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;white-space:nowrap;color:${b.remainderCents === 0 ? "#3ecf8e" : "#c9a84c"};background:${b.remainderCents === 0 ? "rgba(62,207,142,0.1)" : "rgba(201,168,76,0.1)"};border:1px solid ${b.remainderCents === 0 ? "rgba(62,207,142,0.25)" : "rgba(201,168,76,0.3)"};`}>
-                  {b.remainderCents === 0 ? "Quitado" : "Parcial"}
+                <span style={`font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;white-space:nowrap;color:${p.remainderCents === 0 ? "#3ecf8e" : "#c9a84c"};background:${p.remainderCents === 0 ? "rgba(62,207,142,0.1)" : "rgba(201,168,76,0.1)"};border:1px solid ${p.remainderCents === 0 ? "rgba(62,207,142,0.25)" : "rgba(201,168,76,0.3)"};`}>
+                  {p.remainderCents === 0 ? "Quitado" : "Parcial"}
                 </span>
               </a>
             );

@@ -73,20 +73,26 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
     const finalRemainderCents = Math.max(0, computedTotalCents - depositCents);
 
-    const booking = await prisma.booking.create({
+    const notas = [
+      hotel ? `Cidade/Estado: ${hotel}` : null,
+      vehicleType ? `Tamanho: ${vehicleType}` : null,
+      idaDate ? `Prazo de entrega: ${idaDate.toLocaleDateString("pt-BR")}` : null,
+      idaFlightTime,
+    ]
+      .filter(Boolean)
+      .join(" | ") || undefined;
+
+    const pedido = await prisma.pedido.create({
       data: {
         publicToken,
         numeroPedido,
         customerId: customer.id,
-        tripType,
-        vehicleType: vehicleType || "n/a",
-        passengerCount,
-        hotel:          hotel          || undefined,
-        idaDate:        idaDate        || undefined,
-        idaFlightTime:  idaFlightTime  || undefined,
-        voltaDate:      voltaDate      || undefined,
-        origin: "Serigraph e Cia",
-        dest:   "Cliente",
+        tipoProduto: tripType,
+        corProduto: corSacola || undefined,
+        lados: "um",
+        coresLadoA: parseInt(voltaDate_raw || "0", 10) || 0,
+        quantidade: passengerCount,
+        internalNotes: notas,
         payMethod,
         // Totais (incluindo possíveis opcionais de impressão)
         totalCents: computedTotalCents,
@@ -99,7 +105,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       },
     });
 
-    return redirect(`/admin/reservas/${booking.id}`, 302);
+    return redirect(`/admin/reservas/${pedido.id}`, 302);
   } catch (err) {
     console.error("Erro ao criar pedido:", err);
     return redirect("/admin/nova-reserva?error=1", 302);

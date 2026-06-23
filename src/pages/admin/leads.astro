@@ -6,7 +6,7 @@ import { prisma } from "../../lib/prisma";
 const url = new URL(Astro.request.url);
 const statusFilter = url.searchParams.get("status") ?? "PENDING";
 
-const orcamentos = await prisma.booking.findMany({
+const orcamentos = await prisma.pedido.findMany({
   where: { status: statusFilter === "todos" ? undefined : statusFilter },
   orderBy: { createdAt: "desc" },
   take: 100,
@@ -16,10 +16,9 @@ const orcamentos = await prisma.booking.findMany({
     createdAt: true,
     status: true,
     totalCents: true,
-    tripType: true,
-    vehicleType: true,
-    passengerCount: true,
-    idaFlightTime: true,
+    tipoProduto: true,
+    quantidade: true,
+    internalNotes: true,
     affiliateCode: true,
     customer: { select: { name: true, phone: true } },
   },
@@ -93,11 +92,10 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
                   </div>
                   <p style="font-size:12px;color:var(--muted);">{o.customer?.phone || "—"}</p>
                   <p style="font-size:11px;color:var(--muted);margin-top:3px;">
-                    {tipoLabel[o.tripType] || o.tripType}
-                    {o.vehicleType && o.vehicleType !== "n/a" ? ` · ${o.vehicleType}` : ""}
-                    {o.passengerCount ? ` · ${o.passengerCount} un` : ""}
+                    {tipoLabel[o.tipoProduto] || o.tipoProduto}
+                    {o.quantidade ? ` · ${o.quantidade} un` : ""}
                   </p>
-                  {o.idaFlightTime && <p style="font-size:11px;color:var(--muted);margin-top:2px;">📝 {o.idaFlightTime.slice(0, 60)}{o.idaFlightTime.length > 60 ? "..." : ""}</p>}
+                  {o.internalNotes && <p style="font-size:11px;color:var(--muted);margin-top:2px;">📝 {o.internalNotes.slice(0, 60)}{o.internalNotes.length > 60 ? "..." : ""}</p>}
                 </div>
                 <div>
                   <p style="font-size:11px;color:var(--muted);">Data</p>

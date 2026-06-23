@@ -14,13 +14,13 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   if (!id) return redirect("/admin/leads", 302);
 
-  const booking = await prisma.booking.findUnique({
+  const pedido = await prisma.pedido.findUnique({
     where: { id },
     select: { numeroPedido: true },
   });
-  const numeroPedido = booking?.numeroPedido ?? await gerarNumeroPedido(prisma);
+  const numeroPedido = pedido?.numeroPedido ?? await gerarNumeroPedido(prisma);
 
-  await prisma.booking.update({
+  await prisma.pedido.update({
     where: { id },
     data: {
       status: "CONFIRMED",

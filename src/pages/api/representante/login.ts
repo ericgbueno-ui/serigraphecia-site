@@ -12,7 +12,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   if (!code || !password) return redirect("/representante?error=1", 302);
 
-  const rep = await prisma.affiliate.findUnique({ where: { code } });
+  const rep = await prisma.representante.findUnique({ where: { code } });
   if (!rep || !rep.active) return redirect("/representante?error=1", 302);
 
   const hashed = crypto.createHash("sha256").update(password).digest("hex");

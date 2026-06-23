@@ -57,19 +57,21 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       optionalsCentsVal = printResult.finalCents;
     }
 
-    await prisma.booking.create({
+    const notas = [hotel ? `Cidade/Estado: ${hotel}` : null, vehicleType ? `Tamanho: ${vehicleType}` : null, detalhes]
+      .filter(Boolean)
+      .join(" | ") || undefined;
+
+    await prisma.pedido.create({
       data: {
         publicToken:    crypto.randomBytes(16).toString("hex"),
         customerId:     customer.id,
         status:         "PENDING",
-        tripType,
-        vehicleType:    vehicleType || "n/a",
-        passengerCount,
-        hotel:          hotel         || undefined,
-        idaFlightTime:  detalhes      || undefined,
-        voltaFlightNumber: cores      || undefined,
-        origin:         "Serigraph e Cia",
-        dest:           "Cliente",
+        tipoProduto:    tripType,
+        corProduto:     corSacola || undefined,
+        lados:          "um",
+        coresLadoA:     parseInt(cores || "0", 10) || 0,
+        quantidade:     passengerCount,
+        internalNotes:  notas,
         payMethod:      "a_definir",
         totalCents:     computedTotalCents,
         depositCents:   0,
