@@ -13,7 +13,8 @@ async function loginAction(formData: FormData) {
   if (secret) {
     const a = Buffer.from(password.padEnd(64, "\0"), "utf-8").subarray(0, 64);
     const b = Buffer.from(secret.padEnd(64, "\0"), "utf-8").subarray(0, 64);
-    const match = require("crypto").timingSafeEqual(a, b) && password === secret;
+    const lengthMatches = password.length === secret.length;
+    const match = require("crypto").timingSafeEqual(a, b) && lengthMatches;
     if (match) {
       const jar = await cookies();
       jar.set(ADMIN_COOKIE_NAME, createAdminToken(secret), {

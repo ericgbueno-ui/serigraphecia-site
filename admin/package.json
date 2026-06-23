@@ -23,7 +23,7 @@
     "prisma:reset": "echo '\\n⛔  OPERAÇÃO BLOQUEADA\\nPrisma migrate reset APAGA TODOS OS DADOS.\\nSe tiver certeza absoluta, rode manualmente:\\n  npx prisma migrate reset\\n' && exit 1",
     "check:env": "node ./scripts/check-env.mjs",
     "setup:dev": "node ./scripts/setup-dev.mjs",
-    "prisma:create-affiliate": "ts-node --compiler-options '{\\\"module\\\":\\\"commonjs\\\"}' scripts/create-affiliate.ts"
+    "prisma:create-affiliate": "node scripts/criar-afiliado.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.39.0",

@@ -99,22 +99,14 @@ async function verifyWebhookSignature(req: Request, rawBody: string): Promise<bo
     return false;
   }
 
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(appSecret),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  const mac = await crypto.subtle.sign("HMAC", key, encoder.encode(rawBody));
+  const nodeCrypto = await import("crypto");
   const expected =
-    "sha256=" +
-    Array.from(new Uint8Array(mac))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
+    "sha256=" + nodeCrypto.createHmac("sha256", appSecret).update(rawBody, "utf8").digest("hex");
 
-  return signature === expected;
+  const sigBuf = Buffer.from(signature, "utf-8");
+  const expectedBuf = Buffer.from(expected, "utf-8");
+  if (sigBuf.length !== expectedBuf.length) return false;
+  return nodeCrypto.timingSafeEqual(sigBuf, expectedBuf);
 }
 
 export async function POST(req: Request) {
