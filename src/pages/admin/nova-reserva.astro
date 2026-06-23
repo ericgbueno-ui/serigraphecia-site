@@ -8,6 +8,12 @@ const representantes = await prisma.representante.findMany({
   select: { id: true, name: true, code: true },
   orderBy: { name: "asc" },
 });
+
+const tabelaPrecos = await prisma.tabelaPreco.findMany({
+  where: { ativo: true },
+  orderBy: [{ tipo: "asc" }, { qtdMin: "asc" }],
+  select: { tipo: true, qtdMin: true, qtdMax: true, precoUnitario: true },
+});
 ---
 
 <AdminLayout title="Novo Pedido | Admin" currentPath="/admin/nova-reserva">
@@ -26,8 +32,12 @@ const representantes = await prisma.representante.findMany({
           <h2 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold);">Cliente</h2>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Nome da loja / cliente *</label>
-              <input name="name" required placeholder="Ex: Boutique Alma" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Nome de contato *</label>
+              <input name="name" required placeholder="Ex: Ana Silva" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Nome da loja</label>
+              <input name="nomeLoja" placeholder="Ex: Boutique Alma" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">WhatsApp *</label>
@@ -38,8 +48,27 @@ const representantes = await prisma.representante.findMany({
               <input name="email" type="email" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
             </div>
             <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cidade / Estado</label>
-              <input name="hotel" placeholder="Ex: Porto Alegre / RS" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Instagram</label>
+              <input name="instagram" placeholder="@usuario" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ENDEREÇO -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <h2 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold);">Endereço</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Rua</label>
+              <input name="endereco" placeholder="Rua, número" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Bairro</label>
+              <input name="bairro" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cidade</label>
+              <input name="cidade" placeholder="Ex: Porto Alegre / RS" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
             </div>
           </div>
         </div>
@@ -51,31 +80,22 @@ const representantes = await prisma.representante.findMany({
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tipo de sacola *</label>
               <select id="sel-tipo" name="tripType" required style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+                <option value="" selected disabled>Selecione...</option>
                 <option value="alca_vazada">Alça Vazada</option>
                 <option value="alca_fita">Alça Fita</option>
                 <option value="alca_camiseta">Alça Camiseta</option>
-
                 <option value="outro">Outro</option>
               </select>
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Quantidade *</label>
-              <input id="inp-qtd" name="passengerCount" type="number" min="50" required placeholder="Ex: 200" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <input id="inp-qtd" name="passengerCount" type="number" min="1" required placeholder="Ex: 200" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tamanho</label>
-              <input name="vehicleType" placeholder="Ex: 30x40cm" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cores de impressão</label>
-              <select name="voltaDate" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
-                <option value="1">1 cor</option>
-                <option value="2">2 cores</option>
-                <option value="3">3 cores</option>
-                <option value="4">4 cores</option>
-                <option value="4c">4 cores (CMYK)</option>
-                <option value="personalizado">Personalizado</option>
-              </select>
+              <input id="inp-tamanho" name="tamanho" list="lista-tamanhos" placeholder="Ex: 30x40" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+              <datalist id="lista-tamanhos"></datalist>
+              <p id="tamanho-info" style="font-size:11px;color:var(--muted);margin-top:4px;min-height:14px;"></p>
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cor da sacola *</label>
@@ -91,12 +111,27 @@ const representantes = await prisma.representante.findMany({
               </select>
             </div>
             <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Quantidade de cores de impressão</label>
+              <select id="sel-cores" name="voltaDate" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+                <option value="1">1 cor</option>
+                <option value="2">2 cores</option>
+                <option value="3">3 cores</option>
+                <option value="4">4 cores</option>
+                <option value="4c">4 cores (CMYK)</option>
+                <option value="personalizado">Personalizado</option>
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cor da tinta de impressão</label>
+              <input name="corImpressao" placeholder="Ex: Preto" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Prazo de entrega</label>
               <input name="idaDate" type="date" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
             </div>
             <div style="grid-column:1/-1;">
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Detalhes / observações</label>
-              <textarea name="idaFlightTime" rows="3" placeholder="Cor, impressão, referências, detalhes especiais..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;resize:vertical;"></textarea>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Observações</label>
+              <textarea name="idaFlightTime" rows="3" placeholder="Referências, detalhes especiais..." style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;resize:vertical;"></textarea>
             </div>
           </div>
         </div>
@@ -119,8 +154,8 @@ const representantes = await prisma.representante.findMany({
               <select name="payMethod" style="width:100%;background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
                 <option value="pix">PIX</option>
                 <option value="cartao">Cartão</option>
-                <option value="boleto">Boleto</option>
-                <option value="transferencia">Transferência</option>
+                <option value="link">Link</option>
+                <option value="dinheiro">Dinheiro</option>
               </select>
             </div>
           </div>
@@ -143,5 +178,103 @@ const representantes = await prisma.representante.findMany({
       </form>
     </div>
   </div>
+
+  <script type="application/json" id="tabela-precos-data">{JSON.stringify(tabelaPrecos)}</script>
+  <script>
+    // ── Dados da Tabela de Valores (TabelaPreco), carregados do servidor ──
+    const TABELA = JSON.parse(document.getElementById("tabela-precos-data").textContent || "[]");
+
+    // Mapeia o value do <select> de tipo de sacola para o rótulo usado em TabelaPreco.tipo
+    const TIPO_LABELS = {
+      alca_vazada: "Alça Vazada",
+      alca_fita: "Alça Fita",
+      alca_camiseta: "Alça Camiseta",
+      outro: "Outro",
+    };
+
+    const selTipo = document.getElementById("sel-tipo");
+    const inpQtd = document.getElementById("inp-qtd");
+    const inpTamanho = document.getElementById("inp-tamanho");
+    const listaTamanhos = document.getElementById("lista-tamanhos");
+    const tamanhoInfo = document.getElementById("tamanho-info");
+    const selCores = document.getElementById("sel-cores");
+    const inpTotal = document.getElementById("inp-total");
+    const precoInfo = document.getElementById("preco-info");
+
+    function rowsParaTipo(slug) {
+      const label = TIPO_LABELS[slug];
+      if (!label) return [];
+      return TABELA
+        .filter((p) => p.tipo.replace(/ \d+x\d+$/, "").toLowerCase() === label.toLowerCase())
+        .map((p) => ({
+          ...p,
+          tamanho: (p.tipo.match(/(\d+x\d+)$/) || [])[1] || null,
+        }));
+    }
+
+    function corMultiplicador(valorSelect) {
+      // Replica calculatePrintPrice (src/lib/pricing.ts): 1 cor = sem acréscimo,
+      // 2+ cores em um lado = +40%. "4c" = 4 cores. "personalizado" tratado como 2+.
+      let n = parseInt(valorSelect, 10);
+      if (valorSelect === "personalizado") n = 2;
+      if (isNaN(n)) n = 1;
+      return n >= 2 ? 1.4 : 1;
+    }
+
+    function brl(v) {
+      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    // Ao trocar o tipo de sacola: sugere tamanho + quantidade mínima, com base na Tabela de Valores
+    selTipo.addEventListener("change", () => {
+      const rows = rowsParaTipo(selTipo.value);
+
+      const tamanhosUnicos = [...new Set(rows.map((r) => r.tamanho).filter(Boolean))];
+      listaTamanhos.innerHTML = tamanhosUnicos.map((t) => `<option value="${t}"></option>`).join("");
+
+      if (rows.length === 0) {
+        tamanhoInfo.textContent = "Nenhum valor cadastrado para este tipo. Cadastre em Tabela de Valores.";
+        recomputeTotal();
+        return;
+      }
+
+      // Linha de referência: menor faixa de quantidade cadastrada
+      const menor = rows.slice().sort((a, b) => a.qtdMin - b.qtdMin)[0];
+      if (!inpTamanho.value) inpTamanho.value = menor.tamanho || "";
+      if (!inpQtd.value) inpQtd.value = String(menor.qtdMin);
+      tamanhoInfo.textContent = tamanhosUnicos.length
+        ? `Tamanhos disponíveis: ${tamanhosUnicos.join(", ")}`
+        : "";
+
+      recomputeTotal();
+    });
+
+    function recomputeTotal() {
+      const rows = rowsParaTipo(selTipo.value).filter(
+        (r) => !inpTamanho.value || r.tamanho === inpTamanho.value
+      );
+      const qtd = parseInt(inpQtd.value, 10) || 0;
+
+      if (rows.length === 0 || qtd <= 0) {
+        precoInfo.textContent = "";
+        return;
+      }
+
+      // Escolhe a faixa de quantidade aplicável (maior qtdMin <= qtd; senão, a menor faixa disponível)
+      const ordenadas = rows.slice().sort((a, b) => a.qtdMin - b.qtdMin);
+      let faixa = ordenadas.filter((r) => r.qtdMin <= qtd).pop();
+      if (!faixa) faixa = ordenadas[0];
+
+      const mult = corMultiplicador(selCores.value);
+      const totalReais = faixa.precoUnitario * qtd * mult;
+
+      inpTotal.value = totalReais.toFixed(2);
+      precoInfo.textContent = `Unit.: ${brl(faixa.precoUnitario)} · faixa a partir de ${faixa.qtdMin} un. · impressão ${mult > 1 ? "+40%" : "sem acréscimo"} · Total: ${brl(totalReais)}`;
+    }
+
+    inpQtd.addEventListener("input", recomputeTotal);
+    inpTamanho.addEventListener("input", recomputeTotal);
+    selCores.addEventListener("change", recomputeTotal);
+  </script>
 
 </AdminLayout>

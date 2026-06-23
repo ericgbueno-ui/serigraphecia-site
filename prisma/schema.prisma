@@ -94,9 +94,17 @@ model LeadEvent {
 
 model Customer {
   id             String    @id @default(cuid())
+  /// Nome da pessoa de contato
   name           String
+  /// Nome da loja/empresa do cliente (opcional, pode ser igual ao contato)
+  nomeLoja       String?
   email          String
   phone          String    @unique
+  instagram      String?
+  /// Endereço — rua/número
+  endereco       String?
+  bairro         String?
+  cidade         String?
   /// CPF do contratante (sem pontuação). Permite lookup por CPF quando WhatsApp não informado.
   cpf            String?   @unique
   marketingOptIn Boolean   @default(false)
@@ -154,6 +162,10 @@ model Pedido {
   tipoProduto             String
   /// Cor do produto/peça
   corProduto              String?
+  /// Tamanho do produto (ex: 20x30, 30x40)
+  tamanho                 String?
+  /// Cor da tinta de impressão
+  corImpressao            String?
   /// "um" | "dois" — lados de impressão
   lados                   String     @default("um")
   /// Quantidade de cores impressas no lado A
@@ -438,7 +450,7 @@ model Fornecedor {
   nome      String
   produto   String
   whatsapp  String?
-  email     String?
+  email    String?
   ativo     Boolean  @default(true)
 
   @@index([ativo])

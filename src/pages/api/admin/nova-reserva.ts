@@ -15,17 +15,23 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const formData = await request.formData();
 
   const name        = formData.get("name")?.toString().trim() || "";
+  const nomeLoja    = formData.get("nomeLoja")?.toString().trim() || null;
   const phone       = formData.get("phone")?.toString().replace(/\D/g, "") || "";
   const email       = formData.get("email")?.toString().trim() || "";
+  const instagram   = formData.get("instagram")?.toString().trim() || null;
+  const endereco    = formData.get("endereco")?.toString().trim() || null;
+  const bairro      = formData.get("bairro")?.toString().trim() || null;
+  const cidade      = formData.get("cidade")?.toString().trim() || null;
+
   const tripType    = formData.get("tripType")?.toString() || "alca_vazada";
-  const vehicleType = formData.get("vehicleType")?.toString().trim() || "";
+  const tamanho     = formData.get("tamanho")?.toString().trim() || null;
+  const corImpressao = formData.get("corImpressao")?.toString().trim() || null;
   const passengerCount = parseInt(formData.get("passengerCount")?.toString() || "50", 10);
-  const hotel       = formData.get("hotel")?.toString().trim() || null;
   const idaDateRaw  = formData.get("idaDate")?.toString();
 
   const corSacola   = formData.get("corSacola")?.toString().trim() || "";
   const detailsRaw  = formData.get("idaFlightTime")?.toString().trim() || "";
-  const idaFlightTime = corSacola ? `Cor da Sacola: ${corSacola}${detailsRaw ? ` | ${detailsRaw}` : ""}` : (detailsRaw || null);
+  const idaFlightTime = detailsRaw || null;
 
   const voltaDate_raw = formData.get("voltaDate")?.toString();
   const payMethod   = formData.get("payMethod")?.toString() || "pix";
@@ -38,13 +44,35 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const remainderCents  = Math.max(0, totalCents - depositCents);
 
   const idaDate   = idaDateRaw   ? new Date(`${idaDateRaw}T12:00:00-03:00`)   : null;
-  const voltaDate = voltaDate_raw ? new Date(`${voltaDate_raw}T12:00:00-03:00`) : null;
 
   try {
     let customer = await prisma.customer.findUnique({ where: { phone } });
     if (!customer) {
       customer = await prisma.customer.create({
-        data: { name, phone, email: email || `sem_email_${phone}@placeholder.local`, marketingOptIn: false },
+        data: {
+          name,
+          nomeLoja: nomeLoja || undefined,
+          phone,
+          email: email || `sem_email_${phone}@placeholder.local`,
+          instagram: instagram || undefined,
+          endereco: endereco || undefined,
+          bairro: bairro || undefined,
+          cidade: cidade || undefined,
+          marketingOptIn: false,
+        },
+      });
+    } else {
+      customer = await prisma.customer.update({
+        where: { id: customer.id },
+        data: {
+          name: name || customer.name,
+          nomeLoja: nomeLoja ?? customer.nomeLoja,
+          email: email || customer.email,
+          instagram: instagram ?? customer.instagram,
+          endereco: endereco ?? customer.endereco,
+          bairro: bairro ?? customer.bairro,
+          cidade: cidade ?? customer.cidade,
+        },
       });
     }
 
@@ -75,8 +103,6 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
     const finalRemainderCents = Math.max(0, computedTotalCents - depositCents);
 
     const notas = [
-      hotel ? `Cidade/Estado: ${hotel}` : null,
-      vehicleType ? `Tamanho: ${vehicleType}` : null,
       idaDate ? `Prazo de entrega: ${idaDate.toLocaleDateString("pt-BR")}` : null,
       idaFlightTime,
     ]
@@ -90,6 +116,8 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         customerId: customer.id,
         tipoProduto: tripType,
         corProduto: corSacola || undefined,
+        tamanho: tamanho || undefined,
+        corImpressao: corImpressao || undefined,
         lados: "um",
         coresLadoA: parseInt(voltaDate_raw || "0", 10) || 0,
         quantidade: passengerCount,
