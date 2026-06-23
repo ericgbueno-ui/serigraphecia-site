@@ -51,7 +51,9 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:4321/api/admin/login\" -Method POST -Body @{password='test-local'} -UseBasicParsing -MaximumRedirection 0 -ErrorAction SilentlyContinue; \"status: $\\($r.StatusCode\\)\"; \"location: $\\($r.Headers.Location\\)\"; \"setcookie: $\\($r.Headers['Set-Cookie']\\)\")",
       "PowerShell($s = New-Object Microsoft.PowerShell.Commands.WebRequestSession; $c = New-Object System.Net.Cookie\\('mt_admin_token','25898a5ec1f744900e3fcaa0ebc894dc8a52a6eeb630d455211296063058a834','/','localhost'\\); $s.Cookies.Add\\($c\\); $r = Invoke-WebRequest -Uri \"http://localhost:4321/admin/representantes/novo\" -UseBasicParsing -WebSession $s; \\($r.Content | Select-String -Pattern 'select[^{<]{0,60}\\\\{[^}]+\\\\}' -AllMatches\\).Matches.Value)",
       "Bash(npm run *)",
-      "Bash(\"C:\\\\Produção de *)"
+      "Bash(\"C:\\\\Produção de *)",
+      "Bash(curl -s http://localhost:3000/api/ping)",
+      "Bash(curl -s http://localhost:3000/admin)"
     ]
   }
 }

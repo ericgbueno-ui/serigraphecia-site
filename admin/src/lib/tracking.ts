@@ -72,8 +72,16 @@ export function trackInitiateCheckout(value?: number, source?: string) {
   trackEvent("begin_checkout", eventData);
 }
 
-export function trackLeadCapture(leadData?: any) {
-  trackEvent("lead_capture", leadData || {});
+export function trackLeadCapture(source?: string | any, leadData?: any) {
+  // Handle both trackLeadCapture(leadData) and trackLeadCapture(source, leadData)
+  const eventData: any = {};
+  if (typeof source === "string") {
+    eventData.source = source;
+    if (leadData) Object.assign(eventData, leadData);
+  } else if (source) {
+    Object.assign(eventData, source);
+  }
+  trackEvent("lead_capture", eventData);
 }
 
 export function track(eventName: string, eventData?: any) {
