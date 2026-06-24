@@ -245,4 +245,5 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
         </div>
       )}
     </div>
-  
+  );
+}
