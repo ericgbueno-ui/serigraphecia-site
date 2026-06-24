@@ -28,10 +28,10 @@ const [selectedLead, interactions] = await Promise.all([
 
 const statusColors: Record<string, { color: string; bg: string }> = {
   frio: { color: "#6b7280", bg: "rgba(107,114,128,0.1)" },
-  interessado: { color: "#60a5fa", bg: "rgba(96,165,250,0.1)" },
-  quente: { color: "#f97316", bg: "rgba(249,115,22,0.1)" },
-  pronto: { color: "#a78bfa", bg: "rgba(167,139,250,0.1)" },
-  convertido: { color: "#3ecf8e", bg: "rgba(62,207,142,0.1)" },
+  interessado: { color: "#2563eb", bg: "rgba(96,165,250,0.1)" },
+  quente: { color: "#c2410c", bg: "rgba(249,115,22,0.1)" },
+  pronto: { color: "#7c3aed", bg: "rgba(167,139,250,0.1)" },
+  convertido: { color: "#15803d", bg: "rgba(62,207,142,0.1)" },
 };
 
 function fmtTime(d: Date) {
@@ -92,7 +92,7 @@ function fmtDate(d: Date) {
                 const isHuman = msg.role === "human";
                 return (
                   <div style={`display:flex;flex-direction:column;${isJolie || isHuman ? "align-items:flex-start;" : "align-items:flex-end;"}`}>
-                    <div style={`max-width:80%;padding:10px 14px;border-radius:${isJolie || isHuman ? "4px 14px 14px 14px" : "14px 4px 14px 14px"};font-size:13px;line-height:1.5;${isJolie ? "background:var(--bg-card);border:1px solid var(--border);color:var(--text);" : isHuman ? "background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);color:#a78bfa;" : "background:rgba(201,168,76,0.08);border:1px solid var(--gold-line);color:var(--text);"}`}>
+                    <div style={`max-width:80%;padding:10px 14px;border-radius:${isJolie || isHuman ? "4px 14px 14px 14px" : "14px 4px 14px 14px"};font-size:13px;line-height:1.5;${isJolie ? "background:var(--bg-card);border:1px solid var(--border);color:var(--text);" : isHuman ? "background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);color:#7c3aed;" : "background:rgba(201,168,76,0.08);border:1px solid var(--gold-line);color:var(--text);"}`}>
                       {msg.content}
                     </div>
                     <span style="font-size:10px;color:var(--muted);margin-top:4px;">{msg.role} · {fmtTime(msg.createdAt)}</span>

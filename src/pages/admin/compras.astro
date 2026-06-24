@@ -1,0 +1,77 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+const compras = await prisma.compra.findMany({
+  orderBy: { createdAt: "desc" },
+  include: {
+    fornecedor: { select: { nome: true } },
+    itens: { select: { id: true } },
+  },
+});
+
+function brl(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function fmtDate(d: Date | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+
+const totalGastoMes = compras
+  .filter((c) => {
+    const now = new Date();
+    return c.createdAt.getMonth() === now.getMonth() && c.createdAt.getFullYear() === now.getFullYear();
+  })
+  .reduce((s, c) => s + c.totalCents, 0);
+---
+<AdminLayout title="Compras | Admin" currentPath="/admin/compras">
+  <div style="padding:32px 40px;">
+    <div style="max-width:1100px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div>
+          <h1 style="font-size:22px;font-weight:700;">📥 Compras de Matéria-Prima</h1>
+          <p style="font-size:13px;color:var(--muted);margin-top:4px;">Controle de gastos e entrada de estoque por nota de compra.</p>
+        </div>
+        <a href="/admin/compras/novo" style="background:var(--gold);color:#05080d;padding:10px 20px;border-radius:10px;font-weight:700;text-decoration:none;font-size:13px;">+ Nova compra</a>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:28px;">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-top:3px solid #dc262644;border-radius:14px;padding:18px 20px;">
+          <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:10px;">Gasto (Mês)</p>
+          <p style="font-size:20px;font-weight:800;color:#dc2626;line-height:1;">{brl(totalGastoMes)}</p>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">em compras de insumos</p>
+        </div>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-top:3px solid var(--gold);border-radius:14px;padding:18px 20px;">
+          <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:10px;">Total de Compras</p>
+          <p style="font-size:20px;font-weight:800;color:var(--text);line-height:1;">{compras.length}</p>
+          <p style="font-size:11px;color:var(--muted);margin-top:6px;">registradas</p>
+        </div>
+      </div>
+
+      {compras.length === 0 ? (
+        <div style="text-align:center;padding:60px;color:var(--muted);background:var(--bg-card);border:1px solid var(--border);border-radius:14px;">
+          Nenhuma compra registrada ainda.
+        </div>
+      ) : (
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(20,30,45,0.025);">
+            {["Fornecedor", "Pedido / Nota", "Itens", "Total", "Data"].map((h) => (
+              <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">{h}</span>
+            ))}
+          </div>
+          {compras.map((c, i) => (
+            <div style={`display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:12px;padding:14px 20px;align-items:center;${i < compras.length - 1 ? "border-bottom:1px solid var(--border);" : ""}`}>
+              <p style="font-size:13px;font-weight:600;">{c.fornecedor?.nome ?? "—"}</p>
+              <p style="font-size:12px;color:var(--muted);">{c.numeroPedido ?? "—"}</p>
+              <p style="font-size:12px;color:var(--muted);">{c.itens.length} {c.itens.length === 1 ? "item" : "itens"} · {c.totalPecas} pç · {c.totalKg.toLocaleString("pt-BR")} kg</p>
+              <p style="font-size:14px;font-weight:700;color:#dc2626;">{brl(c.totalCents)}</p>
+              <p style="font-size:12px;color:var(--muted);">{fmtDate(c.dataEmissao)}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  </div>
+</AdminLayout>

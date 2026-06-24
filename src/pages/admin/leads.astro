@@ -42,9 +42,9 @@ function fmtDate(d: Date) {
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  PENDING:   { label: "Aguardando", color: "#c9a84c", bg: "rgba(201,168,76,0.1)",   border: "rgba(201,168,76,0.3)" },
-  CONFIRMED: { label: "Convertido",  color: "#3ecf8e", bg: "rgba(62,207,142,0.1)",  border: "rgba(62,207,142,0.25)" },
-  CANCELLED: { label: "Cancelado",   color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)" },
+  PENDING:   { label: "Aguardando", color: "#a9802e", bg: "rgba(201,168,76,0.1)",   border: "rgba(201,168,76,0.3)" },
+  CONFIRMED: { label: "Convertido",  color: "#15803d", bg: "rgba(62,207,142,0.1)",  border: "rgba(62,207,142,0.25)" },
+  CANCELLED: { label: "Cancelado",   color: "#dc2626", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)" },
 };
 ---
 
@@ -102,7 +102,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string; b
                   <p style="font-size:13px;margin-top:2px;">{fmtDate(o.createdAt)}</p>
                 </div>
                 <div>
-                  <p style="font-size:16px;font-weight:700;color:#3ecf8e;">{o.totalCents > 0 ? brl(o.totalCents) : <span style="color:var(--muted);font-size:13px;">A definir</span>}</p>
+                  <p style="font-size:16px;font-weight:700;color:#15803d;">{o.totalCents > 0 ? brl(o.totalCents) : <span style="color:var(--muted);font-size:13px;">A definir</span>}</p>
                 </div>
                 <div style="display:flex;flex-direction:column;gap:8px;align-items:flex-end;">
                   <span style={`padding:4px 12px;border-radius:100px;font-size:11px;font-weight:600;white-space:nowrap;color:${sc.color};background:${sc.bg};border:1px solid ${sc.border};`}>

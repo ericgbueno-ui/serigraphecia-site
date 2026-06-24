@@ -55,10 +55,10 @@ const cartaoCount = pedidosThisMonth.filter((p) => p.payMethod === "cartao").len
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:32px;">
         {[
           { label: "Faturamento (Mês)", value: brl(faturamentoMes), sub: `${pedidosThisMonth.length} pedidos`, color: "var(--text)" },
-          { label: "Já Entrou (Mês)", value: brl(recebidoMes), sub: faturamentoMes > 0 ? `${Math.round((recebidoMes / faturamentoMes) * 100)}% das vendas` : "—", color: "#3ecf8e" },
-          { label: "A Receber (Mês)", value: brl(aReceberMes), sub: "saldo pendente", color: "#c9a84c" },
-          { label: "Ticket Médio", value: brl(ticketMedio), sub: "por pedido", color: "#a78bfa" },
-          { label: "Forma de Pgto", value: `${pixCount} PIX`, sub: `${cartaoCount} cartão`, color: "#60a5fa" },
+          { label: "Já Entrou (Mês)", value: brl(recebidoMes), sub: faturamentoMes > 0 ? `${Math.round((recebidoMes / faturamentoMes) * 100)}% das vendas` : "—", color: "#15803d" },
+          { label: "A Receber (Mês)", value: brl(aReceberMes), sub: "saldo pendente", color: "#a9802e" },
+          { label: "Ticket Médio", value: brl(ticketMedio), sub: "por pedido", color: "#7c3aed" },
+          { label: "Forma de Pgto", value: `${pixCount} PIX`, sub: `${cartaoCount} cartão`, color: "#2563eb" },
         ].map((c) => (
           <div style={`background:var(--bg-card);border:1px solid var(--border);border-top:3px solid ${c.color}44;border-radius:14px;padding:18px 20px;`}>
             <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:10px;">{c.label}</p>
@@ -76,7 +76,7 @@ const cartaoCount = pedidosThisMonth.filter((p) => p.payMethod === "cartao").len
         </div>
       ) : (
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden;">
-          <div style="display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1fr auto;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.02);">
+          <div style="display:grid;grid-template-columns:1.6fr 1.2fr 1fr 1fr 1fr auto;gap:12px;padding:12px 20px;border-bottom:1px solid var(--border);background:rgba(20,30,45,0.025);">
             {["Cliente", "Produto", "Total", "Recebido", "A Receber", ""].map((h) => (
               <span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);">{h}</span>
             ))}
@@ -94,11 +94,11 @@ const cartaoCount = pedidosThisMonth.filter((p) => p.payMethod === "cartao").len
                   <p style="font-size:11px;color:var(--muted);margin-top:2px;">{p.quantidade} un</p>
                 </div>
                 <p style="font-size:14px;font-weight:700;">{brl(p.totalCents)}</p>
-                <p style="font-size:14px;font-weight:600;color:#3ecf8e;">{brl(recebido)}</p>
-                <p style={`font-size:14px;font-weight:${p.remainderCents > 0 ? 600 : 400};color:${p.remainderCents > 0 ? "#c9a84c" : "var(--muted)"};`}>
+                <p style="font-size:14px;font-weight:600;color:#15803d;">{brl(recebido)}</p>
+                <p style={`font-size:14px;font-weight:${p.remainderCents > 0 ? 600 : 400};color:${p.remainderCents > 0 ? "#a9802e" : "var(--muted)"};`}>
                   {p.remainderCents > 0 ? brl(p.remainderCents) : "—"}
                 </p>
-                <span style={`font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;white-space:nowrap;color:${p.remainderCents === 0 ? "#3ecf8e" : "#c9a84c"};background:${p.remainderCents === 0 ? "rgba(62,207,142,0.1)" : "rgba(201,168,76,0.1)"};border:1px solid ${p.remainderCents === 0 ? "rgba(62,207,142,0.25)" : "rgba(201,168,76,0.3)"};`}>
+                <span style={`font-size:10px;font-weight:600;padding:3px 8px;border-radius:100px;white-space:nowrap;color:${p.remainderCents === 0 ? "#15803d" : "#a9802e"};background:${p.remainderCents === 0 ? "rgba(62,207,142,0.1)" : "rgba(201,168,76,0.1)"};border:1px solid ${p.remainderCents === 0 ? "rgba(62,207,142,0.25)" : "rgba(201,168,76,0.3)"};`}>
                   {p.remainderCents === 0 ? "Quitado" : "Parcial"}
                 </span>
               </a>

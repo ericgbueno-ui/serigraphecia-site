@@ -164,6 +164,8 @@ model Pedido {
   corProduto              String?
   /// Tamanho do produto (ex: 20x30, 30x40)
   tamanho                 String?
+  /// Gramatura/espessura da sacola, quando aplicável (ex: "0,10", "0,12")
+  gramatura               String?
   /// Cor da tinta de impressão
   corImpressao            String?
   /// "um" | "dois" — lados de impressão
@@ -453,6 +455,8 @@ model Fornecedor {
   email    String?
   ativo     Boolean  @default(true)
 
+  compras   Compra[]
+
   @@index([ativo])
 }
 
@@ -464,9 +468,83 @@ model Estoque {
 
   produto    String
   tipo       String
-  quantidade Float    @default(0)
+  /// Tamanho do item (ex: "40x50")
+  tamanho    String?
+  /// Gramatura/espessura (ex: "0,05")
+  gramatura  String?
+  /// Cor do item
+  cor        String?
+  quantidade Float @default(0)
   unidade    String   @default("un")
   minimo     Float    @default(0)
 
   @@index([produto])
+  @@index([tipo])
+  @@index([tamanho])
+  @@index([gramatura])
+}
+
+// ─────────────────────────────────────────────
+// COMPRAS DE MATÉRIA-PRIMA (notas de fornecedores)
+// ─────────────────────────────────────────────
+
+/// Cabeçalho de uma nota/pedido de compra de matéria-prima
+model Compra {
+  id             String       @id @default(cuid())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  /// Número do pedido/nota do fornecedor (ex: 31676)
+  numeroPedido   String?
+  dataEmissao    DateTime?
+  transportadora String?
+
+  fornecedorId   String?
+  fornecedor     Fornecedor?  @relation(fields: [fornecedorId], references: [id])
+
+  /// Totais calculados a partir dos itens (somatório)
+  totalPecas     Int          @default(0)
+  totalKg        Float        @default(0)
+  totalCents     Int          @default(0)
+
+  observacao     String?      @db.Text
+
+  itens          CompraItem[]
+
+  /// Referência da despesa criada no Fluxo de Caixa (se aplicável)
+  cashflowTransactionId String?
+
+  @@index([fornecedorId])
+  @@index([dataEmissao])
+}
+
+/// Linha de item de uma compra (uma sacola/modelo específico)
+model CompraItem {
+  id          String   @id @default(cuid())
+
+  compraId    String
+  compra      Compra   @relation(fields: [compraId], references: [id], onDelete: Cascade)
+
+  /// Descrição livre, igual à nota (ex: "SAC AD 40X50X0,05 CAMISETA - PRETA")
+  descricao   String
+
+  /// Modelo/tipo da sacola (ex: "Camiseta", "Alça Fita", "Vazada")
+  tipo        String
+  /// Tamanho (ex: "40x50")
+  tamanho     String?
+  /// Gramatura/espessura (ex: "0,05")
+  gramatura   String?
+  /// Cor
+  cor         String?
+
+  /// Quantidade de peças (unidades)
+  pecas       Int
+  /// Peso em KG
+  pesoKg      Float
+  /// Preço por KG, em centavos
+  precoKgCents Int
+  /// Total da linha, em centavos
+  totalCents  Int
+
+  @@index([compraId])
 }

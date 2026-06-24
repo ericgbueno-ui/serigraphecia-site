@@ -52,3 +52,63 @@ export async function baixarEstoque(
     console.error("Erro ao baixar estoque (pedido segue normalmente):", err);
   }
 }
+
+/**
+ * Dá entrada no estoque a partir de uma compra de matéria-prima.
+ *
+ * Regras:
+ * - Busca um item de estoque já existente com o mesmo tipo + tamanho +
+ *   gramatura + cor (comparação sem distinção de maiúsculas/minúsculas).
+ * - Se encontrar, soma a quantidade de peças recebidas.
+ * - Se não encontrar, cria um novo item de estoque com essas características.
+ * - Qualquer erro aqui é registrado no log mas NUNCA deve impedir o registro
+ *   da compra — por isso os erros são capturados internamente.
+ */
+export async function entrarEstoque(
+  prisma: PrismaClient,
+  params: {
+    tipo: string;
+    tamanho?: string | null;
+    gramatura?: string | null;
+    cor?: string | null;
+    pecas: number;
+  }
+): Promise<void> {
+  const { tipo, tamanho, gramatura, cor, pecas } = params;
+  if (!tipo || !pecas) return;
+
+  try {
+    const where: any = {
+      tipo: { equals: tipo, mode: "insensitive" },
+      tamanho: tamanho ? { equals: tamanho, mode: "insensitive" } : null,
+      gramatura: gramatura ? { equals: gramatura, mode: "insensitive" } : null,
+      cor: cor ? { equals: cor, mode: "insensitive" } : null,
+    };
+
+    const item = await prisma.estoque.findFirst({ where, select: { id: true } });
+
+    if (item) {
+      await prisma.estoque.update({
+        where: { id: item.id },
+        data: { quantidade: { increment: pecas } },
+      });
+      return;
+    }
+
+    const partesNome = [tipo, tamanho, gramatura ? `${gramatura}g` : null, cor].filter(Boolean);
+    await prisma.estoque.create({
+      data: {
+        produto: partesNome.join(" "),
+        tipo,
+        tamanho: tamanho || null,
+        gramatura: gramatura || null,
+        cor: cor || null,
+        quantidade: pecas,
+        unidade: "un",
+        minimo: 0,
+      },
+    });
+  } catch (err) {
+    console.error("Erro ao dar entrada no estoque (compra segue registrada):", err);
+  }
+}

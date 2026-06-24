@@ -15,7 +15,7 @@ export function PasswordInput({ hasError }: { hasError: boolean }) {
         style={{
           width: "100%",
           boxSizing: "border-box",
-          background: "rgba(255,255,255,0.04)",
+          background: "rgba(20,30,45,0.045)",
           border: `1px solid ${hasError ? "rgba(248,113,113,0.5)" : "var(--border-md)"}`,
           borderRadius: "12px",
           padding: "12px 48px 12px 16px",

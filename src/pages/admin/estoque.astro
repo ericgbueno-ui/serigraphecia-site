@@ -9,7 +9,10 @@ const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
   <div style="padding:32px;max-width:900px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px">
       <h1 style="font-size:22px;font-weight:700">Estoque</h1>
-      <a href="/admin/estoque/novo" style="background:var(--gold);color:#000;padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px">+ Novo item</a>
+      <div style="display:flex;gap:10px">
+        <a href="/admin/compras/novo" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text);padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px">📥 Registrar compra</a>
+        <a href="/admin/estoque/novo" style="background:var(--gold);color:#05080d;padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px">+ Novo item</a>
+      </div>
     </div>
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
       <table style="width:100%;border-collapse:collapse;font-size:13px">
@@ -17,6 +20,9 @@ const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
           <tr style="border-bottom:1px solid var(--border)">
             <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Produto</th>
             <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Tipo</th>
+            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Tamanho</th>
+            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Gramatura</th>
+            <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Cor</th>
             <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Qtd</th>
             <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Mínimo</th>
             <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Situação</th>
@@ -24,16 +30,19 @@ const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
         </thead>
         <tbody>
           {itens.length === 0 && (
-            <tr><td colspan="5" style="padding:32px;text-align:center;color:var(--muted)">Nenhum item no estoque ainda.</td></tr>
+            <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted)">Nenhum item no estoque ainda.</td></tr>
           )}
           {itens.map(i => (
               <tr style="border-bottom:1px solid var(--border)">
                 <td style="padding:12px 16px;font-weight:500">{i.produto}</td>
                 <td style="padding:12px 16px;color:var(--muted)">{i.tipo}</td>
+                <td style="padding:12px 16px;color:var(--muted)">{i.tamanho ?? "—"}</td>
+                <td style="padding:12px 16px;color:var(--muted)">{i.gramatura ?? "—"}</td>
+                <td style="padding:12px 16px;color:var(--muted)">{i.cor ?? "—"}</td>
                 <td style="padding:12px 16px;text-align:right;font-weight:600">{i.quantidade} {i.unidade}</td>
                 <td style="padding:12px 16px;text-align:right;color:var(--muted)">{i.minimo} {i.unidade}</td>
                 <td style="padding:12px 16px">
-                  <span style={`background:${i.quantidade <= i.minimo ? "rgba(255,59,48,0.15)" : "rgba(34,197,94,0.15)"};color:${i.quantidade <= i.minimo ? "#ff3b30" : "#22c55e"};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600`}>
+                  <span style={`background:${i.quantidade <= i.minimo ? "rgba(220,38,38,0.12)" : "rgba(21,128,61,0.12)"};color:${i.quantidade <= i.minimo ? "#dc2626" : "#15803d"};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600`}>
                     {i.quantidade <= i.minimo ? "⚠ Baixo" : "OK"}
                   </span>
                 </td>

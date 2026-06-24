@@ -47,12 +47,12 @@ function vehicleLabelShort(v: string) {
 
 function classifyCustomer(totalBookings: number, totalCents: number) {
   if (totalBookings >= 3 || totalCents >= 150000) {
-    return { label: "Embaixador", icon: "👑", color: "#f97316", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.25)", tier: 3 };
+    return { label: "Embaixador", icon: "👑", color: "#c2410c", bg: "rgba(249,115,22,0.1)", border: "rgba(249,115,22,0.25)", tier: 3 };
   }
   if (totalBookings >= 2 || totalCents >= 80000) {
-    return { label: "VIP", icon: "⭐", color: "#c9a84c", bg: "rgba(201,168,76,0.1)", border: "rgba(201,168,76,0.25)", tier: 2 };
+    return { label: "VIP", icon: "⭐", color: "#a9802e", bg: "rgba(201,168,76,0.1)", border: "rgba(201,168,76,0.25)", tier: 2 };
   }
-  return { label: "Regular", icon: "🤎", color: "#3ecf8e", bg: "rgba(62,207,142,0.08)", border: "rgba(62,207,142,0.2)", tier: 1 };
+  return { label: "Regular", icon: "🤎", color: "#15803d", bg: "rgba(62,207,142,0.08)", border: "rgba(62,207,142,0.2)", tier: 1 };
 }
 
 type BookingItem = {
@@ -121,10 +121,10 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "16px", marginBottom: "28px" }}>
         {[
-          { label: "Total Clientes", value: totalCustomers, color: "#fff", sub: "com pedido confirmado" },
-          { label: "Recorrentes", value: recorrentes, color: "#c9a84c", sub: "2+ pedidos" },
-          { label: "Embaixadores", value: embaixadores, color: "#f97316", sub: "3+ pedidos ou R$1.500+" },
-          { label: "LTV Médio", value: brl(ticketMedioGeral), color: "#3ecf8e", sub: "por cliente" },
+          { label: "Total Clientes", value: totalCustomers, color: "var(--text)", sub: "com pedido confirmado" },
+          { label: "Recorrentes", value: recorrentes, color: "#a9802e", sub: "2+ pedidos" },
+          { label: "Embaixadores", value: embaixadores, color: "#c2410c", sub: "3+ pedidos ou R$1.500+" },
+          { label: "LTV Médio", value: brl(ticketMedioGeral), color: "#15803d", sub: "por cliente" },
         ].map((k) => (
           <div key={k.label} style={{ ...cardStyle, borderTop: `3px solid ${k.color}33` }}>
             <p style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.12em", color: "var(--muted)", marginBottom: 8 }}>{k.label}</p>
@@ -137,9 +137,9 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
       <div style={{ display: "flex", flexWrap: "wrap" as const, justifyContent: "space-between", alignItems: "center", gap: "16px", marginBottom: "24px" }}>
         <div style={{ ...cardStyle, flex: "1 1 500px", display: "flex", gap: "20px", flexWrap: "wrap" as const, padding: "12px 20px", fontSize: "11px", alignItems: "center" }}>
           {[
-            { icon: "👑", label: "Embaixador", desc: "3+ pedidos ou R$1.500+", color: "#f97316" },
-            { icon: "⭐", label: "VIP", desc: "2+ pedidos ou R$800+", color: "#c9a84c" },
-            { icon: "🤎", label: "Regular", desc: "1 pedido", color: "#3ecf8e" },
+            { icon: "👑", label: "Embaixador", desc: "3+ pedidos ou R$1.500+", color: "#c2410c" },
+            { icon: "⭐", label: "VIP", desc: "2+ pedidos ou R$800+", color: "#a9802e" },
+            { icon: "🤎", label: "Regular", desc: "1 pedido", color: "#15803d" },
           ].map((c) => (
             <div key={c.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
               <span style={{ fontSize: 13 }}>{c.icon}</span>
@@ -154,14 +154,14 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
             placeholder="Buscar por nome, WhatsApp ou e-mail..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={{ width: "100%", boxSizing: "border-box" as const, background: "rgba(255,255,255,0.04)", border: "1px solid var(--border)", borderRadius: "12px", padding: "12px 16px 12px 36px", color: "var(--text)", fontSize: "13px", outline: "none" }}
+            style={{ width: "100%", boxSizing: "border-box" as const, background: "rgba(20,30,45,0.045)", border: "1px solid var(--border)", borderRadius: "12px", padding: "12px 16px 12px 36px", color: "var(--text)", fontSize: "13px", outline: "none" }}
           />
           <span style={{ position: "absolute", left: "14px", top: "50%", transform: "translateY(-50%)", fontSize: "14px", color: "var(--muted)", pointerEvents: "none" }}>🔍</span>
         </div>
       </div>
 
       <div style={{ ...cardStyle, overflow: "hidden", padding: 0 }}>
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 100px", gap: 12, padding: "14px 20px", borderBottom: "1px solid var(--border)", background: "rgba(255,255,255,0.02)" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 100px", gap: 12, padding: "14px 20px", borderBottom: "1px solid var(--border)", background: "rgba(20,30,45,0.025)" }}>
           {(["name", "ltv", "date", "class"] as const).map((field, i) => (
             <button key={field} onClick={() => handleSort(field)} style={{ background: "none", border: "none", textAlign: "left", padding: 0, fontSize: 10, fontWeight: 700, textTransform: "uppercase" as const, letterSpacing: "0.08em", color: sortBy === field ? "var(--gold)" : "var(--muted)", cursor: "pointer" }}>
               {["Cliente", "LTV Total", "Último pedido", "Classe"][i]}{getSortIndicator(field)}
@@ -174,12 +174,12 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
           const lastBooking = c.bookings[0];
           const firstWithAffiliate = c.bookings.find((b) => b.affiliateCode && b.affiliateId);
           return (
-            <div key={c.customer.id} onClick={() => setSelectedCust(c)} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 100px", gap: 12, padding: "16px 20px", alignItems: "center", borderBottom: i < sorted.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none", cursor: "pointer" }}>
+            <div key={c.customer.id} onClick={() => setSelectedCust(c)} style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr 100px", gap: 12, padding: "16px 20px", alignItems: "center", borderBottom: i < sorted.length - 1 ? "1px solid rgba(20,30,45,0.045)" : "none", cursor: "pointer" }}>
               <div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: "var(--text)" }}>{c.customer.name ?? "—"}</span>
                   {firstWithAffiliate?.affiliateName && (
-                    <a href={`/admin/afiliados/${firstWithAffiliate.affiliateId}`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 9, fontWeight: 700, color: "#a78bfa", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)", padding: "1px 6px", borderRadius: 4, textDecoration: "none" }}>
+                    <a href={`/admin/afiliados/${firstWithAffiliate.affiliateId}`} onClick={(e) => e.stopPropagation()} style={{ fontSize: 9, fontWeight: 700, color: "#7c3aed", background: "rgba(167,139,250,0.1)", border: "1px solid rgba(167,139,250,0.2)", padding: "1px 6px", borderRadius: 4, textDecoration: "none" }}>
                       {firstWithAffiliate.affiliateName.toUpperCase()}
                     </a>
                   )}
@@ -194,7 +194,7 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
                 <p style={{ fontSize: 10, color: "var(--muted)" }}>{c.bookings.length} {c.bookings.length === 1 ? "pedido" : "pedidos"}</p>
               </div>
               <div>
-                <p style={{ fontSize: 14, fontWeight: 700, color: "#c9a84c" }}>{brl(c.totalCents)}</p>
+                <p style={{ fontSize: 14, fontWeight: 700, color: "#a9802e" }}>{brl(c.totalCents)}</p>
                 <p style={{ fontSize: 10, color: "var(--muted)" }}>{brl(Math.round(c.totalCents / c.bookings.length))} / pedido</p>
               </div>
               <div>
@@ -218,23 +218,23 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
 
       {selectedCust && (
         <div onClick={() => setSelectedCust(null)} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", backdropFilter: "blur(4px)", zIndex: 999, display: "flex", justifyContent: "flex-end" }}>
-          <div onClick={(e) => e.stopPropagation()} style={{ width: "480px", height: "100%", background: "#0d1117", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", padding: "32px 28px", boxSizing: "border-box", overflowY: "auto" }}>
+          <div onClick={(e) => e.stopPropagation()} style={{ width: "480px", height: "100%", background: "var(--bg-card)", borderLeft: "1px solid var(--border)", display: "flex", flexDirection: "column", padding: "32px 28px", boxSizing: "border-box", overflowY: "auto" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 28 }}>
               <h2 style={{ fontSize: "20px", fontWeight: 700, color: "var(--text)", margin: 0 }}>{selectedCust.customer.name ?? "Cliente"}</h2>
-              <button onClick={() => setSelectedCust(null)} style={{ background: "rgba(255,255,255,0.05)", border: "1px solid var(--border)", borderRadius: "50%", width: "32px", height: "32px", color: "var(--text)", cursor: "pointer" }}>✕</button>
+              <button onClick={() => setSelectedCust(null)} style={{ background: "rgba(20,30,45,0.06)", border: "1px solid var(--border)", borderRadius: "50%", width: "32px", height: "32px", color: "var(--text)", cursor: "pointer" }}>✕</button>
             </div>
             <div style={{ marginBottom: "24px" }}>
               <p style={{ fontSize: 11, color: "var(--muted)", marginBottom: 4 }}>WhatsApp</p>
-              <a href={`https://wa.me/55${selectedCust.customer.phone}`} target="_blank" rel="noreferrer" style={{ color: "#3ecf8e", textDecoration: "none" }}>💬 {selectedCust.customer.phone}</a>
+              <a href={`https://wa.me/55${selectedCust.customer.phone}`} target="_blank" rel="noreferrer" style={{ color: "#15803d", textDecoration: "none" }}>💬 {selectedCust.customer.phone}</a>
             </div>
             <div>
               <h3 style={{ fontSize: "13px", fontWeight: 700, color: "var(--muted)", marginBottom: "16px" }}>📋 Histórico de Pedidos ({selectedCust.bookings.length})</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
                 {selectedCust.bookings.map((b) => (
-                  <a key={b.id} href={`/admin/reservas/${b.id}`} style={{ background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: 4 }}>
+                  <a key={b.id} href={`/admin/reservas/${b.id}`} style={{ background: "rgba(20,30,45,0.035)", border: "1px solid var(--border)", borderRadius: "12px", padding: "16px", textDecoration: "none", color: "inherit", display: "flex", flexDirection: "column", gap: 4 }}>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--gold)" }}>{b.idaDate ? fmtDate(b.idaDate) : fmtDate(b.createdAt)}</span>
-                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#3ecf8e" }}>{brl(b.totalCents)}</span>
+                      <span style={{ fontSize: "13px", fontWeight: 700, color: "#15803d" }}>{brl(b.totalCents)}</span>
                     </div>
                     <div style={{ fontSize: "12px", color: "var(--muted)" }}>{b.tipoProduto ?? "Pedido"} {b.quantidade ? `· ${b.quantidade} un` : ""}</div>
                   </a>
@@ -245,5 +245,4 @@ export function ClientesClient({ initialCustomers }: { initialCustomers: Custome
         </div>
       )}
     </div>
-  );
-}
+  

@@ -20,7 +20,7 @@ function fmtDate(d: Date | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
-const statusColor = pedido.status === "CONFIRMED" ? "#3ecf8e" : pedido.status === "CANCELLED" ? "#f87171" : "#c9a84c";
+const statusColor = pedido.status === "CONFIRMED" ? "#15803d" : pedido.status === "CANCELLED" ? "#dc2626" : "#a9802e";
 const statusLabel = pedido.status === "CONFIRMED" ? "Confirmado" : pedido.status === "CANCELLED" ? "Cancelado" : "Pendente";
 ---
 
@@ -47,7 +47,7 @@ const statusLabel = pedido.status === "CONFIRMED" ? "Confirmado" : pedido.status
           </div>
           <div>
             <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">WhatsApp</p>
-            <a href={`https://wa.me/55${pedido.customer.phone}`} target="_blank" style="font-size:14px;font-weight:600;color:#3ecf8e;text-decoration:none;">💬 {pedido.customer.phone}</a>
+            <a href={`https://wa.me/55${pedido.customer.phone}`} target="_blank" style="font-size:14px;font-weight:600;color:#15803d;text-decoration:none;">💬 {pedido.customer.phone}</a>
           </div>
           <div>
             <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">E-mail</p>
@@ -97,7 +97,7 @@ const statusLabel = pedido.status === "CONFIRMED" ? "Confirmado" : pedido.status
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
           <div>
             <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Total</p>
-            <p style="font-size:22px;font-weight:800;color:#3ecf8e;">{brl(pedido.totalCents)}</p>
+            <p style="font-size:22px;font-weight:800;color:#15803d;">{brl(pedido.totalCents)}</p>
           </div>
           <div>
             <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Já Recebido</p>
@@ -105,7 +105,7 @@ const statusLabel = pedido.status === "CONFIRMED" ? "Confirmado" : pedido.status
           </div>
           <div>
             <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">A Receber</p>
-            <p style={`font-size:22px;font-weight:800;color:${pedido.remainderCents > 0 ? "#c9a84c" : "var(--muted)"};`}>{brl(pedido.remainderCents)}</p>
+            <p style={`font-size:22px;font-weight:800;color:${pedido.remainderCents > 0 ? "#a9802e" : "var(--muted)"};`}>{brl(pedido.remainderCents)}</p>
           </div>
           <div>
             <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Pagamento</p>

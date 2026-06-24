@@ -25,6 +25,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   const tripType    = formData.get("tripType")?.toString() || "alca_vazada";
   const tamanho     = formData.get("tamanho")?.toString().trim() || null;
+  const gramatura   = formData.get("gramatura")?.toString().trim() || null;
   const corImpressao = formData.get("corImpressao")?.toString().trim() || null;
   const passengerCount = parseInt(formData.get("passengerCount")?.toString() || "50", 10);
   const idaDateRaw  = formData.get("idaDate")?.toString();
@@ -117,6 +118,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         tipoProduto: tripType,
         corProduto: corSacola || undefined,
         tamanho: tamanho || undefined,
+        gramatura: gramatura || undefined,
         corImpressao: corImpressao || undefined,
         lados: "um",
         coresLadoA: parseInt(voltaDate_raw || "0", 10) || 0,

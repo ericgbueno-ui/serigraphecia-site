@@ -28,17 +28,17 @@ const currentPath = new URL(Astro.request.url).pathname;
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
       :root {
-        --bg: #05080d;
-        --bg-card: #0d1117;
-        --text: #e8eaf0;
-        --muted: #6b7280;
-        --border: rgba(255,255,255,0.07);
-        --border-md: rgba(255,255,255,0.12);
-        --gold: #c9a84c;
-        --gold-dim: rgba(201,168,76,0.08);
-        --gold-line: rgba(201,168,76,0.25);
-        --red: #f87171;
-        --mt-gold: #c9a84c;
+        --bg: #eef1f3;
+        --bg-card: #ffffff;
+        --text: #1c2230;
+        --muted: #667085;
+        --border: rgba(20,30,45,0.09);
+        --border-md: rgba(20,30,45,0.16);
+        --gold: #a9802e;
+        --gold-dim: rgba(169,128,46,0.10);
+        --gold-line: rgba(169,128,46,0.35);
+        --red: #dc2626;
+        --mt-gold: #a9802e;
       }
       body {
         font-family: 'DM Sans', system-ui, sans-serif;
@@ -53,12 +53,12 @@ const currentPath = new URL(Astro.request.url).pathname;
          os <select> renderizados pelas páginas via <slot> -->
     <style is:global>
       select {
-        color-scheme: dark;
+        color-scheme: light;
       }
       select option,
       select optgroup {
-        background-color: #0d1117;
-        color: #e8eaf0;
+        background-color: #ffffff;
+        color: #1c2230;
       }
     </style>
     <link rel="preconnect" href="https://fonts.googleapis.com" />

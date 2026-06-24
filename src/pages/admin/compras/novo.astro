@@ -1,0 +1,196 @@
+---
+export const prerender = false;
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { prisma } from "../../../lib/prisma";
+
+const fornecedores = await prisma.fornecedor.findMany({
+  where: { ativo: true },
+  orderBy: { nome: "asc" },
+  select: { id: true, nome: true },
+});
+
+const hasError = !!Astro.url.searchParams.get("error");
+---
+<AdminLayout title="Nova Compra | Admin" currentPath="/admin/compras">
+  <div style="padding:32px 40px;">
+    <div style="max-width:1000px;">
+      <div style="margin-bottom:24px;">
+        <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:var(--muted);margin-bottom:6px;">Admin · Gestão</p>
+        <h1 style="font-size:22px;font-weight:700;">📥 Nova Compra de Matéria-Prima</h1>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Registre a nota de compra do fornecedor. O estoque e o fluxo de caixa são atualizados automaticamente.</p>
+      </div>
+
+      {hasError && (
+        <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.25);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--red);margin-bottom:16px;">
+          Verifique os campos: inclua pelo menos um item válido (tipo, peças e peso preenchidos).
+        </div>
+      )}
+
+      <form id="form-compra" action="/api/admin/compras" method="POST" style="display:flex;flex-direction:column;gap:24px;">
+
+        <!-- CABEÇALHO -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <h2 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold);">Dados da Nota</h2>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Fornecedor</label>
+              <select name="fornecedorId" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+                <option value="">Selecione...</option>
+                {fornecedores.map((f) => <option value={f.id}>{f.nome}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Nº do Pedido / Nota</label>
+              <input name="numeroPedido" placeholder="Ex: 31676" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Data de Emissão</label>
+              <input name="dataEmissao" type="date" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Transportadora</label>
+              <input name="transportadora" placeholder="Ex: Van Sul" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            </div>
+            <div style="grid-column:1/-1;">
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Observações</label>
+              <textarea name="observacao" rows="2" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;resize:vertical;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ITENS -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 style="font-size:14px;font-weight:700;color:var(--gold);">Itens da Nota</h2>
+            <button type="button" id="btn-add-item" style="background:rgba(169,128,46,0.1);border:1px solid var(--gold-line);color:var(--gold);padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">+ Adicionar item</button>
+          </div>
+
+          <div id="lista-itens" style="display:flex;flex-direction:column;gap:14px;"></div>
+
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:32px;font-size:13px;">
+            <span style="color:var(--muted);">Peças: <strong id="tot-pecas" style="color:var(--text);">0</strong></span>
+            <span style="color:var(--muted);">Peso: <strong id="tot-kg" style="color:var(--text);">0</strong> kg</span>
+            <span style="color:var(--muted);">Total: <strong id="tot-valor" style="color:#dc2626;">R$ 0,00</strong></span>
+          </div>
+        </div>
+
+        <input type="hidden" name="itensJson" id="itens-json" />
+
+        <div style="display:flex;gap:12px;justify-content:flex-end;">
+          <a href="/admin/compras" style="padding:12px 20px;border:1px solid var(--border);border-radius:10px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:600;">Cancelar</a>
+          <button type="submit" style="padding:12px 24px;background:var(--gold);color:#05080d;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;">Registrar Compra →</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <template id="tpl-item">
+    <div class="linha-item" style="border:1px solid var(--border);border-radius:12px;padding:16px;display:grid;grid-template-columns:1.4fr 0.9fr 0.7fr 0.9fr 0.7fr 0.7fr 0.8fr auto;gap:10px;align-items:end;">
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Tipo *</label>
+        <input class="f-tipo" placeholder="Ex: Camiseta" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Tamanho</label>
+        <input class="f-tamanho" placeholder="40x50" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Gram.</label>
+        <input class="f-gramatura" placeholder="0,05" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Cor</label>
+        <input class="f-cor" placeholder="Preta" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Peças *</label>
+        <input class="f-pecas" type="number" min="0" placeholder="500" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Peso (kg) *</label>
+        <input class="f-peso" type="number" min="0" step="0.001" placeholder="4,100" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box;" />
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:4px;text-transform:uppercase;">Preço/kg *</label>
+        <input class="f-preco" type="number" min="0" step="0.01" placeholder="34,20" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:8px;padding:8px 10px;color:var(--text);font-size:12px;outline:none;box-sizing:border-box;" />
+      </div>
+      <button type="button" class="btn-remove" title="Remover" style="background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.3);color:#dc2626;border-radius:8px;padding:8px 10px;font-size:12px;cursor:pointer;height:34px;">✕</button>
+    </div>
+  </template>
+
+  <script>
+    const listaItens = document.getElementById("lista-itens");
+    const tpl = document.getElementById("tpl-item");
+    const btnAdd = document.getElementById("btn-add-item");
+    const form = document.getElementById("form-compra");
+    const itensJsonInput = document.getElementById("itens-json");
+    const totPecasEl = document.getElementById("tot-pecas");
+    const totKgEl = document.getElementById("tot-kg");
+    const totValorEl = document.getElementById("tot-valor");
+
+    function brl(v) {
+      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    function addItem() {
+      const node = tpl.content.cloneNode(true);
+      const linha = node.querySelector(".linha-item");
+      linha.querySelector(".btn-remove").addEventListener("click", () => {
+        linha.remove();
+        recalcular();
+      });
+      linha.querySelectorAll("input").forEach((el) => el.addEventListener("input", recalcular));
+      listaItens.appendChild(linha);
+    }
+
+    function lerNumero(v) {
+      const n = parseFloat(String(v).replace(",", "."));
+      return isNaN(n) ? 0 : n;
+    }
+
+    function recalcular() {
+      let totPecas = 0, totKg = 0, totValor = 0;
+      listaItens.querySelectorAll(".linha-item").forEach((linha) => {
+        const pecas = lerNumero(linha.querySelector(".f-pecas").value);
+        const peso = lerNumero(linha.querySelector(".f-peso").value);
+        const preco = lerNumero(linha.querySelector(".f-preco").value);
+        totPecas += pecas;
+        totKg += peso;
+        totValor += peso * preco;
+      });
+      totPecasEl.textContent = String(totPecas);
+      totKgEl.textContent = totKg.toLocaleString("pt-BR", { maximumFractionDigits: 3 });
+      totValorEl.textContent = brl(totValor);
+    }
+
+    btnAdd.addEventListener("click", addItem);
+    addItem(); // primeira linha já vem aberta
+
+    form.addEventListener("submit", (e) => {
+      const itens = [];
+      listaItens.querySelectorAll(".linha-item").forEach((linha) => {
+        const tipo = linha.querySelector(".f-tipo").value.trim();
+        const tamanho = linha.querySelector(".f-tamanho").value.trim();
+        const gramatura = linha.querySelector(".f-gramatura").value.trim();
+        const cor = linha.querySelector(".f-cor").value.trim();
+        const pecas = lerNumero(linha.querySelector(".f-pecas").value);
+        const pesoKg = lerNumero(linha.querySelector(".f-peso").value);
+        const precoKg = lerNumero(linha.querySelector(".f-preco").value);
+        if (!tipo || pecas <= 0 || pesoKg <= 0) return;
+        const descricaoPartes = [tipo, tamanho, gramatura ? `${gramatura}g` : "", cor].filter(Boolean);
+        itens.push({
+          descricao: descricaoPartes.join(" "),
+          tipo, tamanho, gramatura, cor, pecas, pesoKg, precoKg,
+        });
+      });
+
+      if (itens.length === 0) {
+        e.preventDefault();
+        alert("Adicione pelo menos um item válido (tipo, peças e peso preenchidos).");
+        return;
+      }
+
+      itensJsonInput.value = JSON.stringify(itens);
+    });
+  </script>
+</AdminLayout>

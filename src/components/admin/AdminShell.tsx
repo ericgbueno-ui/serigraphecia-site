@@ -32,6 +32,7 @@ const SECTIONS: MenuSection[] = [
       { href: "/admin/precos", label: "Tabela de Valores", icon: "💲" },
       { href: "/admin/fornecedores", label: "Fornecedores", icon: "🏭" },
       { href: "/admin/estoque", label: "Estoque", icon: "📦" },
+      { href: "/admin/compras", label: "Compras", icon: "📥" },
       { href: "/admin/caixa", label: "Financeiro", icon: "💰" },
     ],
   },

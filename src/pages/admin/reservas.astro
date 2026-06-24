@@ -42,9 +42,9 @@ function fmtDate(d: Date | null) {
   return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 function statusBadge(s: string) {
-  if (s === "CONFIRMED") return { label: "Confirmado", color: "#3ecf8e", bg: "rgba(62,207,142,0.1)", border: "rgba(62,207,142,0.25)" };
-  if (s === "CANCELLED") return { label: "Cancelado", color: "#f87171", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)" };
-  return { label: "Pendente", color: "#c9a84c", bg: "rgba(201,168,76,0.1)", border: "rgba(201,168,76,0.3)" };
+  if (s === "CONFIRMED") return { label: "Confirmado", color: "#15803d", bg: "rgba(62,207,142,0.1)", border: "rgba(62,207,142,0.25)" };
+  if (s === "CANCELLED") return { label: "Cancelado", color: "#dc2626", bg: "rgba(248,113,113,0.1)", border: "rgba(248,113,113,0.25)" };
+  return { label: "Pendente", color: "#a9802e", bg: "rgba(201,168,76,0.1)", border: "rgba(201,168,76,0.3)" };
 }
 
 const confirmados = pedidos.filter((p) => p.status === "CONFIRMED");
@@ -88,9 +88,9 @@ const monthLabel = new Date(year, month).toLocaleDateString("pt-BR", { month: "l
                   <p style="font-size:13px;font-weight:500;margin-top:2px;">{fmtDate(p.createdAt)}</p>
                 </div>
                 <div>
-                  <p style="font-size:18px;font-weight:700;color:#3ecf8e;">{brl(p.totalCents)}</p>
+                  <p style="font-size:18px;font-weight:700;color:#15803d;">{brl(p.totalCents)}</p>
                   <p style="font-size:11px;color:var(--muted);margin-top:2px;">{p.payMethod === "pix" ? "PIX" : p.payMethod === "card" ? "Cartão" : p.payMethod ?? "—"}</p>
-                  {p.remainderCents > 0 && <p style="font-size:11px;color:#c9a84c;margin-top:2px;">Restante: {brl(p.remainderCents)}</p>}
+                  {p.remainderCents > 0 && <p style="font-size:11px;color:#a9802e;margin-top:2px;">Restante: {brl(p.remainderCents)}</p>}
                 </div>
                 <span style={`padding:5px 12px;border-radius:100px;font-size:11px;font-weight:600;color:${badge.color};background:${badge.bg};border:1px solid ${badge.border};white-space:nowrap;`}>
                   {badge.label}

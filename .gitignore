@@ -32,3 +32,4 @@ Thumbs.db
 # Admin (subprojeto Next.js — rastreado neste repo, deploy separado no Vercel)
 # /admin/
 .env*.local
+seed-precos.mjs

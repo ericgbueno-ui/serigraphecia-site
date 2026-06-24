@@ -64,7 +64,7 @@ function brl(cents: number) {
               <div>
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
                   <p style="font-size:14px;font-weight:600;">{r.name}</p>
-                  {!r.active && <span style="font-size:10px;font-weight:700;color:#f87171;background:rgba(248,113,113,0.1);padding:2px 6px;border-radius:4px;">Inativo</span>}
+                  {!r.active && <span style="font-size:10px;font-weight:700;color:#dc2626;background:rgba(248,113,113,0.1);padding:2px 6px;border-radius:4px;">Inativo</span>}
                 </div>
                 <p style="font-size:12px;color:var(--muted);">Código: <strong style="color:var(--gold);">{r.code}</strong></p>
                 <p style="font-size:11px;color:var(--muted);margin-top:2px;">📱 {r.whatsapp ?? r.email ?? "—"}</p>
@@ -76,12 +76,12 @@ function brl(cents: number) {
               </div>
               <div>
                 <p style="font-size:11px;color:var(--muted);">Total Comissões</p>
-                <p style="font-size:14px;font-weight:600;color:#3ecf8e;">{brl(r.totalComm)}</p>
+                <p style="font-size:14px;font-weight:600;color:#15803d;">{brl(r.totalComm)}</p>
                 <p style="font-size:11px;color:var(--muted);">{r.totalPedidos} pedidos</p>
               </div>
               <div>
                 <p style="font-size:11px;color:var(--muted);">A Pagar</p>
-                <p style={`font-size:14px;font-weight:600;${r.pendente > 0 ? "color:#c9a84c;" : "color:var(--muted);"}`}>{brl(r.pendente)}</p>
+                <p style={`font-size:14px;font-weight:600;${r.pendente > 0 ? "color:#a9802e;" : "color:var(--muted);"}`}>{brl(r.pendente)}</p>
                 <p style="font-size:11px;color:var(--muted);">Pago: {brl(r.totalPago)}</p>
               </div>
               <a href={`/admin/afiliados/${r.id}`} style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:10px;border:1px solid var(--border);text-decoration:none;color:var(--text);">👁️</a>
