@@ -19,6 +19,11 @@ const pedidos = await prisma.pedido.findMany({
   },
 });
 
+const despesas = await prisma.cashflowTransaction.findMany({
+  where: { transactionType: "EXPENSE" },
+  select: { transactionDate: true, amountCents: true, category: { select: { name: true } } },
+});
+
 function brl(cents: number) {
   return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
@@ -32,6 +37,7 @@ function monthKey(d: Date) {
 
 const currentMonth = monthKey(new Date());
 const pedidosThisMonth = pedidos.filter((p) => monthKey(p.createdAt) === currentMonth);
+const despesasThisMonth = despesas.filter((d) => monthKey(d.transactionDate) === currentMonth);
 
 const faturamentoMes = pedidosThisMonth.reduce((s, p) => s + p.totalCents, 0);
 const recebidoMes = pedidosThisMonth.reduce((s, p) => s + (p.totalCents - p.remainderCents), 0);
@@ -39,6 +45,12 @@ const aReceberMes = pedidosThisMonth.reduce((s, p) => s + p.remainderCents, 0);
 const ticketMedio = pedidosThisMonth.length > 0 ? Math.round(faturamentoMes / pedidosThisMonth.length) : 0;
 const pixCount = pedidosThisMonth.filter((p) => p.payMethod === "pix" || p.payMethod === "pix_50").length;
 const cartaoCount = pedidosThisMonth.filter((p) => p.payMethod === "cartao").length;
+
+const gastosMateriaPrimaMes = despesasThisMonth
+  .filter((d) => d.category?.name === "Compra de Matéria-Prima")
+  .reduce((s, d) => s + d.amountCents, 0);
+const totalDespesasMes = despesasThisMonth.reduce((s, d) => s + d.amountCents, 0);
+const resultadoMes = faturamentoMes - totalDespesasMes;
 ---
 
 <AdminLayout title="Fluxo de Caixa | Admin">
@@ -55,6 +67,8 @@ const cartaoCount = pedidosThisMonth.filter((p) => p.payMethod === "cartao").len
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:32px;">
         {[
           { label: "Faturamento (Mês)", value: brl(faturamentoMes), sub: `${pedidosThisMonth.length} pedidos`, color: "var(--text)" },
+          { label: "Gastos c/ Matéria-Prima", value: `- ${brl(gastosMateriaPrimaMes)}`, sub: "compras de sacolas no mês", color: "#dc2626" },
+          { label: "Resultado (Mês)", value: brl(resultadoMes), sub: "faturamento − despesas", color: resultadoMes >= 0 ? "#15803d" : "#dc2626" },
           { label: "Já Entrou (Mês)", value: brl(recebidoMes), sub: faturamentoMes > 0 ? `${Math.round((recebidoMes / faturamentoMes) * 100)}% das vendas` : "—", color: "#15803d" },
           { label: "A Receber (Mês)", value: brl(aReceberMes), sub: "saldo pendente", color: "#a9802e" },
           { label: "Ticket Médio", value: brl(ticketMedio), sub: "por pedido", color: "#7c3aed" },
