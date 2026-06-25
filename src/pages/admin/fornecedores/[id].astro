@@ -47,19 +47,45 @@ const tamanhos = Object.keys(porTamanho).sort();
 
 <AdminLayout title={`${fornecedor.nome} - Catálogo`} currentPath={`/admin/fornecedores/${id}`}>
   <div style="padding:32px;max-width:1200px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
-      <div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px">
+      <div style="flex:1">
         <h1 style="font-size:28px;font-weight:700;margin:0">{fornecedor.nome}</h1>
+        <p style="color:var(--muted);margin:4px 0 0 0;font-size:13px">{fornecedor.razaoSocial}</p>
         <p style="color:var(--muted);margin:8px 0 0 0">{fornecedor.produto}</p>
-        <div style="display:flex;gap:16px;margin-top:12px;font-size:13px">
+
+        {(fornecedor.endereco || fornecedor.cep) && (
+          <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)">
+            📍 {fornecedor.endereco}{fornecedor.bairro ? `, ${fornecedor.bairro}` : ''}
+            <br />
+            {fornecedor.cidade}/{fornecedor.estado} - {fornecedor.cep}
+            {fornecedor.cnpj && <><br />CNPJ: {fornecedor.cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')}</>}
+          </div>
+        )}
+
+        <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:12px">
+          {fornecedor.telefone && (
+            <a href={`tel:${fornecedor.telefone.replace(/\D/g, '')}`} style="color:var(--gold);text-decoration:none">
+              ☎️ {fornecedor.telefone}
+            </a>
+          )}
           {fornecedor.whatsapp && (
-            <a href={`https://wa.me/${fornecedor.whatsapp}`} target="_blank" style="color:var(--gold);text-decoration:none">
-              💬 {fornecedor.whatsapp}
+            <a href={`https://wa.me/${fornecedor.whatsapp.replace(/\D/g, '')}`} target="_blank" style="color:var(--gold);text-decoration:none">
+              💬 WhatsApp
             </a>
           )}
           {fornecedor.email && (
             <a href={`mailto:${fornecedor.email}`} style="color:var(--gold);text-decoration:none">
               ✉️ {fornecedor.email}
+            </a>
+          )}
+          {fornecedor.emailAdicional && (
+            <a href={`mailto:${fornecedor.emailAdicional}`} style="color:var(--gold);text-decoration:none">
+              ✉️ {fornecedor.emailAdicional}
+            </a>
+          )}
+          {fornecedor.site && (
+            <a href={fornecedor.site} target="_blank" style="color:var(--gold);text-decoration:none">
+              🌐 Site
             </a>
           )}
         </div>

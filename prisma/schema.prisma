@@ -452,7 +452,27 @@ model Fornecedor {
   nome      String
   produto   String
   whatsapp  String?
-  email    String?
+  email     String?
+  /// CNPJ do fornecedor (sem pontuação)
+  cnpj      String?
+  /// Razão social/empresa
+  razaoSocial String?
+  /// Endereço (rua e número)
+  endereco  String?
+  /// Bairro
+  bairro    String?
+  /// Cidade
+  cidade    String?
+  /// CEP
+  cep       String?
+  /// Estado (ex: SP)
+  estado    String?
+  /// Telefone fixo para contato
+  telefone  String?
+  /// Email adicional para contato
+  emailAdicional String?
+  /// Site do fornecedor
+  site      String?
   ativo     Boolean  @default(true)
 
   compras   Compra[]
