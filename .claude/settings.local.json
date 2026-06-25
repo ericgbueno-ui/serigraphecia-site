@@ -61,7 +61,9 @@
       "Bash(node import-estoque.mjs)",
       "Bash(node update-fornecedores.mjs)",
       "Bash(git reset *)",
-      "Bash(git restore *)"
+      "Bash(git restore *)",
+      "Bash(node cleanup-fornecedores.mjs)",
+      "Bash(node update-precos.mjs)"
     ]
   }
 }
