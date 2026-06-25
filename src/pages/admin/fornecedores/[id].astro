@@ -1,0 +1,117 @@
+---
+export const prerender = false;
+import AdminLayout from "../../../layouts/AdminLayout.astro";
+import { prisma } from "../../../lib/prisma";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect('/admin/fornecedores');
+}
+
+const fornecedor = await prisma.fornecedor.findUnique({
+  where: { id },
+});
+
+if (!fornecedor) {
+  return Astro.redirect('/admin/fornecedores');
+}
+
+// Buscar itens de estoque deste fornecedor
+// Filtrando por tipo (correlacionado com o fornecedor)
+const tipoMapa: Record<string, string> = {
+  'Alquimia': 'PEAD',
+  'Marfel': 'HD',
+};
+
+const tipoFornecedor = tipoMapa[fornecedor.nome] || fornecedor.nome;
+
+const itensEstoque = await prisma.estoque.findMany({
+  where: {
+    tipo: tipoFornecedor,
+  },
+  orderBy: [{ tamanho: 'asc' }, { gramatura: 'asc' }, { cor: 'asc' }],
+});
+
+// Agrupar por tamanho
+const porTamanho = itensEstoque.reduce((acc, item) => {
+  if (!acc[item.tamanho || '']) {
+    acc[item.tamanho || ''] = [];
+  }
+  acc[item.tamanho || ''].push(item);
+  return acc;
+}, {} as Record<string, typeof itensEstoque>);
+
+const tamanhos = Object.keys(porTamanho).sort();
+---
+
+<AdminLayout title={`${fornecedor.nome} - Catálogo`} currentPath={`/admin/fornecedores/${id}`}>
+  <div style="padding:32px;max-width:1200px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px">
+      <div>
+        <h1 style="font-size:28px;font-weight:700;margin:0">{fornecedor.nome}</h1>
+        <p style="color:var(--muted);margin:8px 0 0 0">{fornecedor.produto}</p>
+        <div style="display:flex;gap:16px;margin-top:12px;font-size:13px">
+          {fornecedor.whatsapp && (
+            <a href={`https://wa.me/${fornecedor.whatsapp}`} target="_blank" style="color:var(--gold);text-decoration:none">
+              💬 {fornecedor.whatsapp}
+            </a>
+          )}
+          {fornecedor.email && (
+            <a href={`mailto:${fornecedor.email}`} style="color:var(--gold);text-decoration:none">
+              ✉️ {fornecedor.email}
+            </a>
+          )}
+        </div>
+      </div>
+      <a href="/admin/fornecedores" style="background:var(--bg-card);color:var(--text);padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px;border:1px solid var(--border)">← Voltar</a>
+    </div>
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+      <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
+        <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">{itensEstoque.length} Produtos Disponíveis</h3>
+      </div>
+
+      {tamanhos.map(tamanho => (
+        <div style="border-bottom:1px solid var(--border);overflow:hidden">
+          <div style="padding:12px 16px;background:rgba(255,255,255,0.02);font-weight:600;font-size:13px;color:var(--muted)">
+            📦 Tamanho: {tamanho}
+          </div>
+
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Cor</th>
+                <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Gramatura</th>
+                <th style="text-align:center;padding:12px 16px;color:var(--muted);font-weight:600">Estoque</th>
+              </tr>
+            </thead>
+            <tbody>
+              {porTamanho[tamanho].map(item => (
+                <tr style="border-bottom:1px solid var(--border);transition:background 0.2s">
+                  <td style="padding:12px 16px;font-weight:500">{item.cor}</td>
+                  <td style="padding:12px 16px;color:var(--muted)">{item.gramatura}mm</td>
+                  <td style="padding:12px 16px;text-align:center">
+                    <span style={`background:${item.quantidade > 0 ? "rgba(34,197,94,0.15)" : "rgba(156,163,175,0.15)"};color:${item.quantidade > 0 ? "#15803d" : "#6b7280"};padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600`}>
+                      {item.quantidade > 0 ? `${item.quantidade} ${item.unidade}` : "---"}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ))}
+    </div>
+
+    <div style="margin-top:24px;padding:16px;background:rgba(255,215,0,0.05);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted)">
+      📊 Catálogo de {fornecedor.nome} com {itensEstoque.length} combinações de cores, tamanhos e gramaturas disponíveis.
+    </div>
+  </div>
+</AdminLayout>
+
+<style>
+  tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+  }
+</style>
