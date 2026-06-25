@@ -18,34 +18,45 @@ if (!fornecedor) {
 }
 
 // Buscar itens de estoque deste fornecedor
-// Filtrando por tipo (correlacionado com o fornecedor)
-const tipoMapa: Record<string, string> = {
-  'Alquimia': 'PEAD',
-  'Marfel': 'HD',
-};
-
-const tipoFornecedor = tipoMapa[fornecedor.nome] || fornecedor.nome;
-
 const itensEstoque = await prisma.estoque.findMany({
   where: {
-    tipo: tipoFornecedor,
+    // Se for Alquimia ou Marfel, pega todos os produtos deles
+    // Caso contrário, filtra por tipo
   },
-  orderBy: [{ tamanho: 'asc' }, { gramatura: 'asc' }, { cor: 'asc' }],
+  orderBy: [{ produto: 'asc' }, { tipo: 'asc' }, { tamanho: 'asc' }, { gramatura: 'asc' }, { cor: 'asc' }],
 });
 
-// Agrupar por tamanho
-const porTamanho = itensEstoque.reduce((acc, item) => {
-  if (!acc[item.tamanho || '']) {
-    acc[item.tamanho || ''] = [];
+// Filtrar por fornecedor se necessário
+const fornecedorNome = fornecedor.nome.toLowerCase();
+const itemsFiltrados = itensEstoque.filter(item => {
+  if (fornecedorNome === 'alquimia') {
+    return item.tipo === 'PEAD' || item.tipo === 'PEBD';
+  } else if (fornecedorNome === 'marfel') {
+    return item.produto && item.produto.toLowerCase().includes('sacola') || item.produto?.toLowerCase().includes('camiseta') || item.produto?.toLowerCase().includes('saco') || item.tipo !== 'PEAD' && item.tipo !== 'PEBD';
   }
-  acc[item.tamanho || ''].push(item);
-  return acc;
-}, {} as Record<string, typeof itensEstoque>);
+  return true;
+});
 
-const tamanhos = Object.keys(porTamanho).sort();
+// Agrupar por PRODUTO
+const porProduto = itemsFiltrados.reduce((acc, item) => {
+  const produtoKey = item.produto || 'Sem categoria';
+  if (!acc[produtoKey]) {
+    acc[produtoKey] = {};
+  }
+
+  // Dentro de cada produto, agrupar por tamanho
+  const tamanhoKey = item.tamanho || 'Sem tamanho';
+  if (!acc[produtoKey][tamanhoKey]) {
+    acc[produtoKey][tamanhoKey] = [];
+  }
+  acc[produtoKey][tamanhoKey].push(item);
+  return acc;
+}, {} as Record<string, Record<string, typeof itemsFiltrados>>);
+
+const produtos = Object.keys(porProduto).sort();
 
 // Obter cores únicas
-const coresUnicas = Array.from(new Set(itensEstoque.map(i => i.cor).filter(Boolean))) as string[];
+const coresUnicas = Array.from(new Set(itemsFiltrados.map(i => i.cor).filter(Boolean))) as string[];
 
 // Mapa de cores
 const mapa_cores: Record<string, { bg: string; text: string }> = {
@@ -147,49 +158,64 @@ const mapa_cores: Record<string, { bg: string; text: string }> = {
 
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
       <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
-        <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">{itensEstoque.length} Produtos Disponíveis</h3>
+        <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">{itemsFiltrados.length} Produtos Disponíveis</h3>
       </div>
 
-      {tamanhos.map(tamanho => (
-        <div style="border-bottom:1px solid var(--border);overflow:hidden">
-          <div style="padding:12px 16px;background:rgba(255,255,255,0.02);font-weight:600;font-size:13px;color:var(--muted)">
-            📦 Tamanho: {tamanho}
+      {produtos.map(nomeProduto => (
+        <div style="border-bottom:2px solid var(--border);overflow:hidden">
+          {/* CABEÇALHO DO PRODUTO */}
+          <div style="padding:20px 16px;background:linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.05) 100%);border-bottom:2px solid var(--border)">
+            <h2 style="margin:0;color:var(--gold);font-size:18px;font-weight:700;letter-spacing:0.5px">
+              📦 {nomeProduto}
+            </h2>
+            <p style="margin:8px 0 0 0;color:var(--muted);font-size:12px">
+              {Object.keys(porProduto[nomeProduto]).length} tamanhos disponíveis
+            </p>
           </div>
 
-          <table style="width:100%;border-collapse:collapse;font-size:12px;overflow-x:auto">
-            <thead>
-              <tr style="border-bottom:1px solid var(--border)">
-                <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Cor</th>
-                <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Gramatura</th>
-                <th style="text-align:center;padding:12px 16px;color:var(--muted);font-weight:600">Qtd/Pacote</th>
-                <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Preço/kg</th>
-                <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Custo/Milheiro</th>
-                <th style="text-align:center;padding:12px 16px;color:var(--muted);font-weight:600">Estoque</th>
-              </tr>
-            </thead>
-            <tbody>
-              {porTamanho[tamanho].map(item => (
-                <tr style="border-bottom:1px solid var(--border);transition:background 0.2s">
-                  <td style="padding:12px 16px;font-weight:500">{item.cor}</td>
-                  <td style="padding:12px 16px;color:var(--muted)">{item.gramatura ? `${item.gramatura}mm` : "—"}</td>
-                  <td style="padding:12px 16px;text-align:center;color:var(--muted)">
-                    {item.quantidadePacote ? `${item.quantidadePacote}` : "—"}
-                  </td>
-                  <td style="padding:12px 16px;text-align:right;font-weight:600;color:var(--gold)">
-                    {item.precoKgCents ? `R$ ${(item.precoKgCents / 100).toFixed(2)}` : "—"}
-                  </td>
-                  <td style="padding:12px 16px;text-align:right;color:var(--text);font-weight:500">
-                    {item.custoMilheiroCents ? `R$ ${(item.custoMilheiroCents / 100).toFixed(2)}` : "—"}
-                  </td>
-                  <td style="padding:12px 16px;text-align:center">
-                    <span style={`background:${item.quantidade > 0 ? "rgba(34,197,94,0.15)" : "rgba(156,163,175,0.15)"};color:${item.quantidade > 0 ? "#15803d" : "#6b7280"};padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600`}>
-                      {item.quantidade > 0 ? `${item.quantidade} ${item.unidade}` : "---"}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {/* TAMANHOS DO PRODUTO */}
+          {Object.keys(porProduto[nomeProduto]).sort().map(tamanho => (
+            <div style="border-bottom:1px solid var(--border);overflow:hidden">
+              <div style="padding:12px 16px;background:rgba(255,255,255,0.02);font-weight:600;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">
+                📏 {tamanho}cm
+              </div>
+
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border);background:rgba(255,255,255,0.01)">
+                    <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Cor</th>
+                    <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Gramatura</th>
+                    <th style="text-align:center;padding:12px 16px;color:var(--muted);font-weight:600">Qtd/Pacote</th>
+                    <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Preço/kg</th>
+                    <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Custo/Milheiro</th>
+                    <th style="text-align:center;padding:12px 16px;color:var(--muted);font-weight:600">Estoque</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {porProduto[nomeProduto][tamanho].map(item => (
+                    <tr style="border-bottom:1px solid var(--border);transition:background 0.2s;hover{background:rgba(255,255,255,0.03)}">
+                      <td style="padding:12px 16px;font-weight:500;color:var(--text)">{item.cor || "—"}</td>
+                      <td style="padding:12px 16px;color:var(--muted)">{item.gramatura ? `${item.gramatura}mm` : "—"}</td>
+                      <td style="padding:12px 16px;text-align:center;color:var(--text);font-weight:500">
+                        {item.quantidadePacote ? `${item.quantidadePacote}` : "—"}
+                      </td>
+                      <td style="padding:12px 16px;text-align:right;font-weight:600;color:var(--gold)">
+                        {item.precoKgCents ? `R$ ${(item.precoKgCents / 100).toFixed(2)}` : "—"}
+                      </td>
+                      <td style="padding:12px 16px;text-align:right;color:var(--text);font-weight:500">
+                        {item.custoMilheiroCents ? `R$ ${(item.custoMilheiroCents / 100).toFixed(2)}` : "—"}
+                      </td>
+                      <td style="padding:12px 16px;text-align:center">
+                        <span style={`background:${item.quantidade > 0 ? "rgba(34,197,94,0.15)" : "rgba(156,163,175,0.15)"};color:${item.quantidade > 0 ? "#15803d" : "#6b7280"};padding:4px 12px;border-radius:4px;font-size:11px;font-weight:600`}>
+                          {item.quantidade > 0 ? `${item.quantidade} ${item.unidade}` : "Sem estoque"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
         </div>
       ))}
     </div>
@@ -223,7 +249,7 @@ const mapa_cores: Record<string, { bg: string; text: string }> = {
     )}
 
     <div style="margin-top:24px;padding:16px;background:rgba(255,215,0,0.05);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted)">
-      📊 Catálogo de {fornecedor.nome} com {itensEstoque.length} combinações de cores, tamanhos e gramaturas disponíveis.
+      📊 Catálogo de {fornecedor.nome} com {itemsFiltrados.length} combinações de cores, tamanhos e gramaturas disponíveis em {produtos.length} linhas de produtos.
     </div>
   </div>
 </AdminLayout>
