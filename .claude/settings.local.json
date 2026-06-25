@@ -74,7 +74,8 @@
       "Bash(curl -s http://localhost:4322)",
       "Bash(node update-marfel-banco.mjs)",
       "Bash(node import-marfel-extras.mjs)",
-      "Bash(node import-marfel-pp-alca-fita.mjs)"
+      "Bash(node import-marfel-pp-alca-fita.mjs)",
+      "Bash(node import-marfel-final.mjs)"
     ]
   }
 }
