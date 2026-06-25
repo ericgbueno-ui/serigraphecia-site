@@ -473,6 +473,18 @@ model Fornecedor {
   emailAdicional String?
   /// Site do fornecedor
   site      String?
+  /// Banco para depósitos (ex: "Itaú S/A")
+  banco1    String?
+  /// Agência do primeiro banco
+  agencia1  String?
+  /// Conta corrente do primeiro banco
+  conta1    String?
+  /// Segundo banco (se houver)
+  banco2    String?
+  /// Agência do segundo banco
+  agencia2  String?
+  /// Conta corrente do segundo banco
+  conta2    String?
   ativo     Boolean  @default(true)
 
   compras   Compra[]

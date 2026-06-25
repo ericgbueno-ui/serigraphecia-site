@@ -43,6 +43,42 @@ const porTamanho = itensEstoque.reduce((acc, item) => {
 }, {} as Record<string, typeof itensEstoque>);
 
 const tamanhos = Object.keys(porTamanho).sort();
+
+// Obter cores únicas
+const coresUnicas = Array.from(new Set(itensEstoque.map(i => i.cor).filter(Boolean))) as string[];
+
+// Mapa de cores
+const mapa_cores: Record<string, { bg: string; text: string }> = {
+  'Branco': { bg: '#FFFFFF', text: '#000000' },
+  'Preto': { bg: '#000000', text: '#FFFFFF' },
+  'Colorida': { bg: '#FF69B4', text: '#FFFFFF' },
+  'Rosa Bebê': { bg: '#FFB6D9', text: '#000000' },
+  'Amarela': { bg: '#FFFF00', text: '#000000' },
+  'Azul Bebê': { bg: '#ADD8E6', text: '#000000' },
+  'Azul Royal': { bg: '#4169E1', text: '#FFFFFF' },
+  'Laranja': { bg: '#FFA500', text: '#FFFFFF' },
+  'Lilás': { bg: '#DA70D6', text: '#FFFFFF' },
+  'Marrom': { bg: '#8B4513', text: '#FFFFFF' },
+  'Ouro': { bg: '#FFD700', text: '#000000' },
+  'Prata': { bg: '#C0C0C0', text: '#000000' },
+  'Rosa': { bg: '#FFC0CB', text: '#000000' },
+  'Rosa Neon': { bg: '#FF10F0', text: '#FFFFFF' },
+  'Roxa': { bg: '#800080', text: '#FFFFFF' },
+  'Transparente': { bg: '#E8E8E8', text: '#000000' },
+  'Verde Água': { bg: '#7FFFD4', text: '#000000' },
+  'Verde Bandeira': { bg: '#007500', text: '#FFFFFF' },
+  'Verde Limão': { bg: '#32CD32', text: '#000000' },
+  'Vermelha': { bg: '#FF0000', text: '#FFFFFF' },
+  'Azul': { bg: '#0000FF', text: '#FFFFFF' },
+  'Cobre': { bg: '#B87333', text: '#FFFFFF' },
+  'Creme': { bg: '#FFFDD0', text: '#000000' },
+  'Salmão': { bg: '#FA8072', text: '#FFFFFF' },
+  'Vinho': { bg: '#722F37', text: '#FFFFFF' },
+  'Ouro': { bg: '#FFD700', text: '#000000' },
+  'Prata': { bg: '#C0C0C0', text: '#000000' },
+  'Branca': { bg: '#FFFFFF', text: '#000000' },
+  'Preta': { bg: '#000000', text: '#FFFFFF' },
+};
 ---
 
 <AdminLayout title={`${fornecedor.nome} - Catálogo`} currentPath={`/admin/fornecedores/${id}`}>
@@ -93,6 +129,22 @@ const tamanhos = Object.keys(porTamanho).sort();
       <a href="/admin/fornecedores" style="background:var(--bg-card);color:var(--text);padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px;border:1px solid var(--border)">← Voltar</a>
     </div>
 
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px">
+      <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
+        <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">🎨 Cores Disponíveis</h3>
+      </div>
+      <div style="padding:16px;display:flex;flex-wrap:wrap;gap:8px">
+        {coresUnicas.map(cor => {
+          const cores = mapa_cores[cor] || { bg: '#CCCCCC', text: '#000000' };
+          return (
+            <div style={`background:${cores.bg};color:${cores.text};padding:8px 16px;border-radius:6px;font-weight:600;font-size:12px;border:1px solid rgba(0,0,0,0.1);cursor:default`}>
+              {cor}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
       <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
         <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">{itensEstoque.length} Produtos Disponíveis</h3>
@@ -133,6 +185,34 @@ const tamanhos = Object.keys(porTamanho).sort();
         </div>
       ))}
     </div>
+
+    {(fornecedor.banco1 || fornecedor.banco2) && (
+      <div style="margin-top:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
+          <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">🏦 Dados Bancários</h3>
+        </div>
+        <div style="padding:16px">
+          {fornecedor.banco1 && (
+            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:12px;font-size:12px">
+              <div style="color:var(--muted);margin-bottom:4px">Banco</div>
+              <div style="font-weight:600;color:var(--text)">{fornecedor.banco1}</div>
+              <div style="color:var(--muted);font-size:11px;margin-top:8px">
+                Agência <span style="color:var(--text);font-weight:600">{fornecedor.agencia1}</span> | Conta <span style="color:var(--text);font-weight:600">{fornecedor.conta1}</span>
+              </div>
+            </div>
+          )}
+          {fornecedor.banco2 && (
+            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
+              <div style="color:var(--muted);margin-bottom:4px">Banco</div>
+              <div style="font-weight:600;color:var(--text)">{fornecedor.banco2}</div>
+              <div style="color:var(--muted);font-size:11px;margin-top:8px">
+                Agência <span style="color:var(--text);font-weight:600">{fornecedor.agencia2}</span> | Conta <span style="color:var(--text);font-weight:600">{fornecedor.conta2}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
 
     <div style="margin-top:24px;padding:16px;background:rgba(255,215,0,0.05);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted)">
       📊 Catálogo de {fornecedor.nome} com {itensEstoque.length} combinações de cores, tamanhos e gramaturas disponíveis.
