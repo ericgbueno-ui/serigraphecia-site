@@ -55,8 +55,10 @@ const porProduto = itemsFiltrados.reduce((acc, item) => {
 
 const produtos = Object.keys(porProduto).sort();
 
-// Obter cores únicas
-const coresUnicas = Array.from(new Set(itemsFiltrados.map(i => i.cor).filter(Boolean))) as string[];
+// Função para obter cores únicas de um produto
+function obterCoresProduto(itensDoProducto: typeof itemsFiltrados) {
+  return Array.from(new Set(itensDoProducto.map(i => i.cor).filter(Boolean))) as string[];
+}
 
 // Mapa de cores
 const mapa_cores: Record<string, { bg: string; text: string }> = {
@@ -140,21 +142,6 @@ const mapa_cores: Record<string, { bg: string; text: string }> = {
       <a href="/admin/fornecedores" style="background:var(--bg-card);color:var(--text);padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px;border:1px solid var(--border)">← Voltar</a>
     </div>
 
-    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:24px">
-      <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
-        <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">🎨 Cores Disponíveis</h3>
-      </div>
-      <div style="padding:16px;display:flex;flex-wrap:wrap;gap:8px">
-        {coresUnicas.map(cor => {
-          const cores = mapa_cores[cor] || { bg: '#CCCCCC', text: '#000000' };
-          return (
-            <div style={`background:${cores.bg};color:${cores.text};padding:8px 16px;border-radius:6px;font-weight:600;font-size:12px;border:1px solid rgba(0,0,0,0.1);cursor:default`}>
-              {cor}
-            </div>
-          );
-        })}
-      </div>
-    </div>
 
     <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
       <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
@@ -175,6 +162,27 @@ const mapa_cores: Record<string, { bg: string; text: string }> = {
               </p>
             </div>
           </div>
+
+          {/* CORES DO PRODUTO */}
+          {(() => {
+            const todosItensDoProducto = Object.values(porProduto[nomeProduto]).flat();
+            const coresProduto = obterCoresProduto(todosItensDoProducto);
+            return coresProduto.length > 0 && (
+              <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,255,255,0.01)">
+                <p style="margin:0 0 12px 0;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px;font-weight:600">🎨 Cores Disponíveis</p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  {coresProduto.map(cor => {
+                    const colorData = mapa_cores[cor] || { bg: '#CCCCCC', text: '#000000' };
+                    return (
+                      <div style={`background:${colorData.bg};color:${colorData.text};padding:6px 14px;border-radius:6px;font-weight:600;font-size:11px;border:1px solid rgba(0,0,0,0.15);cursor:default`}>
+                        {cor}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* TAMANHOS DO PRODUTO */}
           {Object.keys(porProduto[nomeProduto]).sort().map(tamanho => (
