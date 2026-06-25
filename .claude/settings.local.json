@@ -63,7 +63,17 @@
       "Bash(git reset *)",
       "Bash(git restore *)",
       "Bash(node cleanup-fornecedores.mjs)",
-      "Bash(node update-precos.mjs)"
+      "Bash(node update-precos.mjs)",
+      "Bash(node update-marfel-dados.mjs)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(curl -s http://localhost:3000/admin/fornecedores)",
+      "Bash(netstat -ano)",
+      "Bash(curl -v http://localhost:3000)",
+      "Bash(curl -s http://localhost:4322/admin/fornecedores)",
+      "Bash(curl -s http://localhost:4322)",
+      "Bash(node update-marfel-banco.mjs)",
+      "Bash(node import-marfel-extras.mjs)"
     ]
   }
 }
