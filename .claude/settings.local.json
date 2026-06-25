@@ -53,7 +53,15 @@
       "Bash(npm run *)",
       "Bash(\"C:\\\\Produção de *)",
       "Bash(curl -s http://localhost:3000/api/ping)",
-      "Bash(curl -s http://localhost:3000/admin)"
+      "Bash(curl -s http://localhost:3000/admin)",
+      "PowerShell(python3 -c \"import pdfplumber; print\\('pdfplumber dispon�vel'\\)\" 2>&1)",
+      "Bash(node import-db.mjs)",
+      "Bash(pdftotext -layout \"C:\\\\Users\\\\User\\\\OneDrive\\\\Desktop\\\\tabela valore\\\\Alquimia.pdf\" -)",
+      "Bash(pdftotext -layout \"C:\\\\Users\\\\User\\\\OneDrive\\\\Desktop\\\\tabela valore\\\\Marfel.pdf\" -)",
+      "Bash(node import-estoque.mjs)",
+      "Bash(node update-fornecedores.mjs)",
+      "Bash(git reset *)",
+      "Bash(git restore *)"
     ]
   }
 }
