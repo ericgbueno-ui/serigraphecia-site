@@ -77,7 +77,8 @@
       "Bash(node import-marfel-pp-alca-fita.mjs)",
       "Bash(node import-marfel-final.mjs)",
       "Bash(node import-marfel-alca-0-13.mjs)",
-      "Bash(node import-marfel-alca-bd.mjs)"
+      "Bash(node import-marfel-alca-bd.mjs)",
+      "Bash(node -e ' *)"
     ]
   }
 }
