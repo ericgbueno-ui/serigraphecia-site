@@ -477,6 +477,8 @@ model Estoque {
   quantidade Float @default(0)
   unidade    String   @default("un")
   minimo     Float    @default(0)
+  /// Preço por kg em centavos (ex: 2890 = R$ 28,90)
+  precoKgCents Int?
 
   @@index([produto])
   @@index([tipo])
