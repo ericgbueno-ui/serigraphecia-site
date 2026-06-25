@@ -164,13 +164,16 @@ const mapa_cores: Record<string, { bg: string; text: string }> = {
       {produtos.map(nomeProduto => (
         <div style="border-bottom:2px solid var(--border);overflow:hidden">
           {/* CABEÇALHO DO PRODUTO */}
-          <div style="padding:20px 16px;background:linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.05) 100%);border-bottom:2px solid var(--border)">
-            <h2 style="margin:0;color:var(--gold);font-size:18px;font-weight:700;letter-spacing:0.5px">
-              📦 {nomeProduto}
-            </h2>
-            <p style="margin:8px 0 0 0;color:var(--muted);font-size:12px">
-              {Object.keys(porProduto[nomeProduto]).length} tamanhos disponíveis
-            </p>
+          <div style="padding:20px 16px;background:linear-gradient(135deg, rgba(255,215,0,0.2) 0%, rgba(255,215,0,0.05) 100%);border-bottom:2px solid var(--border);display:flex;align-items:center;gap:16px">
+            <img src="/sacola-ico.svg" alt="Ícone" style="width:48px;height:48px;flex-shrink:0" />
+            <div style="flex:1">
+              <h2 style="margin:0;color:var(--gold);font-size:18px;font-weight:700;letter-spacing:0.5px">
+                {nomeProduto}
+              </h2>
+              <p style="margin:8px 0 0 0;color:var(--muted);font-size:12px">
+                {Object.keys(porProduto[nomeProduto]).length} tamanhos disponíveis
+              </p>
+            </div>
           </div>
 
           {/* TAMANHOS DO PRODUTO */}
