@@ -581,4 +581,12 @@ model CompraItem {
 
   /// Quantidade de peças (unidades)
   pecas       Int
-  /// Peso em 
+  /// Peso em KG
+  pesoKg      Float
+  /// Preço por KG, em centavos
+  precoKgCents Int
+  /// Total da linha, em centavos
+  totalCents  Int
+
+  @@index([compraId])
+}

@@ -95,4 +95,16 @@ if (!fornecedor) {
               <div style="color:var(--muted);margin-bottom:4px">Banco</div>
               <div style="font-weight:600;color:var(--text)">{fornecedor.banco2}</div>
               <div style="color:var(--muted);font-size:11px;margin-top:8px">
-                Agência <
+                Agência <span style="color:var(--text);font-weight:600">{fornecedor.agencia2}</span> | Conta <span style="color:var(--text);font-weight:600">{fornecedor.conta2}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <div style="margin-top:24px;padding:16px;background:rgba(255,215,0,0.05);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted)">
+      📦 O catálogo de produtos/estoque fica em <a href="/admin/estoque" style="color:var(--gold)">Estoque</a>, separado do cadastro de fornecedores.
+    </div>
+  </div>
+</AdminLayout>
