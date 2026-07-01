@@ -102,4 +102,67 @@ function brl(cents: number | null) {
                     <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600">Gramatura</th>
                     <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600">R$/kg</th>
                     <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600">R$/milheiro</th>
-                    <th style="text-align:center;padding:6px 8px;color:var(--mut
+                    <th style="text-align:center;padding:6px 8px;color:var(--muted);font-weight:600">Un/pct</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {itens.map(item => (
+                    <tr style="border-bottom:1px solid rgba(255,255,255,0.04)">
+                      <td style="padding:6px 8px;font-weight:600">{item.tamanho}</td>
+                      <td style="padding:6px 8px;color:var(--muted)">{item.cor || "—"}</td>
+                      <td style="padding:6px 8px;color:var(--muted)">{item.gramatura || "—"}</td>
+                      <td style="padding:6px 8px;text-align:right;color:var(--gold);font-weight:600">{brl(item.precoKgCents)}</td>
+                      <td style="padding:6px 8px;text-align:right">{brl(item.custoMilheiroCents)}</td>
+                      <td style="padding:6px 8px;text-align:center">{item.qtdPacote ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
+      </div>
+    )}
+
+    {custos.length === 0 && fornecedor.tabelaCustos && (
+      <div style="margin-bottom:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
+          <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">💲 Referência de Custos (o que pagamos)</h3>
+        </div>
+        <pre style="padding:16px;margin:0;font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap;font-family:inherit">{fornecedor.tabelaCustos}</pre>
+      </div>
+    )}
+
+    {(fornecedor.banco1 || fornecedor.banco2) && (
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
+        <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
+          <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">🏦 Dados Bancários</h3>
+        </div>
+        <div style="padding:16px">
+          {fornecedor.banco1 && (
+            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:12px;font-size:12px">
+              <div style="color:var(--muted);margin-bottom:4px">Banco</div>
+              <div style="font-weight:600;color:var(--text)">{fornecedor.banco1}</div>
+              <div style="color:var(--muted);font-size:11px;margin-top:8px">
+                Agência <span style="color:var(--text);font-weight:600">{fornecedor.agencia1}</span> | Conta <span style="color:var(--text);font-weight:600">{fornecedor.conta1}</span>
+              </div>
+            </div>
+          )}
+          {fornecedor.banco2 && (
+            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
+              <div style="color:var(--muted);margin-bottom:4px">Banco</div>
+              <div style="font-weight:600;color:var(--text)">{fornecedor.banco2}</div>
+              <div style="color:var(--muted);font-size:11px;margin-top:8px">
+                Agência <span style="color:var(--text);font-weight:600">{fornecedor.agencia2}</span> | Conta <span style="color:var(--text);font-weight:600">{fornecedor.conta2}</span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
+
+    <div style="margin-top:24px;padding:16px;background:rgba(255,215,0,0.05);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted)">
+      📦 O catálogo de produtos/estoque fica em <a href="/admin/estoque" style="color:var(--gold)">Estoque</a>, separado do cadastro de fornecedores.
+    </div>
+  </div>
+</AdminLayout>
