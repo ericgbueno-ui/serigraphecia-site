@@ -1,12 +1,72 @@
 import type { APIRoute } from "astro";
 import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../../lib/server/adminAuth";
 import { prisma } from "../../../lib/prisma";
-import { calculatePrintPrice } from "../../../lib/pricing";
 import { gerarNumeroPedido } from "../../../lib/pedido";
 import { baixarEstoque } from "../../../lib/estoque";
 import crypto from "crypto";
 
 export const prerender = false;
+
+const TIPO_LABELS: Record<string, string> = {
+  alca_vazada: "Alça Vazada",
+  alca_fita: "Alça Fita",
+  alca_camiseta: "Alça Camiseta",
+  outro: "Outro",
+};
+
+interface ItemForm {
+  tripType: string;
+  passengerCount: number;
+  tamanho: string | null;
+  gramatura: string | null;
+  corSacola: string;
+  cores: string;
+  corImpressao: string | null;
+  observacoes: string | null;
+  subtotalCents: number;
+}
+
+/**
+ * Extrai os itens do FormData a partir de campos "itens[N][campo]"
+ * (Fase 2 — suporte a múltiplos produtos por pedido, 2026-07-01).
+ */
+function parseItens(formData: FormData): ItemForm[] {
+  const porIndice = new Map<number, Record<string, string>>();
+
+  for (const [key, value] of formData.entries()) {
+    const m = key.match(/^itens\[(\d+)\]\[(\w+)\]$/);
+    if (!m) continue;
+    const idx = parseInt(m[1], 10);
+    const campo = m[2];
+    if (!porIndice.has(idx)) porIndice.set(idx, {});
+    porIndice.get(idx)![campo] = value.toString();
+  }
+
+  const indices = [...porIndice.keys()].sort((a, b) => a - b);
+
+  return indices
+    .map((idx) => {
+      const campos = porIndice.get(idx)!;
+      return {
+        tripType: campos.tripType || "outro",
+        passengerCount: parseInt(campos.passengerCount || "0", 10) || 0,
+        tamanho: campos.tamanho?.trim() || null,
+        gramatura: campos.gramatura?.trim() || null,
+        corSacola: campos.corSacola?.trim() || "",
+        cores: campos.cores || "1",
+        corImpressao: campos.corImpressao?.trim() || null,
+        observacoes: campos.observacoes?.trim() || null,
+        subtotalCents: parseInt(campos.subtotalCents || "0", 10) || 0,
+      };
+    })
+    .filter((item) => item.passengerCount > 0);
+}
+
+function coresLabel(valor: string): string {
+  if (valor === "4c") return "4 cores (CMYK)";
+  if (valor === "personalizado") return "personalizado";
+  return `${valor} cor(es)`;
+}
 
 export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const cookieVal = cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
@@ -23,28 +83,23 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
   const bairro      = formData.get("bairro")?.toString().trim() || null;
   const cidade      = formData.get("cidade")?.toString().trim() || null;
 
-  const tripType    = formData.get("tripType")?.toString() || "alca_vazada";
-  const tamanho     = formData.get("tamanho")?.toString().trim() || null;
-  const gramatura   = formData.get("gramatura")?.toString().trim() || null;
-  const corImpressao = formData.get("corImpressao")?.toString().trim() || null;
-  const passengerCount = parseInt(formData.get("passengerCount")?.toString() || "50", 10);
   const idaDateRaw  = formData.get("idaDate")?.toString();
-
-  const corSacola   = formData.get("corSacola")?.toString().trim() || "";
-  const detailsRaw  = formData.get("idaFlightTime")?.toString().trim() || "";
-  const idaFlightTime = detailsRaw || null;
-
-  const voltaDate_raw = formData.get("voltaDate")?.toString();
+  const idaFlightTime = formData.get("idaFlightTime")?.toString().trim() || null;
   const payMethod   = formData.get("payMethod")?.toString() || "pix";
   const affiliateCode = formData.get("affiliateCode")?.toString() || null;
 
   const totalCentsRaw   = parseFloat(formData.get("totalCents")?.toString().replace(",", ".") || "0");
-  const totalCents      = Math.round(totalCentsRaw * 100);
+  const totalCentsForm  = Math.round(totalCentsRaw * 100);
   const depositCentsRaw = parseFloat(formData.get("depositCents")?.toString().replace(",", ".") || "0");
   const depositCents    = Math.round(depositCentsRaw * 100);
-  const remainderCents  = Math.max(0, totalCents - depositCents);
 
-  const idaDate   = idaDateRaw   ? new Date(`${idaDateRaw}T12:00:00-03:00`)   : null;
+  const idaDate = idaDateRaw ? new Date(`${idaDateRaw}T12:00:00-03:00`) : null;
+
+  const itens = parseItens(formData);
+
+  if (itens.length === 0) {
+    return redirect("/admin/nova-reserva?error=1", 302);
+  }
 
   try {
     let customer = await prisma.customer.findUnique({ where: { phone } });
@@ -77,34 +132,28 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       });
     }
 
-    const publicToken   = crypto.randomBytes(16).toString("hex");
-    const numeroPedido  = await gerarNumeroPedido(prisma);
+    const publicToken  = crypto.randomBytes(16).toString("hex");
+    const numeroPedido = await gerarNumeroPedido(prisma);
 
-    // --- Impressão (opcional) ---
-    const printBaseRaw = formData.get("printBase")?.toString();
-    const printSides = formData.get("printSides")?.toString() || "one";
-    const colorsSideA = formData.get("colorsSideA")?.toString() || "0";
-    const colorsSideB = formData.get("colorsSideB")?.toString() || "0";
+    // Total geral: soma dos subtotais calculados por produto. Se o admin
+    // ajustou manualmente o campo "Total (R$)" para um valor diferente da
+    // soma, respeita o que foi digitado (ele pode ter um motivo: desconto,
+    // frete, etc.) — só usa a soma como padrão quando o campo bate com ela.
+    const somaItens = itens.reduce((s, i) => s + i.subtotalCents, 0);
+    const totalCents = totalCentsForm > 0 ? totalCentsForm : somaItens;
+    const remainderCents = Math.max(0, totalCents - depositCents);
+    const quantidadeTotal = itens.reduce((s, i) => s + i.passengerCount, 0);
 
-    let computedTotalCents = totalCents;
-    let optionalsObj: Record<string, unknown> = {};
-    let optionalsCentsVal = 0;
-    if (printBaseRaw) {
-      const baseCents = Math.round(parseFloat(printBaseRaw.replace(",", ".")) * 100);
-      const printResult = calculatePrintPrice(baseCents, {
-        sides: printSides === "two" ? "two" : "one",
-        colorsSideA: parseInt(colorsSideA || "0", 10) || 0,
-        colorsSideB: parseInt(colorsSideB || "0", 10) || 0,
-      });
-      computedTotalCents += printResult.finalCents;
-      optionalsObj.print = printResult;
-      optionalsCentsVal = printResult.finalCents;
-    }
-
-    const finalRemainderCents = Math.max(0, computedTotalCents - depositCents);
+    // Campos "legados" do Pedido (tipoProduto, corProduto, etc.) recebem os
+    // dados do primeiro produto, para compatibilidade com telas que ainda
+    // leem esses campos direto do pedido. O detalhe completo, produto a
+    // produto, fica em ItemPedido.
+    const primeiro = itens[0];
+    const multiplosProdutos = itens.length > 1;
 
     const notas = [
       idaDate ? `Prazo de entrega: ${idaDate.toLocaleDateString("pt-BR")}` : null,
+      multiplosProdutos ? `Pedido com ${itens.length} produtos — ver detalhe na lista de itens.` : null,
       idaFlightTime,
     ]
       .filter(Boolean)
@@ -115,47 +164,62 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         publicToken,
         numeroPedido,
         customerId: customer.id,
-        tipoProduto: tripType,
-        corProduto: corSacola || undefined,
-        tamanho: tamanho || undefined,
-        gramatura: gramatura || undefined,
-        corImpressao: corImpressao || undefined,
+        tipoProduto: multiplosProdutos
+          ? `${TIPO_LABELS[primeiro.tripType] || primeiro.tripType} + ${itens.length - 1} outro(s)`
+          : (TIPO_LABELS[primeiro.tripType] || primeiro.tripType),
+        corProduto: primeiro.corSacola || undefined,
+        tamanho: primeiro.tamanho || undefined,
+        gramatura: primeiro.gramatura || undefined,
+        corImpressao: primeiro.corImpressao || undefined,
         lados: "um",
-        coresLadoA: parseInt(voltaDate_raw || "0", 10) || 0,
-        quantidade: passengerCount,
+        coresLadoA: parseInt(primeiro.cores || "0", 10) || 0,
+        quantidade: quantidadeTotal,
         internalNotes: notas,
         payMethod,
-        // Totais (incluindo possíveis opcionais de impressão)
-        totalCents: computedTotalCents,
+        totalCents,
         depositCents,
-        remainderCents: finalRemainderCents,
-        optionalsJson: Object.keys(optionalsObj).length ? JSON.stringify(optionalsObj) : undefined,
-        optionalsCents: optionalsCentsVal,
+        remainderCents,
         status: "CONFIRMED",
-        affiliateCode:  affiliateCode  || undefined,
+        affiliateCode: affiliateCode || undefined,
         // Fase 2 — auditoria 2026-07-01: datas independentes do pedido.
+        // Mesmo pedido, mesma data, com vários produtos dentro.
         dataPedido: new Date(),
         dataPrevistaEntrega: idaDate || undefined,
       },
     });
 
-    // Fase 2 — item do pedido (permite múltiplos produtos por pedido no futuro;
-    // este é o primeiro item, criado a partir dos campos do formulário atual).
-    await prisma.itemPedido.create({
-      data: {
-        pedidoId: pedido.id,
-        produtoId: null,
-        nome: tripType,
-        cor: corSacola || undefined,
-        tamanho: tamanho || undefined,
-        quantidade: passengerCount || 1,
-        valorUnitarioCents: passengerCount > 0 ? Math.round(computedTotalCents / passengerCount) : computedTotalCents,
-        subtotalCents: computedTotalCents,
-      },
-    });
+    // Um ItemPedido por produto informado no formulário — sem limite de itens.
+    for (const item of itens) {
+      const nomeBase = TIPO_LABELS[item.tripType] || item.tripType;
+      const detalhesImpressao = [
+        item.gramatura ? `Gramatura: ${item.gramatura}` : null,
+        `Impressão: ${coresLabel(item.cores)}`,
+        item.corImpressao ? `Tinta: ${item.corImpressao}` : null,
+        item.observacoes,
+      ]
+        .filter(Boolean)
+        .join(" | ") || undefined;
 
-    // Baixa do estoque (não bloqueia o pedido caso não haja estoque suficiente)
-    await baixarEstoque(prisma, tripType, corSacola, passengerCount);
+      await prisma.itemPedido.create({
+        data: {
+          pedidoId: pedido.id,
+          produtoId: null,
+          nome: nomeBase,
+          cor: item.corSacola || undefined,
+          tamanho: item.tamanho || undefined,
+          observacoes: detalhesImpressao,
+          quantidade: item.passengerCount,
+          valorUnitarioCents: item.passengerCount > 0 ? Math.round(item.subtotalCents / item.passengerCount) : item.subtotalCents,
+          subtotalCents: item.subtotalCents,
+        },
+      });
+
+      // Baixa do estoque por produto (não bloqueia o pedido caso não haja
+      // estoque suficiente — ver src/lib/estoque.ts).
+      await baixarEstoque(prisma, item.tripType, item.corSacola, item.passengerCount, {
+        pedidoId: pedido.id,
+      });
+    }
 
     return redirect(`/admin/reservas/${pedido.id}`, 302);
   } catch (err) {

@@ -22,7 +22,7 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
       <div style="margin-bottom:28px;">
         <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:var(--muted);margin-bottom:6px;">Admin · Produção</p>
         <h1 style="font-size:22px;font-weight:700;">＋ Novo Pedido</h1>
-        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Registre um pedido de sacolas manualmente.</p>
+        <p style="font-size:13px;color:var(--muted);margin-top:4px;">Registre um pedido de sacolas manualmente. Um pedido pode ter quantos produtos você quiser.</p>
       </div>
 
       <form action="/api/admin/nova-reserva" method="POST" style="display:flex;flex-direction:column;gap:24px;">
@@ -73,71 +73,36 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
           </div>
         </div>
 
-        <!-- PEDIDO -->
+        <!-- PRODUTOS (múltiplos itens no mesmo pedido) -->
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <h2 style="font-size:14px;font-weight:700;color:var(--gold);">Produtos</h2>
+            <button type="button" id="btn-add-produto" style="background:rgba(201,168,76,0.12);color:var(--gold);border:1px solid rgba(201,168,76,0.35);padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+              ➕ Adicionar Produto
+            </button>
+          </div>
+
+          <datalist id="lista-tamanhos"></datalist>
+
+          <div id="itens-container" style="display:flex;flex-direction:column;gap:16px;"></div>
+
+          <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+            <p style="font-size:12px;color:var(--muted);">Total calculado a partir dos produtos acima (soma dos subtotais). Pode ajustar manualmente se precisar.</p>
+            <p style="font-size:20px;font-weight:800;color:#15803d;" id="soma-total-display">R$ 0,00</p>
+          </div>
+        </div>
+
+        <!-- PEDIDO (dados gerais, compartilhados por todos os produtos) -->
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
           <h2 style="font-size:14px;font-weight:700;margin-bottom:16px;color:var(--gold);">Pedido</h2>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
             <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tipo de sacola *</label>
-              <select id="sel-tipo" name="tripType" required style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
-                <option value="" selected disabled>Selecione...</option>
-                <option value="alca_vazada">Alça Vazada</option>
-                <option value="alca_fita">Alça Fita</option>
-                <option value="alca_camiseta">Alça Camiseta</option>
-                <option value="outro">Outro</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Quantidade *</label>
-              <input id="inp-qtd" name="passengerCount" type="number" min="1" required placeholder="Ex: 200" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tamanho</label>
-              <input id="inp-tamanho" name="tamanho" list="lista-tamanhos" placeholder="Ex: 30x40" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
-              <datalist id="lista-tamanhos"></datalist>
-              <p id="tamanho-info" style="font-size:11px;color:var(--muted);margin-top:4px;min-height:14px;"></p>
-            </div>
-            <div id="bloco-gramatura" style="display:none;">
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Gramatura</label>
-              <select id="sel-gramatura" name="gramatura" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
-                <option value="">Selecione...</option>
-              </select>
-              <p id="gramatura-info" style="font-size:11px;color:var(--muted);margin-top:4px;min-height:14px;"></p>
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cor da sacola *</label>
-              <select name="corSacola" required style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
-                <option value="Amarelo">Amarelo</option>
-                <option value="Azul">Azul</option>
-                <option value="Branco">Branco</option>
-                <option value="Lilás">Lilás</option>
-                <option value="Preto">Preto</option>
-                <option value="Rosa">Rosa</option>
-                <option value="Rosa Bebê">Rosa Bebê</option>
-                <option value="Transparente">Transparente</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Quantidade de cores de impressão</label>
-              <select id="sel-cores" name="voltaDate" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
-                <option value="1">1 cor</option>
-                <option value="2">2 cores</option>
-                <option value="3">3 cores</option>
-                <option value="4">4 cores</option>
-                <option value="4c">4 cores (CMYK)</option>
-                <option value="personalizado">Personalizado</option>
-              </select>
-            </div>
-            <div>
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cor da tinta de impressão</label>
-              <input name="corImpressao" placeholder="Ex: Preto" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
-            </div>
-            <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Prazo de entrega</label>
               <input name="idaDate" type="date" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
             </div>
+            <div></div>
             <div style="grid-column:1/-1;">
-              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Observações</label>
+              <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Observações gerais</label>
               <textarea name="idaFlightTime" rows="3" placeholder="Referências, detalhes especiais..." style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;resize:vertical;"></textarea>
             </div>
           </div>
@@ -150,7 +115,6 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Total (R$) *</label>
               <input id="inp-total" name="totalCents" type="number" step="0.01" required placeholder="0.00" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
-              <p id="preco-info" style="font-size:11px;color:var(--gold);margin-top:4px;min-height:16px;"></p>
             </div>
             <div>
               <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Sinal (R$)</label>
@@ -191,7 +155,6 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
     // ── Dados da Tabela de Valores (TabelaPreco), carregados do servidor ──
     const TABELA = JSON.parse(document.getElementById("tabela-precos-data").textContent || "[]");
 
-    // Mapeia o value do <select> de tipo de sacola para o rótulo usado em TabelaPreco.tipo
     const TIPO_LABELS = {
       alca_vazada: "Alça Vazada",
       alca_fita: "Alça Fita",
@@ -199,21 +162,12 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
       outro: "Outro",
     };
 
-    const selTipo = document.getElementById("sel-tipo");
-    const inpQtd = document.getElementById("inp-qtd");
-    const inpTamanho = document.getElementById("inp-tamanho");
-    const listaTamanhos = document.getElementById("lista-tamanhos");
-    const tamanhoInfo = document.getElementById("tamanho-info");
-    const blocoGramatura = document.getElementById("bloco-gramatura");
-    const selGramatura = document.getElementById("sel-gramatura");
-    const gramaturaInfo = document.getElementById("gramatura-info");
-    const selCores = document.getElementById("sel-cores");
-    const inpTotal = document.getElementById("inp-total");
-    const precoInfo = document.getElementById("preco-info");
+    const container = document.getElementById("itens-container");
+    const btnAdd = document.getElementById("btn-add-produto");
+    const inpTotalGeral = document.getElementById("inp-total");
+    const somaTotalDisplay = document.getElementById("soma-total-display");
+    let itemIndex = 0;
 
-    // Extrai base/tamanho/gramatura do campo "tipo" da TabelaPreco.
-    // Convenções aceitas: "<Base> <tamanho>" ou "<Base> <gramatura>g <tamanho>"
-    // Ex.: "Alça Camiseta 30x40" | "Alça Vazada 0,12g 40x50"
     function parseRow(p) {
       let m = p.tipo.match(/^(.*) (\d+,\d+)g (\d+x\d+)$/);
       if (m) return { ...p, base: m[1], gramatura: m[2], tamanho: m[3] };
@@ -228,8 +182,102 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
       return TABELA.map(parseRow).filter((p) => p.base.toLowerCase() === label.toLowerCase());
     }
 
-    // Atualiza o seletor de gramatura: só aparece quando o tamanho escolhido tem mais de uma gramatura cadastrada
-    function atualizarGramatura() {
+    function corMultiplicador(valorSelect) {
+      let n = parseInt(valorSelect, 10);
+      if (valorSelect === "personalizado") n = 2;
+      if (isNaN(n)) n = 1;
+      return n >= 2 ? 1.4 : 1;
+    }
+
+    function brl(v) {
+      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    function criarBlocoItem(idx) {
+      const div = document.createElement("div");
+      div.className = "item-bloco";
+      div.dataset.index = String(idx);
+      div.style.cssText = "border:1px solid var(--border);border-radius:12px;padding:18px;background:rgba(20,30,45,0.02);position:relative;";
+      div.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <p style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;">Produto ${idx + 1}</p>
+          <button type="button" class="btn-remove-produto" style="background:none;border:none;color:#dc2626;font-size:12px;font-weight:600;cursor:pointer;display:none;">✕ Remover</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tipo de sacola *</label>
+            <select class="sel-tipo" name="itens[${idx}][tripType]" required style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+              <option value="" selected disabled>Selecione...</option>
+              <option value="alca_vazada">Alça Vazada</option>
+              <option value="alca_fita">Alça Fita</option>
+              <option value="alca_camiseta">Alça Camiseta</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Quantidade *</label>
+            <input class="inp-qtd" name="itens[${idx}][passengerCount]" type="number" min="1" required placeholder="Ex: 200" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Tamanho</label>
+            <input class="inp-tamanho" name="itens[${idx}][tamanho]" list="lista-tamanhos" placeholder="Ex: 30x40" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+            <p class="tamanho-info" style="font-size:11px;color:var(--muted);margin-top:4px;min-height:14px;"></p>
+          </div>
+          <div class="bloco-gramatura" style="display:none;">
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Gramatura</label>
+            <select class="sel-gramatura" name="itens[${idx}][gramatura]" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+              <option value="">Selecione...</option>
+            </select>
+            <p class="gramatura-info" style="font-size:11px;color:var(--muted);margin-top:4px;min-height:14px;"></p>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cor da sacola *</label>
+            <select name="itens[${idx}][corSacola]" required style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+              <option value="Amarelo">Amarelo</option>
+              <option value="Azul">Azul</option>
+              <option value="Branco">Branco</option>
+              <option value="Lilás">Lilás</option>
+              <option value="Preto">Preto</option>
+              <option value="Rosa">Rosa</option>
+              <option value="Rosa Bebê">Rosa Bebê</option>
+              <option value="Transparente">Transparente</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Quantidade de cores de impressão</label>
+            <select class="sel-cores" name="itens[${idx}][cores]" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;">
+              <option value="1">1 cor</option>
+              <option value="2">2 cores</option>
+              <option value="3">3 cores</option>
+              <option value="4">4 cores</option>
+              <option value="4c">4 cores (CMYK)</option>
+              <option value="personalizado">Personalizado</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Cor da tinta de impressão</label>
+            <input name="itens[${idx}][corImpressao]" placeholder="Ex: Preto" style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="display:block;font-size:11px;font-weight:600;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">Observações do produto</label>
+            <input name="itens[${idx}][observacoes]" placeholder="Detalhes específicos deste produto..." style="width:100%;background:rgba(20,30,45,0.045);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:13px;outline:none;box-sizing:border-box;" />
+          </div>
+        </div>
+        <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+          <p class="subtotal-info" style="font-size:12px;color:var(--gold);font-weight:600;"></p>
+          <input type="hidden" class="inp-subtotal" name="itens[${idx}][subtotalCents]" value="0" />
+        </div>
+      `;
+      return div;
+    }
+
+    function atualizarGramatura(bloco) {
+      const selTipo = bloco.querySelector(".sel-tipo");
+      const inpTamanho = bloco.querySelector(".inp-tamanho");
+      const blocoGramatura = bloco.querySelector(".bloco-gramatura");
+      const selGramatura = bloco.querySelector(".sel-gramatura");
+      const gramaturaInfo = bloco.querySelector(".gramatura-info");
+
       const rows = rowsParaTipo(selTipo.value).filter(
         (r) => !inpTamanho.value || r.tamanho === inpTamanho.value
       );
@@ -248,45 +296,15 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
       }
     }
 
-    function corMultiplicador(valorSelect) {
-      // Replica calculatePrintPrice (src/lib/pricing.ts): 1 cor = sem acréscimo,
-      // 2+ cores em um lado = +40%. "4c" = 4 cores. "personalizado" tratado como 2+.
-      let n = parseInt(valorSelect, 10);
-      if (valorSelect === "personalizado") n = 2;
-      if (isNaN(n)) n = 1;
-      return n >= 2 ? 1.4 : 1;
-    }
+    function recomputeSubtotal(bloco) {
+      const selTipo = bloco.querySelector(".sel-tipo");
+      const inpQtd = bloco.querySelector(".inp-qtd");
+      const inpTamanho = bloco.querySelector(".inp-tamanho");
+      const selGramatura = bloco.querySelector(".sel-gramatura");
+      const selCores = bloco.querySelector(".sel-cores");
+      const subtotalInfo = bloco.querySelector(".subtotal-info");
+      const inpSubtotal = bloco.querySelector(".inp-subtotal");
 
-    function brl(v) {
-      return v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-    }
-
-    // Ao trocar o tipo de sacola: sugere tamanho + quantidade mínima, com base na Tabela de Valores
-    selTipo.addEventListener("change", () => {
-      const rows = rowsParaTipo(selTipo.value);
-
-      const tamanhosUnicos = [...new Set(rows.map((r) => r.tamanho).filter(Boolean))];
-      listaTamanhos.innerHTML = tamanhosUnicos.map((t) => `<option value="${t}"></option>`).join("");
-
-      if (rows.length === 0) {
-        tamanhoInfo.textContent = "Nenhum valor cadastrado para este tipo. Cadastre em Tabela de Valores.";
-        recomputeTotal();
-        return;
-      }
-
-      // Linha de referência: menor faixa de quantidade cadastrada
-      const menor = rows.slice().sort((a, b) => a.qtdMin - b.qtdMin)[0];
-      if (!inpTamanho.value) inpTamanho.value = menor.tamanho || "";
-      if (!inpQtd.value) inpQtd.value = String(menor.qtdMin);
-      tamanhoInfo.textContent = tamanhosUnicos.length
-        ? `Tamanhos disponíveis: ${tamanhosUnicos.join(", ")}`
-        : "";
-
-      atualizarGramatura();
-      recomputeTotal();
-    });
-
-    function recomputeTotal() {
       let rows = rowsParaTipo(selTipo.value).filter(
         (r) => !inpTamanho.value || r.tamanho === inpTamanho.value
       );
@@ -297,35 +315,103 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
         if (selGramatura.value) {
           rows = rows.filter((r) => r.gramatura === selGramatura.value);
         } else {
-          precoInfo.textContent = "Selecione a gramatura acima para calcular o valor.";
+          subtotalInfo.textContent = "Selecione a gramatura acima para calcular o valor.";
+          inpSubtotal.value = "0";
+          recomputeSomaTotal();
           return;
         }
       }
 
       if (rows.length === 0 || qtd <= 0) {
-        precoInfo.textContent = "";
+        subtotalInfo.textContent = "";
+        inpSubtotal.value = "0";
+        recomputeSomaTotal();
         return;
       }
 
-      // Escolhe a faixa de quantidade aplicável (maior qtdMin <= qtd; senão, a menor faixa disponível)
       const ordenadas = rows.slice().sort((a, b) => a.qtdMin - b.qtdMin);
       let faixa = ordenadas.filter((r) => r.qtdMin <= qtd).pop();
       if (!faixa) faixa = ordenadas[0];
 
       const mult = corMultiplicador(selCores.value);
       const totalReais = faixa.precoUnitario * qtd * mult;
+      const totalCents = Math.round(totalReais * 100);
 
-      inpTotal.value = totalReais.toFixed(2);
-      precoInfo.textContent = `Unit.: ${brl(faixa.precoUnitario)} · faixa a partir de ${faixa.qtdMin} un. · impressão ${mult > 1 ? "+40%" : "sem acréscimo"} · Total: ${brl(totalReais)}`;
+      inpSubtotal.value = String(totalCents);
+      subtotalInfo.textContent = `Unit.: ${brl(faixa.precoUnitario)} · Subtotal: ${brl(totalReais)}`;
+      recomputeSomaTotal();
     }
 
-    inpQtd.addEventListener("input", recomputeTotal);
-    inpTamanho.addEventListener("input", () => {
-      atualizarGramatura();
-      recomputeTotal();
-    });
-    selGramatura.addEventListener("change", recomputeTotal);
-    selCores.addEventListener("change", recomputeTotal);
+    function recomputeSomaTotal() {
+      const soma = [...container.querySelectorAll(".inp-subtotal")]
+        .reduce((s, el) => s + (parseInt(el.value, 10) || 0), 0);
+      somaTotalDisplay.textContent = brl(soma / 100);
+      inpTotalGeral.value = (soma / 100).toFixed(2);
+    }
+
+    function ligarEventos(bloco) {
+      const selTipo = bloco.querySelector(".sel-tipo");
+      const inpQtd = bloco.querySelector(".inp-qtd");
+      const inpTamanho = bloco.querySelector(".inp-tamanho");
+      const selGramatura = bloco.querySelector(".sel-gramatura");
+      const selCores = bloco.querySelector(".sel-cores");
+      const btnRemove = bloco.querySelector(".btn-remove-produto");
+
+      selTipo.addEventListener("change", () => {
+        const rows = rowsParaTipo(selTipo.value);
+        const tamanhosUnicos = [...new Set(rows.map((r) => r.tamanho).filter(Boolean))];
+        document.getElementById("lista-tamanhos").innerHTML = tamanhosUnicos.map((t) => `<option value="${t}"></option>`).join("");
+
+        const tamanhoInfo = bloco.querySelector(".tamanho-info");
+        if (rows.length === 0) {
+          tamanhoInfo.textContent = "Nenhum valor cadastrado para este tipo. Cadastre em Tabela de Valores.";
+          recomputeSubtotal(bloco);
+          return;
+        }
+
+        const menor = rows.slice().sort((a, b) => a.qtdMin - b.qtdMin)[0];
+        if (!inpTamanho.value) inpTamanho.value = menor.tamanho || "";
+        if (!inpQtd.value) inpQtd.value = String(menor.qtdMin);
+        tamanhoInfo.textContent = tamanhosUnicos.length ? `Tamanhos disponíveis: ${tamanhosUnicos.join(", ")}` : "";
+
+        atualizarGramatura(bloco);
+        recomputeSubtotal(bloco);
+      });
+
+      inpQtd.addEventListener("input", () => recomputeSubtotal(bloco));
+      inpTamanho.addEventListener("input", () => {
+        atualizarGramatura(bloco);
+        recomputeSubtotal(bloco);
+      });
+      selGramatura.addEventListener("change", () => recomputeSubtotal(bloco));
+      selCores.addEventListener("change", () => recomputeSubtotal(bloco));
+
+      btnRemove.addEventListener("click", () => {
+        bloco.remove();
+        recomputeSomaTotal();
+        atualizarBotoesRemover();
+      });
+    }
+
+    function atualizarBotoesRemover() {
+      const blocos = container.querySelectorAll(".item-bloco");
+      blocos.forEach((b) => {
+        const btn = b.querySelector(".btn-remove-produto");
+        btn.style.display = blocos.length > 1 ? "" : "none";
+      });
+    }
+
+    function adicionarProduto() {
+      const bloco = criarBlocoItem(itemIndex++);
+      container.appendChild(bloco);
+      ligarEventos(bloco);
+      atualizarBotoesRemover();
+    }
+
+    btnAdd.addEventListener("click", adicionarProduto);
+
+    // Primeiro produto já vem pronto ao carregar a página
+    adicionarProduto();
   </script>
 
 </AdminLayout>

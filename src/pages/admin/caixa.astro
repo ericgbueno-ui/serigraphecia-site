@@ -46,8 +46,15 @@ const ticketMedio = pedidosThisMonth.length > 0 ? Math.round(faturamentoMes / pe
 const pixCount = pedidosThisMonth.filter((p) => p.payMethod === "pix" || p.payMethod === "pix_50").length;
 const cartaoCount = pedidosThisMonth.filter((p) => p.payMethod === "cartao").length;
 
-const gastosMateriaPrimaMes = despesasThisMonth
-  .filter((d) => d.category?.name === "Compra de Matéria-Prima")
+// Gastos com matéria-prima separados entre Sacolas e Diversos.
+// Compras antigas (categoria "Compra de Matéria-Prima", sem sufixo, de antes
+// desta separação) continuam contadas como "Sacolas" — é o que elas sempre
+// foram, na prática, até esta mudança.
+const gastosSacolasMes = despesasThisMonth
+  .filter((d) => d.category?.name?.startsWith("Compra de Matéria-Prima") && d.category?.name !== "Compra de Matéria-Prima - Diversos")
+  .reduce((s, d) => s + d.amountCents, 0);
+const gastosDiversosMes = despesasThisMonth
+  .filter((d) => d.category?.name === "Compra de Matéria-Prima - Diversos")
   .reduce((s, d) => s + d.amountCents, 0);
 const totalDespesasMes = despesasThisMonth.reduce((s, d) => s + d.amountCents, 0);
 const resultadoMes = faturamentoMes - totalDespesasMes;
@@ -67,7 +74,8 @@ const resultadoMes = faturamentoMes - totalDespesasMes;
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:32px;">
         {[
           { label: "Faturamento (Mês)", value: brl(faturamentoMes), sub: `${pedidosThisMonth.length} pedidos`, color: "var(--text)" },
-          { label: "Gastos c/ Matéria-Prima", value: `- ${brl(gastosMateriaPrimaMes)}`, sub: "compras de sacolas no mês", color: "#dc2626" },
+          { label: "Gastos c/ Sacolas", value: `- ${brl(gastosSacolasMes)}`, sub: "matéria-prima das sacolas", color: "#dc2626" },
+          { label: "Gastos c/ Diversos", value: `- ${brl(gastosDiversosMes)}`, sub: "tinta, fita, embalagem etc.", color: "#dc2626" },
           { label: "Resultado (Mês)", value: brl(resultadoMes), sub: "faturamento − despesas", color: resultadoMes >= 0 ? "#15803d" : "#dc2626" },
           { label: "Já Entrou (Mês)", value: brl(recebidoMes), sub: faturamentoMes > 0 ? `${Math.round((recebidoMes / faturamentoMes) * 100)}% das vendas` : "—", color: "#15803d" },
           { label: "A Receber (Mês)", value: brl(aReceberMes), sub: "saldo pendente", color: "#a9802e" },

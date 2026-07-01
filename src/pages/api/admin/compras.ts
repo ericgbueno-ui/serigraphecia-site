@@ -26,6 +26,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
 
   const formData = await request.formData();
 
+  const categoriaGasto = formData.get("categoriaGasto")?.toString().trim() === "diversos" ? "diversos" : "sacolas";
   const numeroPedido = formData.get("numeroPedido")?.toString().trim() || null;
   const fornecedorId = formData.get("fornecedorId")?.toString().trim() || null;
   const dataEmissaoRaw = formData.get("dataEmissao")?.toString().trim() || "";
@@ -92,17 +93,27 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       });
     }
 
-    // Lança a despesa no Fluxo de Caixa
+    // Lança a despesa no Fluxo de Caixa — em categoria separada por tipo de
+    // gasto (Sacolas | Diversos), para o Financeiro mostrar os dois valores
+    // separados.
     try {
+      const nomeCategoria =
+        categoriaGasto === "diversos"
+          ? "Compra de Matéria-Prima - Diversos"
+          : "Compra de Matéria-Prima - Sacolas";
+
       let categoria = await prisma.cashflowCategory.findFirst({
-        where: { name: "Compra de Matéria-Prima" },
+        where: { name: nomeCategoria },
       });
       if (!categoria) {
         categoria = await prisma.cashflowCategory.create({
           data: {
-            name: "Compra de Matéria-Prima",
+            name: nomeCategoria,
             type: "EXPENSE",
-            description: "Compras de sacolas/insumos de fornecedores",
+            description:
+              categoriaGasto === "diversos"
+                ? "Compras de tinta, fita, embalagem e outros insumos (não-sacola)"
+                : "Compras de sacolas em branco de fornecedores",
           },
         });
       }
