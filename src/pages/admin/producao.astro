@@ -14,6 +14,18 @@ function fmtDate(d: Date | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
+
+// Calculado aqui no frontmatter (fora do template) para evitar o operador de
+// comparação (<=) dentro de expressões JSX, que o compilador do Astro
+// interpreta de forma ambígua com abertura de tags.
+const ordensComEtapas = ordens.map((ordem) => {
+  const atual = ETAPAS_PRODUCAO.indexOf(ordem.status as any);
+  const etapasVisual = ETAPAS_PRODUCAO.map((etapa, idx) => ({
+    etapa,
+    passou: idx <= atual,
+  }));
+  return { ordem, etapasVisual };
+});
 ---
 <AdminLayout title="Produção | Admin">
   <div style="padding:32px;max-width:1000px">
@@ -29,7 +41,7 @@ function fmtDate(d: Date | null) {
     )}
 
     <div style="display:flex;flex-direction:column;gap:12px;">
-      {ordens.map((ordem) => (
+      {ordensComEtapas.map(({ ordem, etapasVisual }) => (
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
             <div>
@@ -41,15 +53,11 @@ function fmtDate(d: Date | null) {
           </div>
 
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
-            {ETAPAS_PRODUCAO.map((etapa, idx) => {
-              const atual = ETAPAS_PRODUCAO.indexOf(ordem.status as any);
-              const passou = idx <= atual;
-              return (
-                <span style={`font-size:10px;font-weight:700;padding:4px 8px;border-radius:20px;background:${passou ? "rgba(169,128,46,0.15)" : "rgba(20,30,45,0.06)"};color:${passou ? "var(--gold)" : "var(--muted)"};`}>
-                  {ETAPA_LABEL[etapa]}
-                </span>
-              );
-            })}
+            {etapasVisual.map(({ etapa, passou }) => (
+              <span style={`font-size:10px;font-weight:700;padding:4px 8px;border-radius:20px;background:${passou ? "rgba(169,128,46,0.15)" : "rgba(20,30,45,0.06)"};color:${passou ? "var(--gold)" : "var(--muted)"};`}>
+                {ETAPA_LABEL[etapa]}
+              </span>
+            ))}
           </div>
 
           <form action="/api/admin/producao-etapa" method="POST" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">

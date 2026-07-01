@@ -3,7 +3,19 @@ export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { prisma } from "../../lib/prisma";
 
-const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
+const itensRaw = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
+
+// Calculado aqui no frontmatter (fora do template) para evitar operadores de
+// comparação (</<=) dentro de expressões JSX, que o compilador do Astro
+// interpreta de forma ambígua com abertura de tags.
+const itens = itensRaw.map((i) => {
+  const disponivel = i.quantidade - (i.quantidadeReservada || 0);
+  const negativo = i.quantidade < 0;
+  const baixo = !negativo && i.quantidade <= i.minimo;
+  const situacaoCor = negativo ? "#dc2626" : baixo ? "#a9802e" : "#15803d";
+  const situacaoLabel = negativo ? "🔴 Negativo" : baixo ? "🟡 Baixo" : "🟢 Normal";
+  return { ...i, disponivel, situacaoCor, situacaoLabel };
+});
 ---
 <AdminLayout title="Estoque" currentPath="/admin/estoque">
   <div style="padding:32px;max-width:900px">
@@ -34,12 +46,7 @@ const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
           {itens.length === 0 && (
             <tr><td colspan="10" style="padding:32px;text-align:center;color:var(--muted)">Nenhum item no estoque ainda.</td></tr>
           )}
-          {itens.map(i => {
-            const disponivel = i.quantidade - (i.quantidadeReservada || 0);
-            const situacao = i.quantidade < 0 ? "negativo" : i.quantidade <= i.minimo ? "baixo" : "normal";
-            const cor = situacao === "negativo" ? "#dc2626" : situacao === "baixo" ? "#a9802e" : "#15803d";
-            const label = situacao === "negativo" ? "🔴 Negativo" : situacao === "baixo" ? "🟡 Baixo" : "🟢 Normal";
-            return (
+          {itens.map((i) => (
               <tr style="border-bottom:1px solid var(--border)">
                 <td style="padding:12px 16px;font-weight:500">{i.produto}</td>
                 <td style="padding:12px 16px;color:var(--muted)">{i.tipo}</td>
@@ -48,16 +55,15 @@ const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
                 <td style="padding:12px 16px;color:var(--muted)">{i.cor ?? "—"}</td>
                 <td style="padding:12px 16px;text-align:right;font-weight:600">{i.quantidade} {i.unidade}</td>
                 <td style="padding:12px 16px;text-align:right;color:var(--muted)">{i.quantidadeReservada || 0} {i.unidade}</td>
-                <td style="padding:12px 16px;text-align:right;font-weight:600">{disponivel} {i.unidade}</td>
+                <td style="padding:12px 16px;text-align:right;font-weight:600">{i.disponivel} {i.unidade}</td>
                 <td style="padding:12px 16px;text-align:right;color:var(--muted)">{i.minimo} {i.unidade}</td>
                 <td style="padding:12px 16px">
-                  <span style={`background:${cor}22;color:${cor};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600`}>
-                    {label}
+                  <span style={`background:${i.situacaoCor}22;color:${i.situacaoCor};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600`}>
+                    {i.situacaoLabel}
                   </span>
                 </td>
               </tr>
-            );
-          })}
+          ))}
         </tbody>
       </table>
     </div>
