@@ -487,6 +487,9 @@ model Fornecedor {
   conta2    String?
   ativo     Boolean  @default(true)
 
+  /// Referência rápida dos valores que pagamos a este fornecedor (texto livre, não é preço de venda nem estoque)
+  tabelaCustos String? @db.Text
+
   compras   Compra[]
 
   @@index([ativo])
@@ -578,12 +581,4 @@ model CompraItem {
 
   /// Quantidade de peças (unidades)
   pecas       Int
-  /// Peso em KG
-  pesoKg      Float
-  /// Preço por KG, em centavos
-  precoKgCents Int
-  /// Total da linha, em centavos
-  totalCents  Int
-
-  @@index([compraId])
-}
+  /// Peso em 
