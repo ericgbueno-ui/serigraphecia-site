@@ -426,13 +426,33 @@ model AutomationRun {
 // PRODUÇÃO / GESTÃO (preços, fornecedores, estoque)
 // ─────────────────────────────────────────────
 
-/// Tabela de valores por tipo de produto e faixa de quantidade
+/// Catálogo dos modelos de sacola que vendemos (Alça Camiseta, Alça Vazada, Alça Fita)
+model Modelo {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  nome      String   @unique
+  ativo     Boolean  @default(true)
+
+  precos    TabelaPreco[]
+  custos    FornecedorCusto[]
+}
+
+/// Tabela de valores (preço de venda ao cliente) por modelo, tamanho e faixa de quantidade
 model TabelaPreco {
   id            String   @id @default(cuid())
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  /// Mantido por compatibilidade (ex: "Alça Camiseta 40x50") — a fonte de verdade agora é modeloId + tamanho
   tipo          String
+
+  modeloId      String?
+  modelo        Modelo?  @relation(fields: [modeloId], references: [id])
+  /// Tamanho no formato "40x50"
+  tamanho       String?
+
   qtdMin        Int
   qtdMax        Int?
   precoUnitario Float
@@ -441,6 +461,37 @@ model TabelaPreco {
 
   @@index([tipo])
   @@index([ativo])
+  @@index([modeloId])
+}
+
+/// Custo de compra (o que pagamos) por fornecedor + modelo + tamanho + cor. Referência, não é preço de venda nem estoque físico.
+model FornecedorCusto {
+  id           String     @id @default(cuid())
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  fornecedorId String
+  fornecedor   Fornecedor @relation(fields: [fornecedorId], references: [id], onDelete: Cascade)
+
+  modeloId     String
+  modelo       Modelo     @relation(fields: [modeloId], references: [id])
+
+  /// Tamanho no formato "40x50"
+  tamanho      String
+  /// Cor ou faixa de cor (ex: "Branco/Preto", "Colorida", "Diversas cores")
+  cor          String?
+  /// Espessura/gramatura (ex: "0,05")
+  gramatura    String?
+
+  precoKgCents       Int
+  pesoMilheiroKg     Float?
+  custoMilheiroCents Int?
+  qtdPacote          Int?
+
+  notas        String?
+
+  @@index([fornecedorId])
+  @@index([modeloId])
 }
 
 /// Fornecedores de matéria-prima (sacolas em branco, tintas, etc.)
@@ -487,10 +538,11 @@ model Fornecedor {
   conta2    String?
   ativo     Boolean  @default(true)
 
-  /// Referência rápida dos valores que pagamos a este fornecedor (texto livre, não é preço de venda nem estoque)
+  /// Referência rápida em texto livre — mantido para fornecedores sem dados estruturados ainda (ver FornecedorCusto)
   tabelaCustos String? @db.Text
 
   compras   Compra[]
+  custos    FornecedorCusto[]
 
   @@index([ativo])
 }
@@ -528,65 +580,4 @@ model Estoque {
 
 // ─────────────────────────────────────────────
 // COMPRAS DE MATÉRIA-PRIMA (notas de fornecedores)
-// ─────────────────────────────────────────────
-
-/// Cabeçalho de uma nota/pedido de compra de matéria-prima
-model Compra {
-  id             String       @id @default(cuid())
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  /// Número do pedido/nota do fornecedor (ex: 31676)
-  numeroPedido   String?
-  dataEmissao    DateTime?
-  transportadora String?
-
-  fornecedorId   String?
-  fornecedor     Fornecedor?  @relation(fields: [fornecedorId], references: [id])
-
-  /// Totais calculados a partir dos itens (somatório)
-  totalPecas     Int          @default(0)
-  totalKg        Float        @default(0)
-  totalCents     Int          @default(0)
-
-  observacao     String?      @db.Text
-
-  itens          CompraItem[]
-
-  /// Referência da despesa criada no Fluxo de Caixa (se aplicável)
-  cashflowTransactionId String?
-
-  @@index([fornecedorId])
-  @@index([dataEmissao])
-}
-
-/// Linha de item de uma compra (uma sacola/modelo específico)
-model CompraItem {
-  id          String   @id @default(cuid())
-
-  compraId    String
-  compra      Compra   @relation(fields: [compraId], references: [id], onDelete: Cascade)
-
-  /// Descrição livre, igual à nota (ex: "SAC AD 40X50X0,05 CAMISETA - PRETA")
-  descricao   String
-
-  /// Modelo/tipo da sacola (ex: "Camiseta", "Alça Fita", "Vazada")
-  tipo        String
-  /// Tamanho (ex: "40x50")
-  tamanho     String?
-  /// Gramatura/espessura (ex: "0,05")
-  gramatura   String?
-  /// Cor
-  cor         String?
-
-  /// Quantidade de peças (unidades)
-  pecas       Int
-  /// Peso em KG
-  pesoKg      Float
-  /// Preço por KG, em centavos
-  precoKgCents Int
-  /// Total da linha, em centavos
-  totalCents  Int
-
-  @@index([compraId])
-}
+// ─────────────────�

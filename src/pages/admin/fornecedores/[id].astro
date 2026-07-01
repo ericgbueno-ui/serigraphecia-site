@@ -16,10 +16,29 @@ const fornecedor = await prisma.fornecedor.findUnique({
 if (!fornecedor) {
   return Astro.redirect('/admin/fornecedores');
 }
+
+const custos = await prisma.fornecedorCusto.findMany({
+  where: { fornecedorId: id },
+  include: { modelo: true },
+  orderBy: [{ modelo: { nome: "asc" } }, { tamanho: "asc" }, { cor: "asc" }],
+});
+
+// Agrupa por modelo
+const porModelo = new Map<string, typeof custos>();
+for (const c of custos) {
+  const nome = c.modelo.nome;
+  if (!porModelo.has(nome)) porModelo.set(nome, []);
+  porModelo.get(nome)!.push(c);
+}
+
+function brl(cents: number | null) {
+  if (cents == null) return "—";
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 ---
 
 <AdminLayout title={`${fornecedor.nome} - Fornecedor`} currentPath={`/admin/fornecedores/${id}`}>
-  <div style="padding:32px;max-width:800px">
+  <div style="padding:32px;max-width:900px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px">
       <div style="flex:1">
         <h1 style="font-size:28px;font-weight:700;margin:0">{fornecedor.nome}</h1>
@@ -66,45 +85,21 @@ if (!fornecedor) {
       <a href="/admin/fornecedores" style="background:var(--bg-card);color:var(--text);padding:8px 18px;border-radius:8px;font-weight:600;text-decoration:none;font-size:13px;border:1px solid var(--border)">← Voltar</a>
     </div>
 
-    {fornecedor.tabelaCustos && (
+    {custos.length > 0 && (
       <div style="margin-bottom:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
         <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
           <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">💲 Referência de Custos (o que pagamos)</h3>
         </div>
-        <pre style="padding:16px;margin:0;font-size:12px;line-height:1.6;color:var(--text);white-space:pre-wrap;font-family:inherit">{fornecedor.tabelaCustos}</pre>
-      </div>
-    )}
-
-    {(fornecedor.banco1 || fornecedor.banco2) && (
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden">
-        <div style="padding:16px;border-bottom:1px solid var(--border);background:rgba(255,215,0,0.1)">
-          <h3 style="margin:0;color:var(--text);font-size:14px;font-weight:600">🏦 Dados Bancários</h3>
-        </div>
         <div style="padding:16px">
-          {fornecedor.banco1 && (
-            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:6px;margin-bottom:12px;font-size:12px">
-              <div style="color:var(--muted);margin-bottom:4px">Banco</div>
-              <div style="font-weight:600;color:var(--text)">{fornecedor.banco1}</div>
-              <div style="color:var(--muted);font-size:11px;margin-top:8px">
-                Agência <span style="color:var(--text);font-weight:600">{fornecedor.agencia1}</span> | Conta <span style="color:var(--text);font-weight:600">{fornecedor.conta1}</span>
-              </div>
-            </div>
-          )}
-          {fornecedor.banco2 && (
-            <div style="padding:12px;background:rgba(255,255,255,0.02);border-radius:6px;font-size:12px">
-              <div style="color:var(--muted);margin-bottom:4px">Banco</div>
-              <div style="font-weight:600;color:var(--text)">{fornecedor.banco2}</div>
-              <div style="color:var(--muted);font-size:11px;margin-top:8px">
-                Agência <span style="color:var(--text);font-weight:600">{fornecedor.agencia2}</span> | Conta <span style="color:var(--text);font-weight:600">{fornecedor.conta2}</span>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    )}
-
-    <div style="margin-top:24px;padding:16px;background:rgba(255,215,0,0.05);border:1px solid var(--border);border-radius:8px;font-size:12px;color:var(--muted)">
-      📦 O catálogo de produtos/estoque fica em <a href="/admin/estoque" style="color:var(--gold)">Estoque</a>, separado do cadastro de fornecedores.
-    </div>
-  </div>
-</AdminLayout>
+          {[...porModelo.entries()].map(([modeloNome, itens]) => (
+            <div style="margin-bottom:20px">
+              <h4 style="margin:0 0 8px 0;color:var(--gold);font-size:13px;font-weight:700">🛍️ {modeloNome}</h4>
+              <table style="width:100%;border-collapse:collapse;font-size:12px">
+                <thead>
+                  <tr style="border-bottom:1px solid var(--border)">
+                    <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600">Tamanho</th>
+                    <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600">Cor</th>
+                    <th style="text-align:left;padding:6px 8px;color:var(--muted);font-weight:600">Gramatura</th>
+                    <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600">R$/kg</th>
+                    <th style="text-align:right;padding:6px 8px;color:var(--muted);font-weight:600">R$/milheiro</th>
+                    <th style="text-align:center;padding:6px 8px;color:var(--mut
