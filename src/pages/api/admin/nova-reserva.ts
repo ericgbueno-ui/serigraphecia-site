@@ -133,6 +133,24 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         optionalsCents: optionalsCentsVal,
         status: "CONFIRMED",
         affiliateCode:  affiliateCode  || undefined,
+        // Fase 2 — auditoria 2026-07-01: datas independentes do pedido.
+        dataPedido: new Date(),
+        dataPrevistaEntrega: idaDate || undefined,
+      },
+    });
+
+    // Fase 2 — item do pedido (permite múltiplos produtos por pedido no futuro;
+    // este é o primeiro item, criado a partir dos campos do formulário atual).
+    await prisma.itemPedido.create({
+      data: {
+        pedidoId: pedido.id,
+        produtoId: null,
+        nome: tripType,
+        cor: corSacola || undefined,
+        tamanho: tamanho || undefined,
+        quantidade: passengerCount || 1,
+        valorUnitarioCents: passengerCount > 0 ? Math.round(computedTotalCents / passengerCount) : computedTotalCents,
+        subtotalCents: computedTotalCents,
       },
     });
 

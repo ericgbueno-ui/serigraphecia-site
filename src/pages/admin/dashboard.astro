@@ -1,0 +1,191 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+function brl(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+function fmtDate(d: Date | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
+const agora = new Date();
+const inicioHoje = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
+const inicioMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
+const inicioAno = new Date(agora.getFullYear(), 0, 1);
+
+// Faturamento por dataPedido (evita distorção de pedidos antigos cadastrados depois)
+async function faturamentoDesde(data: Date) {
+  const r = await prisma.pedido.aggregate({
+    where: { dataPedido: { gte: data }, status: { not: "CANCELLED" } },
+    _sum: { totalCents: true },
+    _count: true,
+  });
+  return { totalCents: r._sum.totalCents ?? 0, count: r._count };
+}
+
+const [faturamentoHoje, faturamentoMes, faturamentoAno] = await Promise.all([
+  faturamentoDesde(inicioHoje),
+  faturamentoDesde(inicioMes),
+  faturamentoDesde(inicioAno),
+]);
+
+const [pedidosAbertos, pedidosEmProducao, pedidosConcluidos, pedidosAtrasados] = await Promise.all([
+  prisma.pedido.count({ where: { status: { in: ["PENDING", "CONFIRMED"] } } }),
+  prisma.pedido.count({ where: { status: "CONFIRMED", producaoConcluida: false } }),
+  prisma.pedido.count({ where: { producaoConcluida: true } }),
+  prisma.pedido.count({
+    where: {
+      dataPrevistaEntrega: { lt: agora },
+      dataEntregaReal: null,
+      status: { not: "CANCELLED" },
+    },
+  }),
+]);
+
+const ticketMedio = faturamentoMes.count > 0 ? Math.round(faturamentoMes.totalCents / faturamentoMes.count) : 0;
+
+const maisVendidos = await prisma.itemPedido.groupBy({
+  by: ["nome"],
+  _sum: { quantidade: true, subtotalCents: true },
+  orderBy: { _sum: { quantidade: "desc" } },
+  take: 5,
+});
+
+const clientesTop = await prisma.pedido.groupBy({
+  by: ["customerId"],
+  where: { status: { not: "CANCELLED" } },
+  _sum: { totalCents: true },
+  _count: true,
+  orderBy: { _sum: { totalCents: "desc" } },
+  take: 5,
+});
+const clientesTopComNome = await Promise.all(
+  clientesTop.map(async (c) => {
+    const customer = await prisma.customer.findUnique({ where: { id: c.customerId }, select: { name: true } });
+    return { nome: customer?.name ?? "—", totalCents: c._sum.totalCents ?? 0, pedidos: c._count };
+  })
+);
+
+const estoqueTodos = await prisma.estoque.findMany();
+const estoqueNegativo = estoqueTodos.filter((e) => e.quantidade < 0);
+const estoqueBaixo = estoqueTodos.filter((e) => e.quantidade >= 0 && e.quantidade <= e.minimo);
+
+const proximasEntregas = await prisma.pedido.findMany({
+  where: {
+    dataPrevistaEntrega: { gte: inicioHoje },
+    dataEntregaReal: null,
+    status: { not: "CANCELLED" },
+  },
+  include: { customer: true },
+  orderBy: { dataPrevistaEntrega: "asc" },
+  take: 8,
+});
+---
+<AdminLayout title="Dashboard | Admin">
+  <div style="padding:32px;max-width:1200px">
+    <h1 style="font-size:22px;font-weight:700;margin-bottom:24px">Dashboard executivo</h1>
+
+    <!-- Faturamento -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Faturamento hoje</p>
+        <p style="font-size:22px;font-weight:800;color:#15803d;">{brl(faturamentoHoje.totalCents)}</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Faturamento no mês</p>
+        <p style="font-size:22px;font-weight:800;color:#15803d;">{brl(faturamentoMes.totalCents)}</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Faturamento no ano</p>
+        <p style="font-size:22px;font-weight:800;color:#15803d;">{brl(faturamentoAno.totalCents)}</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Ticket médio (mês)</p>
+        <p style="font-size:22px;font-weight:800;">{brl(ticketMedio)}</p>
+      </div>
+    </div>
+
+    <!-- Pedidos -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px;">
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Pedidos em aberto</p>
+        <p style="font-size:22px;font-weight:800;">{pedidosAbertos}</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Em produção</p>
+        <p style="font-size:22px;font-weight:800;">{pedidosEmProducao}</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Concluídos</p>
+        <p style="font-size:22px;font-weight:800;color:#15803d;">{pedidosConcluidos}</p>
+      </div>
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <p style="font-size:11px;color:var(--muted);margin-bottom:6px;">Atrasados</p>
+        <p style={`font-size:22px;font-weight:800;color:${pedidosAtrasados > 0 ? "#dc2626" : "var(--text)"};`}>{pedidosAtrasados}</p>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+      <!-- Mais vendidos -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <h2 style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;">Produtos mais vendidos</h2>
+        {maisVendidos.length === 0 && <p style="font-size:12px;color:var(--muted);">Sem dados ainda.</p>}
+        {maisVendidos.map((p) => (
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span>{p.nome}</span>
+            <span style="color:var(--muted);">{p._sum.quantidade} un · {brl(p._sum.subtotalCents ?? 0)}</span>
+          </div>
+        ))}
+      </div>
+
+      <!-- Clientes que mais compram -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <h2 style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;">Clientes que mais compram</h2>
+        {clientesTopComNome.length === 0 && <p style="font-size:12px;color:var(--muted);">Sem dados ainda.</p>}
+        {clientesTopComNome.map((c) => (
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span>{c.nome}</span>
+            <span style="color:var(--muted);">{c.pedidos} pedido(s) · {brl(c.totalCents)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <!-- Estoque crítico -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <h2 style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;">Estoque crítico</h2>
+        {estoqueNegativo.length === 0 && estoqueBaixo.length === 0 && (
+          <p style="font-size:12px;color:var(--muted);">Nenhum item crítico.</p>
+        )}
+        {estoqueNegativo.map((e) => (
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span>🔴 {e.produto}</span>
+            <span style="color:#dc2626;font-weight:700;">{e.quantidade} {e.unidade}</span>
+          </div>
+        ))}
+        {estoqueBaixo.map((e) => (
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);">
+            <span>🟡 {e.produto}</span>
+            <span style="color:#a9802e;font-weight:700;">{e.quantidade} {e.unidade}</span>
+          </div>
+        ))}
+      </div>
+
+      <!-- Agenda de entregas -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+        <h2 style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px;">Agenda de entregas</h2>
+        {proximasEntregas.length === 0 && <p style="font-size:12px;color:var(--muted);">Nenhuma entrega prevista.</p>}
+        {proximasEntregas.map((p) => (
+          <a href={`/admin/reservas/${p.id}`} style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);text-decoration:none;color:inherit;">
+            <span>{p.customer.name}</span>
+            <span style="color:var(--gold);font-weight:700;">{fmtDate(p.dataPrevistaEntrega)}</span>
+          </a>
+        ))}
+      </div>
+    </div>
+  </div>
+</AdminLayout>

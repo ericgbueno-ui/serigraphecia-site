@@ -8,7 +8,7 @@ if (!id) return Astro.redirect("/admin/reservas");
 
 const pedido = await prisma.pedido.findUnique({
   where: { id },
-  include: { customer: true, payments: true },
+  include: { customer: true, payments: true, itens: true },
 });
 
 if (!pedido) return Astro.redirect("/admin/reservas");
@@ -19,6 +19,12 @@ function brl(cents: number) {
 function fmtDate(d: Date | null) {
   if (!d) return "—";
   return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+// Formato yyyy-mm-dd para preencher <input type="date"> com o valor atual
+function fmtDateInput(d: Date | null) {
+  if (!d) return "";
+  const dt = new Date(d);
+  return dt.toISOString().slice(0, 10);
 }
 const statusColor = pedido.status === "CONFIRMED" ? "#15803d" : pedido.status === "CANCELLED" ? "#dc2626" : "#a9802e";
 const statusLabel = pedido.status === "CONFIRMED" ? "Confirmado" : pedido.status === "CANCELLED" ? "Cancelado" : "Pendente";
@@ -88,6 +94,111 @@ const statusLabel = pedido.status === "CONFIRMED" ? "Confirmado" : pedido.status
             <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Observações</p>
             <p style="font-size:13px;white-space:pre-wrap;">{pedido.internalNotes}</p>
           </div>
+        )}
+      </div>
+
+      <!-- Itens do pedido (Fase 2 — suporte a múltiplos produtos) -->
+      {pedido.itens.length > 0 && (
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;">
+          <h2 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:16px;">📦 Itens do pedido</h2>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            {pedido.itens.map((item) => (
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);">
+                <div>
+                  <p style="font-size:13px;font-weight:600;">{item.nome}{item.cor ? ` · ${item.cor}` : ""}{item.tamanho ? ` · ${item.tamanho}` : ""}</p>
+                  <p style="font-size:12px;color:var(--muted);">{item.quantidade} un × {brl(item.valorUnitarioCents)}</p>
+                </div>
+                <p style="font-size:14px;font-weight:700;">{brl(item.subtotalCents)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <!-- Datas (Fase 2 — controle independente de prazos) -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;margin-bottom:16px;">
+        <h2 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:16px;">🗓️ Datas</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;">
+          <div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Data do pedido</p>
+            <p style="font-size:14px;">{fmtDate(pedido.dataPedido)}</p>
+          </div>
+          <div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Data de cadastro</p>
+            <p style="font-size:14px;">{fmtDate(pedido.createdAt)}</p>
+          </div>
+          <div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Prevista · Produção</p>
+            <p style="font-size:14px;">{fmtDate(pedido.dataPrevistaProducao)}</p>
+          </div>
+          <div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Prevista · Conclusão</p>
+            <p style="font-size:14px;">{fmtDate(pedido.dataPrevistaConclusao)}</p>
+          </div>
+          <div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Prevista · Entrega</p>
+            <p style="font-size:14px;font-weight:700;color:var(--gold);">{fmtDate(pedido.dataPrevistaEntrega)}</p>
+          </div>
+          <div>
+            <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Entrega real</p>
+            <p style="font-size:14px;">{fmtDate(pedido.dataEntregaReal)}</p>
+          </div>
+          {pedido.dataCancelamento && (
+            <div>
+              <p style="font-size:11px;color:var(--muted);margin-bottom:4px;">Cancelado em</p>
+              <p style="font-size:14px;color:#dc2626;">{fmtDate(pedido.dataCancelamento)}</p>
+              {pedido.motivoCancelamento && <p style="font-size:12px;color:var(--muted);">{pedido.motivoCancelamento}</p>}
+            </div>
+          )}
+        </div>
+
+        {!pedido.dataCancelamento && (
+          <form action="/api/admin/pedido-datas" method="POST" style="border-top:1px solid var(--border);padding-top:16px;">
+            <input type="hidden" name="pedidoId" value={pedido.id} />
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px;">
+              <label style="font-size:11px;color:var(--muted);">
+                Prevista · Produção
+                <input type="date" name="dataPrevistaProducao" value={fmtDateInput(pedido.dataPrevistaProducao)}
+                  style="display:block;margin-top:4px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;" />
+              </label>
+              <label style="font-size:11px;color:var(--muted);">
+                Prevista · Conclusão
+                <input type="date" name="dataPrevistaConclusao" value={fmtDateInput(pedido.dataPrevistaConclusao)}
+                  style="display:block;margin-top:4px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;" />
+              </label>
+              <label style="font-size:11px;color:var(--muted);">
+                Prevista · Entrega
+                <input type="date" name="dataPrevistaEntrega" value={fmtDateInput(pedido.dataPrevistaEntrega)}
+                  style="display:block;margin-top:4px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;" />
+              </label>
+              <label style="font-size:11px;color:var(--muted);">
+                Entrega real
+                <input type="date" name="dataEntregaReal" value={fmtDateInput(pedido.dataEntregaReal)}
+                  style="display:block;margin-top:4px;width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text);font-size:13px;" />
+              </label>
+            </div>
+            <div style="display:flex;gap:10px;align-items:center;">
+              <button type="submit" style="padding:9px 16px;background:var(--gold);color:#05080d;font-weight:700;font-size:12px;border:none;border-radius:8px;cursor:pointer;">
+                Salvar datas
+              </button>
+              <span style="font-size:11px;color:var(--muted);">Toda alteração fica registrada no histórico.</span>
+            </div>
+          </form>
+        )}
+
+        {!pedido.dataCancelamento && (
+          <form action="/api/admin/pedido-datas" method="POST" style="border-top:1px solid var(--border);margin-top:16px;padding-top:16px;">
+            <input type="hidden" name="pedidoId" value={pedido.id} />
+            <input type="hidden" name="cancelar" value="1" />
+            <label style="font-size:11px;color:var(--muted);display:block;margin-bottom:8px;">
+              Motivo do cancelamento (obrigatório para cancelar)
+              <input type="text" name="motivo" placeholder="Ex: cliente desistiu, duplicidade..."
+                style="display:block;margin-top:4px;width:100%;padding:8px;border-radius:8px;border:1px solid rgba(220,38,38,0.35);background:transparent;color:var(--text);font-size:13px;" />
+            </label>
+            <button type="submit" style="padding:8px 14px;background:transparent;color:#dc2626;font-weight:700;font-size:12px;border:1px solid rgba(220,38,38,0.4);border-radius:8px;cursor:pointer;">
+              Cancelar pedido
+            </button>
+          </form>
         )}
       </div>
 

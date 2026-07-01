@@ -62,7 +62,7 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
       .filter(Boolean)
       .join(" | ") || undefined;
 
-    await prisma.pedido.create({
+    const novoPedido = await prisma.pedido.create({
       data: {
         publicToken:    crypto.randomBytes(16).toString("hex"),
         customerId:     customer.id,
@@ -80,6 +80,23 @@ export const POST: APIRoute = async ({ request, cookies, redirect }) => {
         optionalsJson:  Object.keys(optionalsObj).length ? JSON.stringify(optionalsObj) : undefined,
         optionalsCents: optionalsCentsVal,
         affiliateCode:  affiliateCode || undefined,
+        // Fase 2 — auditoria 2026-07-01: data em que o orçamento foi de fato
+        // solicitado. Sem um campo próprio no formulário ainda, usamos "agora"
+        // (mesmo comportamento de antes, só que agora fica em campo estruturado).
+        dataPedido:     new Date(),
+      },
+    });
+
+    // Fase 2 — item do pedido (permite múltiplos produtos por pedido no futuro;
+    // este é o primeiro item, criado a partir dos campos do orçamento).
+    await prisma.itemPedido.create({
+      data: {
+        pedidoId: novoPedido.id,
+        nome: tripType,
+        cor: corSacola || undefined,
+        quantidade: passengerCount || 1,
+        valorUnitarioCents: passengerCount > 0 ? Math.round(computedTotalCents / passengerCount) : computedTotalCents,
+        subtotalCents: computedTotalCents,
       },
     });
 

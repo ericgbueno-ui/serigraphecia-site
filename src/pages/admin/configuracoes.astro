@@ -1,0 +1,49 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+import { getGatilhoBaixaEstoque } from "../../lib/server/configuracao";
+
+const gatilhoAtual = await getGatilhoBaixaEstoque(prisma);
+const salvo = Astro.url.searchParams.get("ok") === "1";
+
+const OPCOES = [
+  { valor: "criacao", label: "Na criação do pedido/orçamento (comportamento atual)" },
+  { valor: "confirmacao", label: "Na confirmação/aprovação do pedido" },
+  { valor: "producao", label: "No início da produção" },
+];
+---
+<AdminLayout title="Configurações | Admin">
+  <div style="padding:32px;max-width:700px">
+    <h1 style="font-size:22px;font-weight:700;margin-bottom:8px">Configurações do sistema</h1>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px">
+      Regras de negócio que podem ser ajustadas sem alterar código.
+    </p>
+
+    {salvo && (
+      <div style="background:rgba(21,128,61,0.08);border:1px solid rgba(21,128,61,0.25);border-radius:10px;padding:10px 14px;font-size:13px;color:#15803d;margin-bottom:20px;">
+        Configuração salva.
+      </div>
+    )}
+
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:24px;">
+      <h2 style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:6px;">Baixa automática de estoque</h2>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">
+        Em que momento o sistema deve descontar o estoque automaticamente. Hoje: <strong>{OPCOES.find(o => o.valor === gatilhoAtual)?.label}</strong>.
+      </p>
+      <form action="/api/admin/configuracoes" method="POST">
+        <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:18px;">
+          {OPCOES.map((op) => (
+            <label style="display:flex;align-items:center;gap:10px;font-size:13px;cursor:pointer;">
+              <input type="radio" name="gatilhoBaixaEstoque" value={op.valor} checked={gatilhoAtual === op.valor} />
+              {op.label}
+            </label>
+          ))}
+        </div>
+        <button type="submit" style="padding:10px 20px;background:var(--gold);color:#05080d;font-weight:700;font-size:13px;border:none;border-radius:8px;cursor:pointer;">
+          Salvar
+        </button>
+      </form>
+    </div>
+  </div>
+</AdminLayout>

@@ -8,6 +8,78 @@ datasource db {
 }
 
 // ─────────────────────────────────────────────
+// USUÁRIOS INTERNOS / AUTENTICAÇÃO (Fase 1 — auditoria 2026-07-01)
+// ─────────────────────────────────────────────
+
+/// Colaborador com acesso individual ao painel administrativo.
+/// Substitui gradualmente a senha única compartilhada (ADMIN_PASSWORD).
+model User {
+  id           String    @id @default(cuid())
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  name         String
+  email        String    @unique
+  /// Hash scrypt (nunca a senha em texto puro)
+  passwordHash String
+
+  /// admin | equipe (papéis futuros podem ser adicionados sem quebrar o existente)
+  role         String    @default("admin")
+  active       Boolean   @default(true)
+  lastLoginAt  DateTime?
+
+  historico    HistoricoAlteracao[]
+  loginAttempts LoginAttempt[]
+  pedidosCancelados Pedido[]
+
+  @@index([active])
+}
+
+/// Registro de cada tentativa de login (sucesso ou falha) — base do rate limit
+/// e de rastreabilidade de acesso. Nunca é apagado.
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+
+  /// IP de origem da tentativa (chave principal do rate limit)
+  ip         String
+  /// E-mail informado, se houver (login individual) — pode não existir (login legado)
+  email      String?
+  success    Boolean
+
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([ip, createdAt])
+  @@index([email, createdAt])
+}
+
+/// Log de auditoria genérico: qualquer alteração relevante em qualquer entidade
+/// (Pedido, Estoque, Cliente, etc.) pode gravar um registro aqui. Nunca é apagado.
+model HistoricoAlteracao {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+
+  /// Nome da entidade alterada (ex: "Pedido", "Estoque", "Customer")
+  entidade      String
+  /// ID do registro alterado
+  entidadeId    String
+  /// Nome do campo alterado (ex: "dataPrevistaEntrega", "status")
+  campo         String
+  valorAnterior String?  @db.Text
+  valorNovo     String?  @db.Text
+
+  /// Motivo da alteração, quando informado pelo usuário
+  motivo        String?  @db.Text
+
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entidade, entidadeId])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────────
 // LEAD / CRM
 // ─────────────────────────────────────────────
 
@@ -195,6 +267,30 @@ model Pedido {
   producaoConcluida       Boolean    @default(false)
   reviewRequestedAt       DateTime?
 
+  // ── Controle de datas independente (Fase 2 — auditoria 2026-07-01) ──────
+  // createdAt acima já funciona como "Data de Cadastro" (preenchido
+  // automaticamente pelo sistema). Os campos abaixo são independentes dele.
+
+  /// Data em que o cliente efetivamente fez o pedido (pode ser anterior ao
+  /// cadastro no sistema). Para pedidos antigos, foi preenchida com createdAt
+  /// na migração — é a melhor informação disponível, não um dado inventado.
+  dataPedido              DateTime?
+
+  /// Previsão de início da produção
+  dataPrevistaProducao    DateTime?
+  /// Previsão de conclusão da produção
+  dataPrevistaConclusao   DateTime?
+  /// Data prometida ao cliente para entrega
+  dataPrevistaEntrega     DateTime?
+  /// Data em que o pedido foi efetivamente entregue (vazio até a confirmação)
+  dataEntregaReal         DateTime?
+
+  /// Data/hora do cancelamento, se houver. Pedido cancelado NUNCA é excluído.
+  dataCancelamento        DateTime?
+  motivoCancelamento      String?    @db.Text
+  canceladoPorUserId      String?
+  canceladoPor            User?      @relation(fields: [canceladoPorUserId], references: [id], onDelete: SetNull)
+
   /// Observações internas da equipe (não visível ao cliente)
   internalNotes           String?    @db.Text
 
@@ -202,8 +298,123 @@ model Pedido {
   customer                Customer   @relation(fields: [customerId], references: [id])
 
   payments                Payment[]
+  itens                   ItemPedido[]
+  ordemProducao           OrdemProducao?
 
   @@index([status])
+  @@index([dataPedido])
+  @@index([dataPrevistaEntrega])
+  @@index([dataCancelamento])
+}
+
+// ─────────────────────────────────────────────
+// PRODUÇÃO (Fase 4 — auditoria 2026-07-01)
+// ─────────────────────────────────────────────
+
+/// Fluxo fixo de etapas da produção, na ordem em que devem acontecer.
+/// RECEBIDO -> AGUARDANDO_APROVACAO -> AGUARDANDO_PRODUCAO -> EM_PRODUCAO ->
+/// PRODUCAO_FINALIZADA -> SEPARACAO -> PRONTO -> ENTREGUE -> FINALIZADO
+/// (mantido como String, não enum, para não exigir migração de banco ao
+/// ajustar o fluxo no futuro)
+model OrdemProducao {
+  id            String    @id @default(cuid())
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  /// Número sequencial legível (ex: OP-2026-0001)
+  numero        String    @unique
+
+  pedidoId      String    @unique
+  pedido        Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  /// Ver fluxo fixo acima
+  status        String    @default("RECEBIDO")
+  /// baixa | normal | alta | urgente
+  prioridade    String    @default("normal")
+
+  responsavelId String?
+  previsao      DateTime?
+  observacoes   String?   @db.Text
+
+  etapas        OrdemProducaoEtapa[]
+
+  @@index([status])
+  @@index([prioridade])
+}
+
+/// Histórico de cada mudança de etapa — nunca é apagado.
+model OrdemProducaoEtapa {
+  id              String        @id @default(cuid())
+  createdAt       DateTime      @default(now())
+
+  ordemId         String
+  ordem           OrdemProducao @relation(fields: [ordemId], references: [id], onDelete: Cascade)
+
+  etapa           String
+  responsavelId   String?
+  observacoes     String?       @db.Text
+
+  @@index([ordemId])
+}
+
+/// Catálogo formal de produtos, com ID permanente — um pedido referencia o
+/// produto por ID, então renomear/alterar o produto no catálogo nunca corrompe
+/// pedidos antigos (o nome também fica gravado como snapshot em ItemPedido).
+model Produto {
+  id                 String    @id @default(cuid())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  codigo             String?   @unique
+  nome               String
+  categoria          String?
+  modelo             String?
+  descricao          String?   @db.Text
+  imagemUrl          String?
+
+  precoCents            Int?
+  precoPromocionalCents Int?
+  custoCents            Int?
+
+  fornecedorId       String?
+  fornecedor         Fornecedor? @relation(fields: [fornecedorId], references: [id], onDelete: SetNull)
+
+  ativo              Boolean   @default(true)
+
+  itens              ItemPedido[]
+
+  @@index([ativo])
+  @@index([categoria])
+}
+
+/// Um item (linha) dentro de um pedido. Um pedido pode ter quantos itens o
+/// cliente quiser — sem limite. "nome"/"cor"/"tamanho" são um snapshot do
+/// produto no momento da venda: se o produto for renomeado depois no catálogo,
+/// este registro histórico não muda.
+model ItemPedido {
+  id                 String    @id @default(cuid())
+  createdAt          DateTime  @default(now())
+
+  pedidoId           String
+  pedido             Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  /// Referência ao catálogo, quando o item veio de um Produto cadastrado
+  /// (opcional — itens antigos ou avulsos podem não ter produto vinculado)
+  produtoId          String?
+  produto            Produto?  @relation(fields: [produtoId], references: [id], onDelete: SetNull)
+
+  /// Snapshot do nome do produto no momento da venda
+  nome               String
+  cor                String?
+  tamanho            String?
+  observacoes        String?   @db.Text
+
+  quantidade         Int       @default(1)
+  valorUnitarioCents Int       @default(0)
+  subtotalCents      Int       @default(0)
+
+  @@index([pedidoId])
+  @@index([produtoId])
 }
 
 model Payment {
@@ -543,6 +754,7 @@ model Fornecedor {
 
   compras   Compra[]
   custos    FornecedorCusto[]
+  produtos  Produto[]
 
   @@index([ativo])
 }
@@ -565,6 +777,10 @@ model Estoque {
   quantidadePacote Int?
   /// Quantidade em estoque
   quantidade Float @default(0)
+  /// Quantidade comprometida em pedidos abertos (Fase 3 — auditoria 2026-07-01).
+  /// Disponível para vender = quantidade - quantidadeReservada (calculado no
+  /// código, não gravado, para nunca ficar dessincronizado).
+  quantidadeReservada Float @default(0)
   unidade    String   @default("un")
   minimo     Float    @default(0)
   /// Preço por kg em centavos (ex: 2890 = R$ 28,90)
@@ -572,10 +788,48 @@ model Estoque {
   /// Custo aproximado por milheiro em centavos
   custoMilheiroCents Int?
 
+  movimentacoes MovimentacaoEstoque[]
+
   @@index([produto])
   @@index([tipo])
   @@index([tamanho])
   @@index([gramatura])
+}
+
+/// Histórico de cada entrada/saída de estoque — nunca é apagado
+/// (Fase 3 — auditoria 2026-07-01).
+model MovimentacaoEstoque {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+
+  estoqueId     String
+  estoque       Estoque  @relation(fields: [estoqueId], references: [id], onDelete: Cascade)
+
+  /// ENTRADA | SAIDA | AJUSTE
+  tipo          String
+  quantidade    Float
+  saldoAnterior Float
+  saldoAtual    Float
+
+  /// Pedido que originou a saída, quando aplicável
+  pedidoId      String?
+  /// Usuário responsável, quando identificável (login individual)
+  userId        String?
+  motivo        String?  @db.Text
+
+  @@index([estoqueId])
+  @@index([pedidoId])
+  @@index([createdAt])
+}
+
+/// Configurações do sistema em chave/valor — permite mudar regras de negócio
+/// (ex: em que etapa o estoque é baixado) sem alterar código-fonte
+/// (Fase 3 — auditoria 2026-07-01).
+model Configuracao {
+  chave     String   @id
+  valor     String
+  descricao String?
+  updatedAt DateTime @updatedAt
 }
 
 // ─────────────────────────────────────────────

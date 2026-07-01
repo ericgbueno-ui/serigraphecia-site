@@ -24,15 +24,22 @@ const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
             <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Gramatura</th>
             <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Cor</th>
             <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Qtd</th>
+            <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Reservado</th>
+            <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Disponível</th>
             <th style="text-align:right;padding:12px 16px;color:var(--muted);font-weight:600">Mínimo</th>
             <th style="text-align:left;padding:12px 16px;color:var(--muted);font-weight:600">Situação</th>
           </tr>
         </thead>
         <tbody>
           {itens.length === 0 && (
-            <tr><td colspan="8" style="padding:32px;text-align:center;color:var(--muted)">Nenhum item no estoque ainda.</td></tr>
+            <tr><td colspan="10" style="padding:32px;text-align:center;color:var(--muted)">Nenhum item no estoque ainda.</td></tr>
           )}
-          {itens.map(i => (
+          {itens.map(i => {
+            const disponivel = i.quantidade - (i.quantidadeReservada || 0);
+            const situacao = i.quantidade < 0 ? "negativo" : i.quantidade <= i.minimo ? "baixo" : "normal";
+            const cor = situacao === "negativo" ? "#dc2626" : situacao === "baixo" ? "#a9802e" : "#15803d";
+            const label = situacao === "negativo" ? "🔴 Negativo" : situacao === "baixo" ? "🟡 Baixo" : "🟢 Normal";
+            return (
               <tr style="border-bottom:1px solid var(--border)">
                 <td style="padding:12px 16px;font-weight:500">{i.produto}</td>
                 <td style="padding:12px 16px;color:var(--muted)">{i.tipo}</td>
@@ -40,14 +47,17 @@ const itens = await prisma.estoque.findMany({ orderBy: { produto: "asc" } });
                 <td style="padding:12px 16px;color:var(--muted)">{i.gramatura ?? "—"}</td>
                 <td style="padding:12px 16px;color:var(--muted)">{i.cor ?? "—"}</td>
                 <td style="padding:12px 16px;text-align:right;font-weight:600">{i.quantidade} {i.unidade}</td>
+                <td style="padding:12px 16px;text-align:right;color:var(--muted)">{i.quantidadeReservada || 0} {i.unidade}</td>
+                <td style="padding:12px 16px;text-align:right;font-weight:600">{disponivel} {i.unidade}</td>
                 <td style="padding:12px 16px;text-align:right;color:var(--muted)">{i.minimo} {i.unidade}</td>
                 <td style="padding:12px 16px">
-                  <span style={`background:${i.quantidade <= i.minimo ? "rgba(220,38,38,0.12)" : "rgba(21,128,61,0.12)"};color:${i.quantidade <= i.minimo ? "#dc2626" : "#15803d"};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600`}>
-                    {i.quantidade <= i.minimo ? "⚠ Baixo" : "OK"}
+                  <span style={`background:${cor}22;color:${cor};padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600`}>
+                    {label}
                   </span>
                 </td>
               </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

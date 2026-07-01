@@ -1,0 +1,71 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+import { ETAPAS_PRODUCAO, ETAPA_LABEL } from "../../lib/producao";
+
+const ordens = await prisma.ordemProducao.findMany({
+  where: { status: { not: "FINALIZADO" } },
+  include: { pedido: { include: { customer: true } } },
+  orderBy: { createdAt: "asc" },
+});
+
+function fmtDate(d: Date | null) {
+  if (!d) return "—";
+  return new Date(d).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
+}
+---
+<AdminLayout title="Produção | Admin">
+  <div style="padding:32px;max-width:1000px">
+    <h1 style="font-size:22px;font-weight:700;margin-bottom:6px">Produção</h1>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:24px">
+      Ordens de produção geradas automaticamente ao confirmar um pedido.
+    </p>
+
+    {ordens.length === 0 && (
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:32px;text-align:center;color:var(--muted);font-size:13px;">
+        Nenhuma ordem de produção em aberto.
+      </div>
+    )}
+
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      {ordens.map((ordem) => (
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:12px;">
+            <div>
+              <p style="font-size:11px;color:var(--muted);">{ordem.numero}</p>
+              <p style="font-size:15px;font-weight:700;">{ordem.pedido.customer.name}</p>
+              <p style="font-size:12px;color:var(--muted);">{ordem.pedido.tipoProduto} · {ordem.pedido.quantidade} un</p>
+            </div>
+            <a href={`/admin/reservas/${ordem.pedidoId}`} style="font-size:12px;color:var(--gold);text-decoration:none;">Ver pedido →</a>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px;flex-wrap:wrap;">
+            {ETAPAS_PRODUCAO.map((etapa, idx) => {
+              const atual = ETAPAS_PRODUCAO.indexOf(ordem.status as any);
+              const passou = idx <= atual;
+              return (
+                <span style={`font-size:10px;font-weight:700;padding:4px 8px;border-radius:20px;background:${passou ? "rgba(169,128,46,0.15)" : "rgba(20,30,45,0.06)"};color:${passou ? "var(--gold)" : "var(--muted)"};`}>
+                  {ETAPA_LABEL[etapa]}
+                </span>
+              );
+            })}
+          </div>
+
+          <form action="/api/admin/producao-etapa" method="POST" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+            <input type="hidden" name="ordemId" value={ordem.id} />
+            <select name="etapa" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-size:12px;">
+              {ETAPAS_PRODUCAO.map((etapa) => (
+                <option value={etapa} selected={etapa === ordem.status}>{ETAPA_LABEL[etapa]}</option>
+              ))}
+            </select>
+            <input type="text" name="observacoes" placeholder="Observação (opcional)" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);font-size:12px;flex:1;min-width:160px;" />
+            <button type="submit" style="padding:8px 16px;background:var(--gold);color:#05080d;font-weight:700;font-size:12px;border:none;border-radius:8px;cursor:pointer;">
+              Atualizar etapa
+            </button>
+          </form>
+        </div>
+      ))}
+    </div>
+  </div>
+</AdminLayout>
