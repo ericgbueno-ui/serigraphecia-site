@@ -12,7 +12,7 @@ const representantes = await prisma.representante.findMany({
 const tabelaPrecos = await prisma.tabelaPreco.findMany({
   where: { ativo: true },
   orderBy: [{ tipo: "asc" }, { qtdMin: "asc" }],
-  select: { tipo: true, qtdMin: true, qtdMax: true, precoUnitario: true },
+  select: { tipo: true, tamanho: true, gramatura: true, qtdMin: true, qtdMax: true, precoUnitario: true },
 });
 ---
 
@@ -168,12 +168,15 @@ const tabelaPrecos = await prisma.tabelaPreco.findMany({
     const somaTotalDisplay = document.getElementById("soma-total-display");
     let itemIndex = 0;
 
+    // Usa as colunas reais (tamanho, gramatura) em vez de tentar extrair do texto
+    // livre "tipo" — mais confiável, e reflete a precificação por gramatura
+    // (Fase 2026-07-01: preço agora pode variar por modelo+tamanho+gramatura).
     function parseRow(p) {
-      let m = p.tipo.match(/^(.*) (\d+,\d+)g (\d+x\d+)$/);
-      if (m) return { ...p, base: m[1], gramatura: m[2], tamanho: m[3] };
-      m = p.tipo.match(/^(.*) (\d+x\d+)$/);
-      if (m) return { ...p, base: m[1], gramatura: null, tamanho: m[2] };
-      return { ...p, base: p.tipo, gramatura: null, tamanho: null };
+      const tamanho = p.tamanho || null;
+      const base = tamanho && p.tipo.endsWith(" " + tamanho)
+        ? p.tipo.slice(0, p.tipo.length - tamanho.length - 1)
+        : p.tipo;
+      return { ...p, base, tamanho, gramatura: p.gramatura || null };
     }
 
     function rowsParaTipo(slug) {

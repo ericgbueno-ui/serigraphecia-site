@@ -17,7 +17,8 @@ for (const p of precos) {
   grupos.get(base)!.push(p);
 }
 
-// Sub-agrupa por tamanho dentro de cada modelo
+// Sub-agrupa por tamanho, e dentro de cada tamanho por gramatura (um tamanho
+// pode ter mais de uma gramatura, cada uma com sua própria faixa de preços).
 function porTamanho(itens: typeof precos) {
   const map = new Map<string, typeof precos>();
   for (const i of itens) {
@@ -26,6 +27,16 @@ function porTamanho(itens: typeof precos) {
     map.get(tam)!.push(i);
   }
   return map;
+}
+
+function porGramatura(itens: typeof precos) {
+  const map = new Map<string, typeof precos>();
+  for (const i of itens) {
+    const g = i.gramatura ?? "—";
+    if (!map.has(g)) map.set(g, []);
+    map.get(g)!.push(i);
+  }
+  return [...map.entries()].sort((a, b) => a[0].localeCompare(b[0]));
 }
 
 function brl(v: any) {
@@ -39,18 +50,30 @@ function brlTotal(preco: any, qtd: number) {
 
 <AdminLayout title="Tabela de Valores | Admin" currentPath="/admin/precos">
   <div style="padding:32px 40px;max-width:1100px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+    <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;gap:16px;flex-wrap:wrap;">
       <div>
         <h1 style="font-size:22px;font-weight:700;">💲 Tabela de Valores</h1>
         <p style="font-size:13px;color:var(--muted);margin-top:4px;">{precos.length} faixas · 1 cor de impressão · +40% na 2ª cor ou verso</p>
       </div>
+      <button
+        id="btn-imprimir-tabela"
+        type="button"
+        style="display:flex;align-items:center;gap:8px;background:var(--gold);color:#fff;border:none;border-radius:10px;padding:11px 20px;font-size:13px;font-weight:700;cursor:pointer;"
+      >
+        🖨️ Imprimir tabela
+      </button>
+    </div>
+
+    <div id="print-titulo-somente-impressao" style="display:none;">
+      <h1 style="font-size:20px;font-weight:700;margin-bottom:2px;">Tabela de Valores — Serigraph e Cia</h1>
+      <p style="font-size:12px;color:#444;margin-bottom:20px;">{precos.length} faixas · 1 cor de impressão · +40% na 2ª cor ou verso</p>
     </div>
 
     {[...grupos.entries()].map(([tipo, itens]) => {
       const tamanhos = porTamanho(itens);
       const nota = itens.find(i => i.notas)?.notas;
       return (
-        <div style="margin-bottom:36px;">
+        <div class="bloco-modelo" style="margin-bottom:36px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
             <h2 style="font-size:16px;font-weight:700;color:var(--gold);">🛍️ {tipo}</h2>
             {nota && (
@@ -61,40 +84,80 @@ function brlTotal(preco: any, qtd: number) {
           </div>
 
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
-            {[...tamanhos.entries()].map(([tam, faixas]) => (
-              <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-                <div style="background:rgba(201,168,76,0.08);border-bottom:1px solid var(--border);padding:10px 16px;">
-                  <p style="font-size:13px;font-weight:700;color:var(--gold);">Tamanho {tam.replace("x", " × ")} cm</p>
-                </div>
-                <table style="width:100%;border-collapse:collapse;font-size:12px;">
-                  <thead>
-                    <tr style="border-bottom:1px solid var(--border);background:rgba(20,30,45,0.025);">
-                      <th style="text-align:center;padding:8px 12px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;">Quant.</th>
-                      <th style="text-align:center;padding:8px 12px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;">Valor Unit.</th>
-                      <th style="text-align:center;padding:8px 12px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;">Valor Total</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {faixas.map((f, i) => (
-                      <tr style={`border-bottom:${i < faixas.length - 1 ? "1px solid rgba(20,30,45,0.045)" : "none"};`}>
-                        <td style="padding:10px 12px;text-align:center;font-weight:700;font-size:13px;">
-                          {f.qtdMin}
-                        </td>
-                        <td style="padding:10px 12px;text-align:center;color:var(--gold);font-weight:600;">
-                          {brl(f.precoUnitario)}
-                        </td>
-                        <td style="padding:10px 12px;text-align:center;color:#15803d;font-weight:700;">
-                          {brlTotal(f.precoUnitario, f.qtdMin)}
-                        </td>
+            {[...tamanhos.entries()].map(([tam, faixasDoTamanho]) => {
+              const gramaturas = porGramatura(faixasDoTamanho);
+              const temVariasGramaturas = gramaturas.length > 1;
+              return gramaturas.map(([gram, faixas]) => (
+                <div class="bloco-tamanho" style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+                  <div style="background:rgba(201,168,76,0.08);border-bottom:1px solid var(--border);padding:10px 16px;">
+                    <p style="font-size:13px;font-weight:700;color:var(--gold);">
+                      Tamanho {tam.replace("x", " × ")} cm
+                      {temVariasGramaturas && gram !== "—" && (
+                        <span style="font-weight:600;color:var(--muted);font-size:11px;"> · gramatura {gram}</span>
+                      )}
+                    </p>
+                  </div>
+                  <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                    <thead>
+                      <tr style="border-bottom:1px solid var(--border);background:rgba(20,30,45,0.025);">
+                        <th style="text-align:center;padding:8px 12px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;">Quant.</th>
+                        <th style="text-align:center;padding:8px 12px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;">Valor Unit.</th>
+                        <th style="text-align:center;padding:8px 12px;color:var(--muted);font-weight:700;font-size:10px;text-transform:uppercase;">Valor Total</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ))}
+                    </thead>
+                    <tbody>
+                      {faixas.map((f, i) => (
+                        <tr style={`border-bottom:${i < faixas.length - 1 ? "1px solid rgba(20,30,45,0.045)" : "none"};`}>
+                          <td style="padding:10px 12px;text-align:center;font-weight:700;font-size:13px;">
+                            {f.qtdMin}
+                          </td>
+                          <td style="padding:10px 12px;text-align:center;color:var(--gold);font-weight:600;">
+                            {brl(f.precoUnitario)}
+                          </td>
+                          <td style="padding:10px 12px;text-align:center;color:#15803d;font-weight:700;">
+                            {brlTotal(f.precoUnitario, f.qtdMin)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ));
+            })}
           </div>
         </div>
       );
     })}
   </div>
+
+  <style is:global>
+    @media print {
+      .admin-sidebar, .admin-topbar, .admin-overlay, .admin-hamburger, .no-print {
+        display: none !important;
+      }
+      .admin-main {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      #print-titulo-somente-impressao {
+        display: block !important;
+      }
+      .bloco-modelo {
+        page-break-inside: avoid;
+      }
+      .bloco-tamanho {
+        page-break-inside: avoid;
+        border: 1px solid #ccc !important;
+      }
+      body {
+        background: #fff !important;
+      }
+    }
+  </style>
+
+  <script>
+    document.getElementById("btn-imprimir-tabela")?.addEventListener("click", () => {
+      window.print();
+    });
+  </script>
 </AdminLayout>

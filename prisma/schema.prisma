@@ -663,6 +663,9 @@ model TabelaPreco {
   modelo        Modelo?  @relation(fields: [modeloId], references: [id])
   /// Tamanho no formato "40x50"
   tamanho       String?
+  /// Gramatura da matéria-prima (ex: "0,05"), quando o modelo+tamanho tem mais de uma opção.
+  /// Nulo = preço legado, anterior à precificação por gramatura (2026-07-01).
+  gramatura     String?
 
   qtdMin        Int
   qtdMax        Int?
