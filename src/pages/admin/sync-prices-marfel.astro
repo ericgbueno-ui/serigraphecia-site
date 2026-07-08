@@ -63,23 +63,11 @@ if (Astro.request.method === "POST") {
         // Usar o primeiro custo encontrado para este tamanho
         const custo = custos[0];
 
-        // Calcular preço unitário baseado no custo
-        // Se há custo por milheiro, usar isso
-        let novoPreco = preco.precoUnitario;
-
-        if (custo.custoMilheiroCents && custo.custoMilheiroCents > 0) {
-          // custoMilheiroCents já é o custo por 1000 unidades
-          // Converter para custo unitário
-          const custoUnitarioCents = custo.custoMilheiroCents / 1000;
-          // Aplicar margem de 150% (multiplicar por 2.5)
-          novoPreco = (custoUnitarioCents * 2.5) / 100;
-        } else if (custo.pesoMilheiroKg && custo.precoKgCents > 0) {
-          // Calcular custo do milheiro
-          const custoMilheiroCents = (custo.pesoMilheiroKg * custo.precoKgCents);
-          const custoUnitarioCents = custoMilheiroCents / 1000;
-          // Aplicar margem de 150%
-          novoPreco = (custoUnitarioCents * 2.5) / 100;
-        }
+        // Fórmula: (R$ 0.59 + R$ 0.30) × 2 = R$ 1.78
+        const custoBase = 0.59;
+        const custoAdicional = 0.30;
+        const margem = 2.0;
+        const novoPreco = (custoBase + custoAdicional) * margem;
 
         // Atualizar preço se mudou
         if (Math.abs(novoPreco - preco.precoUnitario) > 0.01) {
@@ -130,7 +118,7 @@ if (Astro.request.method === "POST") {
             <li style="margin:8px 0;">
               Custos da Marfel utilizados: <strong>{resultado.custosUsados}</strong>
             </li>
-            <li style="margin:8px 0;">Margem aplicada: <strong>150%</strong> sobre custo</li>
+            <li style="margin:8px 0;">Fórmula: <strong>(R$ 0.59 + R$ 0.30) × 2</strong></li>
           </ul>
 
           {resultado.atualizacoes.length > 0 && (
@@ -184,7 +172,7 @@ if (Astro.request.method === "POST") {
           >
             <div style="background:rgba(201,168,76,0.08);border-left:4px solid var(--gold);padding:12px;border-radius:4px;margin-bottom:16px;">
               <p style="margin:0;font-size:13px;color:var(--muted);">
-                <strong>Cálculo:</strong> Cada preço será calculado como: <code style="background:rgba(0,0,0,0.1);padding:2px 6px;border-radius:3px;">Custo do Milheiro × 2.5</code>
+                <strong>Fórmula:</strong> <code style="background:rgba(0,0,0,0.1);padding:2px 6px;border-radius:3px;">(R$ 0.59 + R$ 0.30) × 2 = R$ 1.78</code>
               </p>
             </div>
 

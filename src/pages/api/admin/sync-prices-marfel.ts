@@ -59,16 +59,11 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       if (custos.length === 0) continue;
 
       const custo = custos[0];
-      let novoPreco = preco.precoUnitario;
-
-      if (custo.custoMilheiroCents && custo.custoMilheiroCents > 0) {
-        const custoUnitarioCents = custo.custoMilheiroCents / 1000;
-        novoPreco = (custoUnitarioCents * 2.5) / 100;
-      } else if (custo.pesoMilheiroKg && custo.precoKgCents > 0) {
-        const custoMilheiroCents = custo.pesoMilheiroKg * custo.precoKgCents;
-        const custoUnitarioCents = custoMilheiroCents / 1000;
-        novoPreco = (custoUnitarioCents * 2.5) / 100;
-      }
+      // Fórmula: (R$ 0.59 + R$ 0.30) × 2 = R$ 1.78
+      const custoBase = 0.59;
+      const custoAdicional = 0.30;
+      const margem = 2.0;
+      const novoPreco = (custoBase + custoAdicional) * margem;
 
       if (Math.abs(novoPreco - preco.precoUnitario) > 0.01) {
         await prisma.tabelaPreco.update({

@@ -1,0 +1,157 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../lib/server/adminAuth";
+
+export const prerender = false;
+
+const cookie = Astro.cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
+if (!getIsAdmin(cookie)) {
+  return Astro.redirect("/admin", 302);
+}
+
+let resultado: any = null;
+let erro: string | null = null;
+
+if (Astro.request.method === "POST") {
+  try {
+    const response = await fetch(new URL("/api/admin/sync-complete-prices", Astro.url), {
+      method: "POST",
+      headers: {
+        "Cookie": `${ADMIN_COOKIE_NAME}=${cookie}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      resultado = data;
+    } else {
+      erro = data.error || "Erro ao sincronizar";
+    }
+  } catch (e) {
+    erro = e instanceof Error ? e.message : "Erro desconhecido";
+  }
+}
+---
+
+<AdminLayout title="Sincronizar Preços Marfel | Admin" currentPath="/admin/precos-marfel">
+  <div style="padding:32px 40px;max-width:1200px;">
+    <h1 style="font-size:24px;font-weight:700;margin-bottom:12px;">💰 Sincronizar Tabela de Preços</h1>
+    <p style="color:var(--muted);margin-bottom:28px;">
+      Aplica a fórmula de preço a todos os modelos da Marfel com 10 faixas de quantidade.
+    </p>
+
+    <!-- Tabela de Fórmula -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;">
+      <h2 style="font-size:14px;font-weight:700;color:var(--gold);margin:0 0 16px;">📊 Fórmula de Cálculo</h2>
+      <div style="background:rgba(201,168,76,0.08);border-left:4px solid var(--gold);padding:12px;border-radius:4px;margin-bottom:16px;">
+        <p style="margin:0 0 8px;font-size:13px;color:var(--muted);">
+          <strong>Preço Unitário = (Custo Marfel + R$ 0.30) × (1 + Acréscimo %)</strong>
+        </p>
+      </div>
+
+      <table style="width:100%;font-size:12px;border-collapse:collapse;">
+        <thead>
+          <tr style="border-bottom:1px solid var(--border);background:rgba(20,30,45,0.025);">
+            <th style="text-align:center;padding:10px;font-weight:700;">Quantidade</th>
+            <th style="text-align:center;padding:10px;font-weight:700;">Acréscimo</th>
+            <th style="text-align:center;padding:10px;font-weight:700;">Multiplicador</th>
+          </tr>
+        </thead>
+        <tbody>
+          {[
+            { qtd: 100, acrescimo: "100%" },
+            { qtd: 200, acrescimo: "75%" },
+            { qtd: 300, acrescimo: "70%" },
+            { qtd: 400, acrescimo: "65%" },
+            { qtd: 500, acrescimo: "60%" },
+            { qtd: 600, acrescimo: "56%" },
+            { qtd: 700, acrescimo: "52%" },
+            { qtd: 800, acrescimo: "48%" },
+            { qtd: 900, acrescimo: "44%" },
+            { qtd: 1000, acrescimo: "40%" },
+          ].map((f) => (
+            <tr style="border-bottom:1px solid rgba(20,30,45,0.045);">
+              <td style="text-align:center;padding:10px;font-weight:600;">{f.qtd}</td>
+              <td style="text-align:center;padding:10px;color:var(--gold);font-weight:600;">+{f.acrescimo}</td>
+              <td style="text-align:center;padding:10px;color:#15803d;font-weight:600;">
+                ×{(1 + parseFloat(f.acrescimo) / 100).toFixed(2)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+
+    {
+      resultado && (
+        <div
+          style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:20px;margin-bottom:24px;"
+        >
+          <p style="font-weight:700;color:#16a34a;margin:0 0 12px;">✓ Sincronização concluída com sucesso!</p>
+          <ul style="margin:0;padding-left:20px;color:#16a34a;font-size:13px;">
+            <li style="margin:8px 0;">
+              <strong>{resultado.precosCriados}</strong> novos preços criados
+            </li>
+            <li style="margin:8px 0;">
+              <strong>{resultado.precosAtualizados}</strong> preços atualizados
+            </li>
+            <li style="margin:8px 0;">
+              <strong>{resultado.modelosProcessados}</strong> modelos processados
+            </li>
+            <li style="margin:8px 0;">
+              <strong>{resultado.faixasUsadas}</strong> faixas de quantidade por modelo
+            </li>
+          </ul>
+
+          {resultado.relatorio && resultado.relatorio.length > 0 && (
+            <div style="margin-top:16px;border-top:1px solid rgba(34,197,94,0.3);padding-top:16px;">
+              <p style="font-weight:600;color:#16a34a;margin:0 0 10px;font-size:12px;">Exemplos de modelos processados:</p>
+              <ul style="margin:0;padding-left:20px;font-size:11px;">
+                {resultado.relatorio.map((r: any) => (
+                  <li style="margin:4px 0;">
+                    {r.modelo} ({r.tamanho}) - Custo base: R$ {r.custoPorUnidade}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )
+    }
+
+    {
+      erro && (
+        <div
+          style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:16px;margin-bottom:24px;color:#dc2626;"
+        >
+          <strong>❌ Erro:</strong> {erro}
+        </div>
+      )
+    }
+
+    {
+      !resultado && !erro && (
+        <form method="POST">
+          <div
+            style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;"
+          >
+            <p style="margin:0 0 16px;color:var(--muted);font-size:13px;">
+              Clique abaixo para sincronizar a tabela de preços de <strong>todos os modelos</strong> com base nos custos da Marfel,
+              aplicando as 10 faixas de quantidade com seus respectivos acréscimos percentuais.
+            </p>
+
+            <button
+              type="submit"
+              style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s;"
+              onmouseover="this.style.opacity='0.9'"
+              onmouseout="this.style.opacity='1'"
+            >
+              🔄 Sincronizar Todos os Preços
+            </button>
+          </div>
+        </form>
+      )
+    }
+  </div>
+</AdminLayout>

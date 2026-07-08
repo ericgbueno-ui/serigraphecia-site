@@ -50,7 +50,7 @@ async function main() {
     });
 
     console.log(`✓ ${precos.length} preços encontrados\n`);
-    console.log('📊 Sincronizando preços (margem 150% sobre custo)...\n');
+    console.log('📊 Sincronizando preços (fórmula: R$ 0.59 + R$ 0.30 × 2 = R$ 1.78)...\n');
 
     let precosAtualizados = 0;
     const atualizacoes = [];
@@ -64,16 +64,12 @@ async function main() {
       if (custos.length === 0) continue;
 
       const custo = custos[0];
-      let novoPreco = preco.precoUnitario;
+      // Fórmula: (R$ 0.59 + R$ 0.30) × 2 = R$ 1.78
+      const custoBase = 0.59; // R$
+      const custoAdicional = 0.30; // R$
+      const margem = 2.0; // 100% = multiplicador 2
 
-      if (custo.custoMilheiroCents && custo.custoMilheiroCents > 0) {
-        const custoUnitarioCents = custo.custoMilheiroCents / 1000;
-        novoPreco = (custoUnitarioCents * 2.5) / 100;
-      } else if (custo.pesoMilheiroKg && custo.precoKgCents > 0) {
-        const custoMilheiroCents = custo.pesoMilheiroKg * custo.precoKgCents;
-        const custoUnitarioCents = custoMilheiroCents / 1000;
-        novoPreco = (custoUnitarioCents * 2.5) / 100;
-      }
+      let novoPreco = (custoBase + custoAdicional) * margem;
 
       if (Math.abs(novoPreco - preco.precoUnitario) > 0.01) {
         await prisma.tabelaPreco.update({
