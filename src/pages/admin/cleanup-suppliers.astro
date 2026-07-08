@@ -1,0 +1,118 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../lib/server/adminAuth";
+import { prisma } from "../../lib/prisma";
+
+export const prerender = false;
+
+// Verificar autenticação
+const cookie = Astro.cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
+if (!getIsAdmin(cookie)) {
+  return Astro.redirect("/admin", 302);
+}
+
+let resultado: any = null;
+let erro: string | null = null;
+
+// Se houver POST, executar a limpeza
+if (Astro.request.method === "POST") {
+  try {
+    // Encontrar Marfel
+    const marfel = await prisma.fornecedor.findFirst({
+      where: { nome: "Marfel" },
+    });
+
+    if (!marfel) {
+      erro = "❌ Fornecedor Marfel não encontrado no banco de dados.";
+    } else {
+      // Contar antes de deletar
+      const totalAntes = await prisma.fornecedorCusto.count({
+        where: { fornecedorId: { not: marfel.id } },
+      });
+
+      // Deletar todos os FornecedorCusto que NÃO são da Marfel
+      const deletados = await prisma.fornecedorCusto.deleteMany({
+        where: { fornecedorId: { not: marfel.id } },
+      });
+
+      // Contar após deletar
+      const custoMarfel = await prisma.fornecedorCusto.count({
+        where: { fornecedorId: marfel.id },
+      });
+
+      resultado = {
+        deletados: deletados.count,
+        mantidos: custoMarfel,
+        fornecedor: "Marfel",
+      };
+    }
+  } catch (e) {
+    erro = `❌ Erro: ${e instanceof Error ? e.message : "Erro desconhecido"}`;
+  }
+}
+---
+
+<AdminLayout title="Limpeza de Fornecedores | Admin" currentPath="/admin/cleanup-suppliers">
+  <div style="padding:32px 40px;max-width:800px;">
+    <h1 style="font-size:24px;font-weight:700;margin-bottom:12px;">🧹 Limpeza: Manter apenas Marfel</h1>
+    <p style="color:var(--muted);margin-bottom:28px;">
+      Esta página remove todos os custos de fornecedores que não são Marfel, mantendo apenas os valores da Marfel no sistema.
+    </p>
+
+    {
+      resultado && (
+        <div
+          style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:16px;margin-bottom:24px;"
+        >
+          <p style="font-weight:700;color:#16a34a;margin:0;">✓ Operação concluída com sucesso!</p>
+          <ul style="margin:12px 0 0 20px;color:#16a34a;">
+            <li style="margin:8px 0;">
+              <strong>{resultado.deletados}</strong> registros de custo deletados
+            </li>
+            <li style="margin:8px 0;">
+              Fornecedor mantido: <strong>{resultado.fornecedor}</strong>
+            </li>
+            <li style="margin:8px 0;">
+              <strong>{resultado.mantidos}</strong> custos da Marfel preservados
+            </li>
+          </ul>
+        </div>
+      )
+    }
+
+    {
+      erro && (
+        <div
+          style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:16px;margin-bottom:24px;color:#dc2626;"
+        >
+          {erro}
+        </div>
+      )
+    }
+
+    {
+      !resultado && !erro && (
+        <form method="POST">
+          <div
+            style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:24px;"
+          >
+            <p style="margin:0 0 16px;color:var(--muted);">
+              Clique no botão abaixo para <strong>deletar permanentemente</strong> todos os
+              custos de fornecedores que não são Marfel. Esta ação
+              <strong style="color:#dc2626;"> não pode ser desfeita</strong>.
+            </p>
+
+            <button
+              type="submit"
+              style="background:#dc2626;color:#fff;border:none;border-radius:8px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;transition:background 0.2s;"
+              onmouseover="this.style.background='#b91c1c'"
+              onmouseout="this.style.background='#dc2626'"
+            >
+              🗑️ Deletar custos de outros fornecedores
+            </button>
+          </div>
+        </form>
+      )
+    }
+  </div>
+</AdminLayout>

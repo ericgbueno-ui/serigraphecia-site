@@ -78,7 +78,13 @@
       "Bash(node import-marfel-final.mjs)",
       "Bash(node import-marfel-alca-0-13.mjs)",
       "Bash(node import-marfel-alca-bd.mjs)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "Bash(node delete-other-suppliers.js)",
+      "Bash(npx tsx *)",
+      "Bash(psql \"postgresql://neondb_owner:npg_6br8DiaLuZAx@ep-falling-moon-aipke1te.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require\" -c \"SELECT COUNT\\(*\\) as total_fornecedores FROM \\\\\"Fornecedor\\\\\";\")",
+      "Bash(curl -X POST http://localhost:3000/api/admin/delete-other-suppliers -H \"Cookie: admin_session=valid\" -H \"Content-Type: application/json\")",
+      "Bash(netstat -tlnp)",
+      "Bash(timeout 10 npm run dev)"
     ]
   }
 }
