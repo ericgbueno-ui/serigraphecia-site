@@ -1,0 +1,95 @@
+---
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { getIsAdmin, ADMIN_COOKIE_NAME } from "../../lib/server/adminAuth";
+
+export const prerender = false;
+
+const cookie = Astro.cookies.get(ADMIN_COOKIE_NAME)?.value ?? "";
+if (!getIsAdmin(cookie)) {
+  return Astro.redirect("/admin", 302);
+}
+
+let resultado: any = null;
+let erro: string | null = null;
+
+if (Astro.request.method === "POST") {
+  try {
+    const response = await fetch(new URL("/api/admin/sync-complete-prices", Astro.url), {
+      method: "POST",
+      headers: {
+        "Cookie": `${ADMIN_COOKIE_NAME}=${cookie}`,
+      },
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      resultado = data;
+    } else {
+      erro = data.error || "Erro ao sincronizar";
+    }
+  } catch (e) {
+    erro = e instanceof Error ? e.message : "Erro desconhecido";
+  }
+}
+---
+
+<AdminLayout title="Sincronizar Preços | Admin" currentPath="/admin/sincronizar-precos">
+  <div style="padding:32px 40px;max-width:900px;">
+    <h1 style="font-size:24px;font-weight:700;margin-bottom:28px;">🔄 Sincronizar Tabela de Preços</h1>
+
+    {
+      resultado && (
+        <div
+          style="background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:20px;margin-bottom:24px;"
+        >
+          <p style="font-weight:700;color:#16a34a;margin:0 0 12px;">✓ Sincronização concluída!</p>
+          <ul style="margin:0;padding-left:20px;color:#16a34a;font-size:13px;">
+            <li style="margin:6px 0;">
+              <strong>{resultado.precosCriados}</strong> preços criados
+            </li>
+            <li style="margin:6px 0;">
+              <strong>{resultado.precosAtualizados}</strong> preços atualizados
+            </li>
+            <li style="margin:6px 0;">
+              <strong>{resultado.modelosProcessados}</strong> modelos processados
+            </li>
+          </ul>
+        </div>
+      )
+    }
+
+    {
+      erro && (
+        <div
+          style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:16px;margin-bottom:24px;color:#dc2626;font-size:13px;"
+        >
+          <strong>❌ Erro:</strong> {erro}
+        </div>
+      )
+    }
+
+    {
+      !resultado && !erro && (
+        <form method="POST">
+          <div
+            style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;"
+          >
+            <p style="margin:0 0 20px;color:var(--muted);font-size:13px;">
+              Sincroniza a tabela de preços com base nos custos da Marfel, aplicando as faixas de quantidade.
+            </p>
+
+            <button
+              type="submit"
+              style="background:var(--gold);color:#fff;border:none;border-radius:8px;padding:12px 32px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity 0.2s;"
+              onmouseover="this.style.opacity='0.9'"
+              onmouseout="this.style.opacity='1'"
+            >
+              🔄 Sincronizar Agora
+            </button>
+          </div>
+        </form>
+      )
+    }
+  </div>
+</AdminLayout>
