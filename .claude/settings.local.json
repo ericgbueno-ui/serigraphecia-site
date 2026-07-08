@@ -84,7 +84,9 @@
       "Bash(psql \"postgresql://neondb_owner:npg_6br8DiaLuZAx@ep-falling-moon-aipke1te.c-4.us-east-1.aws.neon.tech/neondb?sslmode=require\" -c \"SELECT COUNT\\(*\\) as total_fornecedores FROM \\\\\"Fornecedor\\\\\";\")",
       "Bash(curl -X POST http://localhost:3000/api/admin/delete-other-suppliers -H \"Cookie: admin_session=valid\" -H \"Content-Type: application/json\")",
       "Bash(netstat -tlnp)",
-      "Bash(timeout 10 npm run dev)"
+      "Bash(timeout 10 npm run dev)",
+      "Bash(node scripts/sync-prices-marfel.js)",
+      "Bash(curl -X POST http://localhost:4322/api/admin/sync-prices-marfel -H \"Cookie: admin_session=valid\" -v)"
     ]
   }
 }
