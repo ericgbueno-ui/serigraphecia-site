@@ -86,7 +86,10 @@
       "Bash(netstat -tlnp)",
       "Bash(timeout 10 npm run dev)",
       "Bash(node scripts/sync-prices-marfel.js)",
-      "Bash(curl -X POST http://localhost:4322/api/admin/sync-prices-marfel -H \"Cookie: admin_session=valid\" -v)"
+      "Bash(curl -X POST http://localhost:4322/api/admin/sync-prices-marfel -H \"Cookie: admin_session=valid\" -v)",
+      "Bash(xargs grep -l \"Tabela de Valores\\\\|Custo base\")",
+      "Bash(xargs grep -l \"Tabela\\\\|precos\\\\|valores\")",
+      "Bash(grep -r \"0\\\\.59\\\\|Custo base\\\\|R\\\\$0,30\" src/)"
     ]
   }
 }
