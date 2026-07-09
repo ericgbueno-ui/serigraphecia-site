@@ -89,7 +89,8 @@
       "Bash(curl -X POST http://localhost:4322/api/admin/sync-prices-marfel -H \"Cookie: admin_session=valid\" -v)",
       "Bash(xargs grep -l \"Tabela de Valores\\\\|Custo base\")",
       "Bash(xargs grep -l \"Tabela\\\\|precos\\\\|valores\")",
-      "Bash(grep -r \"0\\\\.59\\\\|Custo base\\\\|R\\\\$0,30\" src/)"
+      "Bash(grep -r \"0\\\\.59\\\\|Custo base\\\\|R\\\\$0,30\" src/)",
+      "Bash(node -e \"console.log\\('teste'\\)\")"
     ]
   }
 }

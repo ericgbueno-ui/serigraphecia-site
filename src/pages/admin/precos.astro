@@ -46,6 +46,17 @@ function brl(v: any) {
 function brlTotal(preco: any, qtd: number) {
   return (Number(preco) * qtd).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 }
+
+// Miniatura da sacola por categoria — casamento por palavra-chave no nome do
+// modelo, já que "tipo" vem de fontes diferentes (Modelo cadastrado ou texto
+// legado).
+function imagemParaTipo(tipo: string): string | null {
+  const norm = tipo.toLowerCase();
+  if (norm.includes("vazada")) return "/sacolas/alça-vazada.webp";
+  if (norm.includes("fita")) return "/sacolas/alça-fita.webp";
+  if (norm.includes("camiseta")) return "/sacolas/alça-camiseta.webp";
+  return null;
+}
 ---
 
 <AdminLayout title="Tabela de Valores | Admin" currentPath="/admin/precos">
@@ -75,12 +86,24 @@ function brlTotal(preco: any, qtd: number) {
     {[...grupos.entries()].map(([tipo, itens], idx) => {
       const tamanhos = porTamanho(itens);
       const totalFaixas = itens.length;
+      const imagem = imagemParaTipo(tipo);
       return (
         <div class="bloco-modelo" style="margin-bottom:48px;border-left:4px solid var(--gold);background:rgba(201,168,76,0.03);padding:24px;border-radius:8px;">
-          <div class="bloco-modelo-header" style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid rgba(201,168,76,0.2);">
-            <div>
-              <h2 style="font-size:18px;font-weight:700;color:var(--gold);margin:0;">🛍️ {tipo}</h2>
-              <p style="font-size:12px;color:var(--muted);margin:6px 0 0 0;">{totalFaixas} faixas de preço</p>
+          <div class="bloco-modelo-header" style="display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid rgba(201,168,76,0.2);">
+            <div style="display:flex;align-items:center;gap:14px;">
+              {imagem && (
+                <img
+                  src={imagem}
+                  alt={tipo}
+                  class="bloco-modelo-thumb"
+                  style="width:56px;height:56px;object-fit:cover;border-radius:10px;border:2px solid rgba(201,168,76,0.35);flex-shrink:0;"
+                  loading="lazy"
+                />
+              )}
+              <div>
+                <h2 style="font-size:18px;font-weight:700;color:var(--gold);margin:0;">🛍️ {tipo}</h2>
+                <p style="font-size:12px;color:var(--muted);margin:6px 0 0 0;">{totalFaixas} faixas de preço</p>
+              </div>
             </div>
             <span class="no-print" style="font-size:11px;font-weight:600;color:var(--muted);background:rgba(201,168,76,0.15);padding:4px 12px;border-radius:20px;">Categoria {idx + 1}</span>
           </div>
@@ -169,6 +192,11 @@ function brlTotal(preco: any, qtd: number) {
       }
       .bloco-modelo-header p {
         font-size: 9px !important;
+      }
+      .bloco-modelo-thumb {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 6px !important;
       }
       .tamanhos-grid {
         display: grid !important;
