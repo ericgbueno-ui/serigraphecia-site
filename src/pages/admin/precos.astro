@@ -58,6 +58,7 @@ function brlTotal(preco: any, qtd: number) {
       <button
         id="btn-imprimir-tabela"
         type="button"
+        onclick="window.print();"
         style="display:flex;align-items:center;gap:8px;background:var(--gold);color:#05080d;border:none;border-radius:10px;padding:12px 22px;font-size:13px;font-weight:700;cursor:pointer;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(201,168,76,0.3);"
         onmouseover="this.style.boxShadow='0 4px 12px rgba(201,168,76,0.5)';this.style.transform='translateY(-2px)';"
         onmouseout="this.style.boxShadow='0 2px 8px rgba(201,168,76,0.3)';this.style.transform='translateY(0)';"
@@ -156,22 +157,4 @@ function brlTotal(preco: any, qtd: number) {
     }
   </style>
 
-  <script>
-    function setupPrintButton() {
-      const btn = document.getElementById("btn-imprimir-tabela");
-      if (btn) {
-        btn.addEventListener("click", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          setTimeout(() => window.print(), 100);
-        });
-      }
-    }
-
-    if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", setupPrintButton);
-    } else {
-      setupPrintButton();
-    }
-  </script>
 </AdminLayout>
