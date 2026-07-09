@@ -1,0 +1,121 @@
+---
+export const prerender = false;
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { prisma } from "../../lib/prisma";
+
+const precos = await prisma.tabelaPreco.findMany({
+  where: { ativo: true },
+  include: { modelo: true },
+  orderBy: [{ modelo: { nome: "asc" } }, { tamanho: "asc" }, { gramatura: "asc" }, { qtdMin: "asc" }],
+});
+
+function isIntervalo(g: string) {
+  return g.includes("-") || g.includes("–") || g.includes(" a ");
+}
+
+// Agrupa por (modelo, tamanho) — chave que identifica "a mesma peça física"
+type Linha = (typeof precos)[number];
+const grupos = new Map<string, { modeloNome: string; modeloId: string | null; tipoPrefixo: string; tamanho: string; itens: Linha[] }>();
+
+for (const p of precos) {
+  if (!p.tamanho || !p.gramatura) continue;
+  const modeloNome = p.modelo?.nome ?? p.tipo.replace(/ \d+x\d+$/, "");
+  const key = `${modeloNome}__${p.tamanho}`;
+  if (!grupos.has(key)) {
+    grupos.set(key, {
+      modeloNome,
+      modeloId: p.modeloId,
+      tipoPrefixo: p.tipo,
+      tamanho: p.tamanho,
+      itens: [],
+    });
+  }
+  grupos.get(key)!.itens.push(p);
+}
+
+// Só nos interessam grupos com mais de uma gramatura distinta cadastrada —
+// é aí que mora a inconsistência (ex: "0,04-0,06" convivendo com "0,06").
+const conflitos = [...grupos.values()]
+  .map((g) => {
+    const porGramatura = new Map<string, Linha[]>();
+    for (const item of g.itens) {
+      const key = item.gramatura!;
+      if (!porGramatura.has(key)) porGramatura.set(key, []);
+      porGramatura.get(key)!.push(item);
+    }
+    return { ...g, variantes: [...porGramatura.entries()] };
+  })
+  .filter((g) => g.variantes.length > 1)
+  .sort((a, b) => a.modeloNome.localeCompare(b.modeloNome) || a.tamanho.localeCompare(b.tamanho));
+
+function brl(v: any) {
+  return Number(v).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
+---
+
+<AdminLayout title="Auditoria de Gramaturas | Admin" currentPath="/admin/auditoria-gramaturas">
+  <div style="padding:32px 40px;max-width:1000px;">
+    <div style="margin-bottom:28px;">
+      <p style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2em;color:var(--muted);margin-bottom:6px;">Admin · Tabela de Valores</p>
+      <h1 style="font-size:22px;font-weight:700;">🔍 Auditoria de Gramaturas</h1>
+      <p style="font-size:13px;color:var(--muted);margin-top:6px;max-width:640px;">
+        Lista tamanhos que têm mais de uma gramatura cadastrada — por exemplo um valor em
+        formato de intervalo ("0,04-0,06") convivendo com um valor específico ("0,06") para
+        o mesmo tamanho. Isso normalmente é resquício de importações diferentes e deveria
+        ser um valor só. Nada é apagado de verdade: "desativar" apenas marca a faixa como
+        inativa (reversível pelo banco, se precisar).
+      </p>
+    </div>
+
+    {conflitos.length === 0 ? (
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:24px;text-align:center;color:var(--muted);font-size:13px;">
+        ✅ Nenhuma inconsistência encontrada — todo tamanho tem uma única gramatura cadastrada.
+      </div>
+    ) : (
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        {conflitos.map((g) => (
+          <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:20px;">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;">
+              <h2 style="font-size:15px;font-weight:700;">🛍️ {g.modeloNome} — {g.tamanho.replace("x", " × ")} cm</h2>
+              <span style="font-size:11px;font-weight:600;color:#dc2626;background:rgba(220,38,38,0.08);padding:3px 10px;border-radius:20px;">
+                {g.variantes.length} gramaturas cadastradas
+              </span>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              {g.variantes.map(([gramatura, itens]) => {
+                const intervalo = isIntervalo(gramatura);
+                const qtdMins = itens.map((i) => i.qtdMin).sort((a, b) => a - b);
+                return (
+                  <div style={`display:flex;justify-content:space-between;align-items:center;gap:16px;border:1px solid ${intervalo ? "rgba(220,38,38,0.25)" : "var(--border)"};background:${intervalo ? "rgba(220,38,38,0.04)" : "transparent"};border-radius:8px;padding:12px 14px;`}>
+                    <div>
+                      <p style="font-size:13px;font-weight:700;">
+                        {gramatura}g
+                        {intervalo && <span style="font-size:10px;font-weight:700;color:#dc2626;margin-left:8px;">⚠️ FORMATO DE INTERVALO</span>}
+                      </p>
+                      <p style="font-size:11px;color:var(--muted);margin-top:4px;">
+                        {itens.length} faixa(s) · quantidades: {qtdMins.join(", ")} · preços de {brl(Math.min(...itens.map((i) => i.precoUnitario)))} a {brl(Math.max(...itens.map((i) => i.precoUnitario)))}
+                      </p>
+                    </div>
+                    <form method="POST" action="/api/admin/desativar-gramatura" onsubmit="return confirm('Desativar todas as faixas com gramatura ' + this.gramatura.value + 'g para este tamanho? Isso não apaga o histórico, só tira da tabela ativa.');">
+                      <input type="hidden" name="modeloId" value={g.modeloId ?? ""} />
+                      <input type="hidden" name="tipoPrefixo" value={g.tipoPrefixo} />
+                      <input type="hidden" name="tamanho" value={g.tamanho} />
+                      <input type="hidden" name="gramatura" value={gramatura} />
+                      <button
+                        type="submit"
+                        style="background:rgba(220,38,38,0.08);color:#dc2626;border:1px solid rgba(220,38,38,0.25);padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;"
+                      >
+                        Desativar esta gramatura
+                      </button>
+                    </form>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</AdminLayout>
