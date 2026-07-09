@@ -59,7 +59,6 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       if (custos.length === 0) continue;
 
       const custo = custos[0];
-      // Fórmula: (R$ 0.59 + R$ 0.30) × 2 = R$ 1.78
       const custoBase = 0.59;
       const custoAdicional = 0.30;
       const margem = 2.0;

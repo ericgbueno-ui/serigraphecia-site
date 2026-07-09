@@ -71,16 +71,10 @@ function brlTotal(preco: any, qtd: number) {
 
     {[...grupos.entries()].map(([tipo, itens]) => {
       const tamanhos = porTamanho(itens);
-      const nota = itens.find(i => i.notas)?.notas;
       return (
         <div class="bloco-modelo" style="margin-bottom:36px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
             <h2 style="font-size:16px;font-weight:700;color:var(--gold);">🛍️ {tipo}</h2>
-            {nota && (
-              <span style="font-size:11px;font-weight:600;color:#15803d;background:rgba(62,207,142,0.1);border:1px solid rgba(62,207,142,0.2);padding:3px 10px;border-radius:20px;">
-                {nota}
-              </span>
-            )}
           </div>
 
           <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
