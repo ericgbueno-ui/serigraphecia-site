@@ -49,7 +49,7 @@ function brlTotal(preco: any, qtd: number) {
 ---
 
 <AdminLayout title="Tabela de Valores | Admin" currentPath="/admin/precos">
-  <div style="padding:32px 40px;max-width:1100px;">
+  <div class="precos-container" style="padding:32px 40px;max-width:1100px;">
     <div class="no-print" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;gap:16px;flex-wrap:wrap;">
       <div>
         <h1 style="font-size:22px;font-weight:700;">💲 Tabela de Valores</h1>
@@ -77,15 +77,15 @@ function brlTotal(preco: any, qtd: number) {
       const totalFaixas = itens.length;
       return (
         <div class="bloco-modelo" style="margin-bottom:48px;border-left:4px solid var(--gold);background:rgba(201,168,76,0.03);padding:24px;border-radius:8px;">
-          <div style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid rgba(201,168,76,0.2);">
+          <div class="bloco-modelo-header" style="display:flex;justify-content:space-between;align-items:baseline;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:2px solid rgba(201,168,76,0.2);">
             <div>
               <h2 style="font-size:18px;font-weight:700;color:var(--gold);margin:0;">🛍️ {tipo}</h2>
               <p style="font-size:12px;color:var(--muted);margin:6px 0 0 0;">{totalFaixas} faixas de preço</p>
             </div>
-            <span style="font-size:11px;font-weight:600;color:var(--muted);background:rgba(201,168,76,0.15);padding:4px 12px;border-radius:20px;">Categoria {idx + 1}</span>
+            <span class="no-print" style="font-size:11px;font-weight:600;color:var(--muted);background:rgba(201,168,76,0.15);padding:4px 12px;border-radius:20px;">Categoria {idx + 1}</span>
           </div>
 
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
+          <div class="tamanhos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
             {[...tamanhos.entries()].map(([tam, faixasDoTamanho], tamIdx) => {
               const gramaturas = porGramatura(faixasDoTamanho);
               const temVariasGramaturas = gramaturas.length > 1;
@@ -144,15 +144,56 @@ function brlTotal(preco: any, qtd: number) {
       #print-titulo-somente-impressao {
         display: block !important;
       }
+      body {
+        background: #fff !important;
+      }
+
+      /* Aproveita a largura da página e encolhe os cartões para caber
+         2 (ou até 4, em papéis mais largos) tabelas por folha. */
+      .precos-container {
+        padding: 0 !important;
+        max-width: none !important;
+      }
       .bloco-modelo {
-        page-break-inside: avoid;
+        page-break-inside: auto !important;
+        margin-bottom: 14px !important;
+        padding: 10px !important;
+        border-radius: 4px !important;
+      }
+      .bloco-modelo-header {
+        margin-bottom: 10px !important;
+        padding-bottom: 8px !important;
+      }
+      .bloco-modelo-header h2 {
+        font-size: 13px !important;
+      }
+      .bloco-modelo-header p {
+        font-size: 9px !important;
+      }
+      .tamanhos-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
       }
       .bloco-tamanho {
         page-break-inside: avoid;
+        box-shadow: none !important;
         border: 1px solid #ccc !important;
+        border-radius: 4px !important;
       }
-      body {
-        background: #fff !important;
+      .bloco-tamanho > div {
+        padding: 6px 8px !important;
+      }
+      .bloco-tamanho p {
+        font-size: 10px !important;
+      }
+      .bloco-tamanho table {
+        font-size: 9px !important;
+      }
+      .bloco-tamanho th,
+      .bloco-tamanho td {
+        padding: 4px 6px !important;
+        font-size: 9px !important;
       }
     }
   </style>
