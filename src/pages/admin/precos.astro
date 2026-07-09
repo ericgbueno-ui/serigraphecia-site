@@ -52,9 +52,9 @@ function brlTotal(preco: any, qtd: number) {
 // legado).
 function imagemParaTipo(tipo: string): string | null {
   const norm = tipo.toLowerCase();
-  if (norm.includes("vazada")) return "/sacolas/alça-vazada.webp";
-  if (norm.includes("fita")) return "/sacolas/alça-fita.webp";
-  if (norm.includes("camiseta")) return "/sacolas/alça-camiseta.webp";
+  if (norm.includes("vazada")) return "/icon_valor/boco_vazada.webp";
+  if (norm.includes("fita")) return "/icon_valor/alça_fita.webp";
+  if (norm.includes("camiseta")) return "/icon_valor/alça_camiseta.webp";
   return null;
 }
 ---
