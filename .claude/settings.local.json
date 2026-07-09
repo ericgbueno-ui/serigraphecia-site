@@ -90,7 +90,10 @@
       "Bash(xargs grep -l \"Tabela de Valores\\\\|Custo base\")",
       "Bash(xargs grep -l \"Tabela\\\\|precos\\\\|valores\")",
       "Bash(grep -r \"0\\\\.59\\\\|Custo base\\\\|R\\\\$0,30\" src/)",
-      "Bash(node -e \"console.log\\('teste'\\)\")"
+      "Bash(node -e \"console.log\\('teste'\\)\")",
+      "Bash(node \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Produ--o-de-Site-serigraphecia-site\\\\7c6969a1-2ee4-4911-95a8-2af3a14a4a3c\\\\scratchpad\\\\audit-gramaturas.mjs\")",
+      "Bash(cp \"C:\\\\Users\\\\User\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\C--Produ--o-de-Site-serigraphecia-site\\\\7c6969a1-2ee4-4911-95a8-2af3a14a4a3c\\\\scratchpad\\\\audit-gramaturas.mjs\" scripts/audit-gramaturas.mjs)",
+      "Bash(node scripts/audit-gramaturas.mjs)"
     ]
   }
 }

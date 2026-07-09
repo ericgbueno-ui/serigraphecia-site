@@ -119,13 +119,12 @@ function imagemParaTipo(tipo: string): string | null {
           <div class="tamanhos-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;">
             {[...tamanhos.entries()].map(([tam, faixasDoTamanho], tamIdx) => {
               const gramaturas = porGramatura(faixasDoTamanho);
-              const temVariasGramaturas = gramaturas.length > 1;
               return gramaturas.map(([gram, faixas], gramIdx) => (
                 <div class="bloco-tamanho" style="background:var(--bg-card);border:2px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
                   <div style="background:linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.05) 100%);border-bottom:2px solid rgba(201,168,76,0.2);padding:14px 16px;">
                     <p style="font-size:14px;font-weight:700;color:var(--gold);margin:0;">
                       📏 Tamanho {tam.replace("x", " × ")} cm
-                      {temVariasGramaturas && gram !== "—" && (
+                      {gram !== "—" && (
                         <span style="font-weight:600;color:var(--muted);font-size:12px;display:block;margin-top:4px;"> gramatura {gram}g</span>
                       )}
                     </p>
