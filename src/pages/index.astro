@@ -118,6 +118,9 @@ import Layout from '../layouts/Layout.astro';
         <h2 class="section-title">Por que a <em>Serigraph e Cia</em>?</h2>
         <p class="section-sub">Porque sua boutique merece embalagem à altura do que você vende.</p>
       </div>
+      <div class="showcase-video">
+        <video src="/videos/toda-linda.mp4" controls muted loop playsinline preload="metadata"></video>
+      </div>
       <div class="features-grid">
         <div class="feature-card">
           <div class="feature-icon" style="background: var(--pink)">
@@ -568,6 +571,18 @@ import Layout from '../layouts/Layout.astro';
     padding: 6rem 2rem;
     max-width: 1200px;
     margin: 0 auto;
+  }
+  .showcase-video {
+    display: flex;
+    justify-content: center;
+    margin: 0 0 3rem;
+  }
+  .showcase-video video {
+    width: 100%;
+    max-width: 320px;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.08);
   }
   .features-grid {
     display: grid;
