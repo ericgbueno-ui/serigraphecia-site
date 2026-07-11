@@ -266,138 +266,44 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </section>
 
-  <!-- CTA / FORMULÁRIO -->
+  <!-- CTA -->
   <section id="orcamento" class="cta-section">
     <div class="cta-inner">
-      <div class="cta-content">
-        <h2 class="section-title">Sua sacola está<br/><em>esperando por você</em></h2>
-        <p class="cta-lead">Preencha ao lado e receba um orçamento personalizado em até 1 hora pelo WhatsApp.</p>
+      <h2 class="section-title">Sua sacola está<br/><em>esperando por você</em></h2>
+      <p class="cta-lead">Fale agora pelo WhatsApp e receba um orçamento personalizado em até 1 hora.</p>
 
-        <ul class="value-list">
-          <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            Orçamento sem compromisso
-          </li>
-          <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            Layout incluso no pedido
-          </li>
-          <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            Ajustes ilimitados até aprovar
-          </li>
-          <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            Disponível para envio em até 14 dias úteis (frete por conta do cliente)
-          </li>
-          <li>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-            A partir de 50 unidades
-          </li>
-        </ul>
+      <ul class="value-list">
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Orçamento sem compromisso
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Layout incluso no pedido
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Ajustes ilimitados até aprovar
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Disponível para envio em até 14 dias úteis (frete por conta do cliente)
+        </li>
+        <li>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          A partir de 50 unidades
+        </li>
+      </ul>
 
-        <div class="urgency-badge">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
-          Produção em alta demanda — antecipe o seu pedido e garanta o melhor prazo de entrega
-        </div>
+      <div class="urgency-badge">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Produção em alta demanda — antecipe o seu pedido e garanta o melhor prazo de entrega
       </div>
 
-      <form class="cta-form" id="form-orcamento">
-        <div class="form-label-group">
-          <label for="f-nome">Nome da sua loja *</label>
-          <input type="text" id="f-nome" placeholder="Ex: Boutique Alma" required />
-        </div>
-        <div class="form-label-group">
-          <label for="f-whatsapp">Seu WhatsApp *</label>
-          <input type="tel" id="f-whatsapp" placeholder="(51) 99999-9999" required />
-        </div>
-        
-        <div class="form-label-group">
-          <label>Modelo de Alça *</label>
-          <div class="model-grid">
-            <label class="model-option">
-              <input type="radio" name="f-modelo" value="Alça Vazada" checked required />
-              <div class="model-card">
-                <span class="model-icon">🕳️</span>
-                <span class="model-name">Alça Vazada</span>
-              </div>
-            </label>
-            <label class="model-option">
-              <input type="radio" name="f-modelo" value="Alça Fita" required />
-              <div class="model-card">
-                <span class="model-icon">🎗️</span>
-                <span class="model-name">Alça Fita</span>
-              </div>
-            </label>
-            <label class="model-option">
-              <input type="radio" name="f-modelo" value="Alça Camiseta" required />
-              <div class="model-card">
-                <span class="model-icon">👕</span>
-                <span class="model-name">Alça Camiseta</span>
-              </div>
-            </label>
-          </div>
-        </div>
-
-        <div class="form-label-group">
-          <label>Cor da Sacola *</label>
-          <div class="color-grid">
-            <label class="color-option" title="Amarelo">
-              <input type="radio" name="f-cor" value="Amarelo" checked required />
-              <span class="color-dot" style="background-color: #FFD600;"></span>
-            </label>
-            <label class="color-option" title="Azul">
-              <input type="radio" name="f-cor" value="Azul" required />
-              <span class="color-dot" style="background-color: #3B82F6;"></span>
-            </label>
-            <label class="color-option" title="Branco">
-              <input type="radio" name="f-cor" value="Branco" required />
-              <span class="color-dot" style="background-color: #FFFFFF; border: 1px solid rgba(255,255,255,0.3);"></span>
-            </label>
-            <label class="color-option" title="Lilás">
-              <input type="radio" name="f-cor" value="Lilás" required />
-              <span class="color-dot" style="background-color: #D1A3FF;"></span>
-            </label>
-            <label class="color-option" title="Preto">
-              <input type="radio" name="f-cor" value="Preto" required />
-              <span class="color-dot" style="background-color: #121212; border: 1px solid rgba(255,255,255,0.3);"></span>
-            </label>
-            <label class="color-option" title="Rosa">
-              <input type="radio" name="f-cor" value="Rosa" required />
-              <span class="color-dot" style="background-color: #FF2D78;"></span>
-            </label>
-            <label class="color-option" title="Rosa Bebê">
-              <input type="radio" name="f-cor" value="Rosa Bebê" required />
-              <span class="color-dot" style="background-color: #FFB6C1;"></span>
-            </label>
-            <label class="color-option" title="Transparente">
-              <input type="radio" name="f-cor" value="Transparente" required />
-              <span class="color-dot color-dot--trans"></span>
-            </label>
-          </div>
-          <p id="selected-color-name" class="color-name-display">Cor selecionada: Amarelo</p>
-        </div>
-
-        <div class="form-row">
-          <div class="form-label-group">
-            <label for="f-quantidade">Quantidade</label>
-            <input type="number" id="f-quantidade" placeholder="Ex: 200" min="50" />
-          </div>
-          <div class="form-label-group">
-            <label for="f-tamanho">Tamanho</label>
-            <input type="text" id="f-tamanho" placeholder="Ex: 30×40cm" />
-          </div>
-        </div>
-        <div class="form-label-group">
-          <label for="f-mensagem">Detalhes da sacola</label>
-          <textarea id="f-mensagem" placeholder="Referências, uso, ou algum detalhe especial..." rows="3"></textarea>
-        </div>
-        <button type="submit" class="btn btn-whatsapp btn-full btn-lg">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.527 5.845L.057 23.882l6.198-1.625A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.893a9.866 9.866 0 01-5.031-1.378l-.361-.214-3.735.979 1.004-3.638-.235-.374A9.837 9.837 0 012.108 12C2.108 6.527 6.527 2.108 12 2.108c5.473 0 9.893 4.42 9.893 9.892 0 5.473-4.42 9.893-9.893 9.893z"/></svg>
-          Enviar e pedir meu orçamento
-        </button>
-        <p class="form-note">Resposta em até 1 hora no WhatsApp. Sem spam, prometido.</p>
-      </form>
+      <a href="#" class="btn btn-whatsapp btn-lg js-wa-link" target="_blank" rel="noopener">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.123.555 4.116 1.527 5.845L.057 23.882l6.198-1.625A11.945 11.945 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.893a9.866 9.866 0 01-5.031-1.378l-.361-.214-3.735.979 1.004-3.638-.235-.374A9.837 9.837 0 012.108 12C2.108 6.527 6.527 2.108 12 2.108c5.473 0 9.893 4.42 9.893 9.892 0 5.473-4.42 9.893-9.893 9.893z"/></svg>
+        Pedir meu orçamento pelo WhatsApp
+      </a>
     </div>
   </section>
 
@@ -441,114 +347,9 @@ import Layout from '../layouts/Layout.astro';
     const WA = '5551843971' + '76'; // +55 51 8439-7176
     const waBase = 'https://wa.me/' + WA;
     const waMsg  = encodeURIComponent('✨ Olá! Vim pelo site da Serigraph e Cia.\n\nEstou buscando sacolas com acabamento premium para a minha loja e gostaria de solicitar um orçamento exclusivo.');
-    const leadCaptureUrl = '/api/leads';
-
-    function getUtmValue(name) {
-      const value = new URLSearchParams(window.location.search).get(name);
-      return value ? value.trim() : '';
-    }
-
-    function normalizeLeadPhone(raw) {
-      const digits = String(raw || '').replace(/\D/g, '');
-      if (!digits) return '';
-      if (digits.length >= 12 && digits.length <= 13 && digits.startsWith('55')) return digits;
-      if (digits.length >= 10 && digits.length <= 11) return `55${digits}`;
-      return digits;
-    }
-
-    function collectLeadPayload() {
-      const nome     = (document.getElementById('f-nome')      as HTMLInputElement).value.trim();
-      const whatsapp = (document.getElementById('f-whatsapp')  as HTMLInputElement).value.trim();
-      const qtd      = (document.getElementById('f-quantidade') as HTMLInputElement).value.trim();
-      const tamanho  = (document.getElementById('f-tamanho')   as HTMLInputElement).value.trim();
-      const msg      = (document.getElementById('f-mensagem')   as HTMLTextAreaElement).value.trim();
-
-      const modeloEl = document.querySelector('input[name="f-modelo"]:checked') as HTMLInputElement;
-      const corEl    = document.querySelector('input[name="f-cor"]:checked') as HTMLInputElement;
-
-      return {
-        name: nome,
-        whatsapp: normalizeLeadPhone(whatsapp),
-        model: modeloEl ? modeloEl.value : '',
-        color: corEl ? corEl.value : '',
-        quantity: qtd,
-        size: tamanho,
-        message: msg,
-        pagePath: window.location.pathname,
-        source: 'site',
-        utmSource: getUtmValue('utm_source'),
-        utmMedium: getUtmValue('utm_medium'),
-        utmCampaign: getUtmValue('utm_campaign'),
-      };
-    }
-
-    function captureLead() {
-      const payload = collectLeadPayload();
-      if (!payload.whatsapp) return;
-
-      try {
-        if (navigator.sendBeacon) {
-          const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' });
-          const sent = navigator.sendBeacon(leadCaptureUrl, blob);
-          if (sent) return;
-        }
-      } catch {
-        // fallback below
-      }
-
-      void fetch(leadCaptureUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        keepalive: true,
-      });
-    }
 
     document.querySelectorAll('.js-wa-link').forEach((el) => {
       (el as HTMLAnchorElement).href = waBase + '?text=' + waMsg;
-    });
-
-    // Atualiza dinamicamente o nome da cor selecionada no formulário
-    const colorInputs = document.querySelectorAll('input[name="f-cor"]');
-    const colorDisplay = document.getElementById('selected-color-name');
-    colorInputs.forEach(input => {
-      input.addEventListener('change', (e) => {
-        const target = e.target as HTMLInputElement;
-        if (colorDisplay && target.checked) {
-          colorDisplay.textContent = `Cor selecionada: ${target.parentElement?.getAttribute('title') || target.value}`;
-        }
-      });
-    });
-
-    const form = document.getElementById('form-orcamento') as HTMLFormElement;
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const nome     = (document.getElementById('f-nome')      as HTMLInputElement).value.trim();
-      const whatsapp = (document.getElementById('f-whatsapp')  as HTMLInputElement).value.trim();
-      const qtd      = (document.getElementById('f-quantidade') as HTMLInputElement).value.trim();
-      const tamanho  = (document.getElementById('f-tamanho')   as HTMLInputElement).value.trim();
-      const msg      = (document.getElementById('f-mensagem')  as HTMLTextAreaElement).value.trim();
-
-      const modeloEl = form.querySelector('input[name="f-modelo"]:checked') as HTMLInputElement;
-      const modelo   = modeloEl ? modeloEl.value : '';
-      const corEl    = form.querySelector('input[name="f-cor"]:checked') as HTMLInputElement;
-      const cor      = corEl ? corEl.value : '';
-
-      const linhas = [
-        '✨ Olá! Vim pelo site da Serigraph e Cia.',
-        '',
-        'Estou buscando sacolas com acabamento premium para a minha loja e gostaria de solicitar um orçamento exclusivo.',
-        `🏪 Loja: ${nome}`,
-        whatsapp ? `📱 WhatsApp: ${whatsapp}`        : '',
-        modelo   ? `🛍️ Modelo: ${modelo}`            : '',
-        cor      ? `🎨 Cor da Sacola: ${cor}`        : '',
-        qtd      ? `📦 Quantidade: ${qtd} unidades`  : '',
-        tamanho  ? `📐 Tamanho: ${tamanho}`          : '',
-        msg      ? `💬 Detalhes: ${msg}`             : '',
-      ].filter(Boolean).join('\n');
-
-      captureLead();
-      window.open(waBase + '?text=' + encodeURIComponent(linhas), '_blank');
     });
   </script>
 </Layout>
@@ -921,20 +722,18 @@ import Layout from '../layouts/Layout.astro';
     border-bottom: 1px solid rgba(255,255,255,0.06);
   }
   .cta-inner {
-    max-width: 1000px;
+    max-width: 640px;
     margin: 0 auto;
-    display: grid;
-    grid-template-columns: 1fr 1.2fr;
-    gap: 4rem;
-    align-items: start;
+    text-align: center;
   }
-  .cta-content .section-title { text-align: left; margin-bottom: 0.75rem; }
+  .cta-inner .section-title { margin-bottom: 0.75rem; }
   .cta-lead { color: rgba(255,255,255,0.6); line-height: 1.7; margin-bottom: 1.5rem; }
 
   .value-list {
     list-style: none;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 0.6rem;
     margin-bottom: 1.75rem;
   }
@@ -957,153 +756,7 @@ import Layout from '../layouts/Layout.astro';
     border: 1px solid rgba(255,214,0,0.2);
     border-radius: 100px;
     padding: 0.45rem 0.9rem;
-  }
-
-  .cta-form {
-    display: flex;
-    flex-direction: column;
-    gap: 0.9rem;
-  }
-  .form-label-group { display: flex; flex-direction: column; gap: 0.3rem; }
-  .form-label-group label { font-size: 0.8rem; color: rgba(255,255,255,0.45); }
-  
-  /* Seletores de modelo de sacola */
-  .model-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.6rem;
-    margin-top: 0.2rem;
-    margin-bottom: 0.2rem;
-  }
-  .model-option {
-    cursor: pointer;
-    position: relative;
-    display: block;
-  }
-  .model-option input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  .model-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 12px;
-    padding: 0.75rem 0.5rem;
-    text-align: center;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.4rem;
-    transition: all 0.2s ease;
-  }
-  .model-option input:checked + .model-card {
-    border-color: var(--pink);
-    background: rgba(255, 45, 120, 0.08);
-    box-shadow: 0 0 12px rgba(255, 45, 120, 0.25);
-  }
-  .model-card:hover {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-  .model-option input:checked + .model-card:hover {
-    border-color: var(--pink);
-    background: rgba(255, 45, 120, 0.12);
-  }
-  .model-icon {
-    font-size: 1.25rem;
-  }
-  .model-name {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.75);
-  }
-  .model-option input:checked + .model-card .model-name {
-    color: var(--white);
-  }
-
-  /* Seletores de cores */
-  .color-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.6rem;
-    margin-top: 0.2rem;
-    margin-bottom: 0.2rem;
-  }
-  .color-option {
-    cursor: pointer;
-    position: relative;
-    display: inline-block;
-  }
-  .color-option input {
-    position: absolute;
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-  .color-dot {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    display: block;
-    border: 2px solid transparent;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  }
-  .color-dot--trans {
-    background-color: #e0e0e0;
-    background-image: linear-gradient(45deg, #555 25%, transparent 25%),
-                      linear-gradient(-45deg, #555 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #555 75%),
-                      linear-gradient(-45deg, transparent 75%, #555 75%);
-    background-size: 8px 8px;
-    background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
-    border: 1px solid rgba(255,255,255,0.4);
-  }
-  .color-option:hover .color-dot {
-    transform: scale(1.1);
-  }
-  .color-option input:checked + .color-dot {
-    border-color: var(--pink);
-    box-shadow: 0 0 10px var(--pink);
-    transform: scale(1.15);
-  }
-  .color-name-display {
-    font-size: 0.78rem;
-    color: rgba(255, 255, 255, 0.5);
-    margin-top: 0.3rem;
-    font-style: italic;
-  }
-
-  .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.9rem;
-  }
-  .cta-form input,
-  .cta-form textarea {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 12px;
-    padding: 0.8rem 1rem;
-    color: var(--white);
-    font-family: var(--font-body);
-    font-size: 0.93rem;
-    outline: none;
-    transition: border-color 0.2s, background 0.2s;
-    resize: vertical;
-    width: 100%;
-  }
-  .cta-form input::placeholder,
-  .cta-form textarea::placeholder { color: rgba(255,255,255,0.3); }
-  .cta-form input:focus,
-  .cta-form textarea:focus { border-color: var(--pink); background: rgba(255,255,255,0.08); }
-  .form-note {
-    text-align: center;
-    font-size: 0.78rem;
-    color: rgba(255,255,255,0.3);
-    margin-top: -0.25rem;
+    margin-bottom: 1.75rem;
   }
 
   /* ─── FOOTER ─── */
@@ -1205,11 +858,6 @@ import Layout from '../layouts/Layout.astro';
     .process-steps { flex-direction: column; align-items: stretch; }
     .step { max-width: 100%; }
     .step-arrow { transform: rotate(90deg); align-self: center; }
-
-    .cta-inner { grid-template-columns: 1fr; gap: 2.5rem; }
-    .cta-content .section-title { text-align: center; }
-    .cta-lead { text-align: center; }
-    .form-row { grid-template-columns: 1fr; }
 
     .trust-inner { gap: 1.5rem; }
     .trust-sep { display: none; }
