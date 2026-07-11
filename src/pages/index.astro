@@ -151,45 +151,6 @@ import Layout from '../layouts/Layout.astro';
     </div>
   </section>
 
-  <!-- COMO FUNCIONA -->
-  <section class="process">
-    <div class="process-inner">
-      <div class="section-header">
-        <h2 class="section-title">Simples assim —<br/><em>3 passos</em></h2>
-        <p class="section-sub">Do orçamento à sacola na sua mão, sem complicação.</p>
-      </div>
-      <div class="process-steps">
-        <div class="step">
-          <div class="step-number">01</div>
-          <div class="step-content">
-            <h3>Briefing pelo WhatsApp</h3>
-            <p>Me conta o que você precisa — quantidade, tamanho, cor, referências. A gente cuida do resto. Sem formulário complicado.</p>
-          </div>
-        </div>
-        <div class="step-arrow">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </div>
-        <div class="step">
-          <div class="step-number">02</div>
-          <div class="step-content">
-            <h3>Aprovação do layout em 24h</h3>
-            <p>Você recebe o preview da sua sacola para aprovar. Ajustes ilimitados até ficar exatamente do jeito que você imaginou.</p>
-          </div>
-        </div>
-        <div class="step-arrow">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-        </div>
-        <div class="step">
-          <div class="step-number">03</div>
-          <div class="step-content">
-            <h3>Disponível para envio</h3>
-            <p>Aprovado, vai para a produção. Em até 14 dias úteis seu pedido estará pronto para envio ou retirada (taxas de envio sob responsabilidade do cliente).</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- DEPOIMENTOS -->
   <section class="testimonials">
     <div class="testimonials-inner">
@@ -633,46 +594,6 @@ import Layout from '../layouts/Layout.astro';
   .feature-card p { font-size: 0.9rem; color: rgba(255,255,255,0.6); line-height: 1.65; }
   .feature-card strong { color: var(--white); }
 
-  /* ─── PROCESS ─── */
-  .process {
-    padding: 5rem 2rem;
-    background: rgba(255,255,255,0.02);
-    border-top: 1px solid rgba(255,255,255,0.05);
-  }
-  .process-inner { max-width: 1100px; margin: 0 auto; }
-  .process-steps {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .step {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
-    border-radius: 20px;
-    padding: 2rem;
-    flex: 1;
-    min-width: 220px;
-    max-width: 300px;
-    transition: border-color 0.2s, transform 0.2s;
-  }
-  .step:hover { border-color: rgba(255,45,120,0.3); transform: translateY(-3px); }
-  .step-number {
-    font-family: var(--font-display);
-    font-size: 3rem;
-    font-weight: 800;
-    line-height: 1;
-    background: linear-gradient(135deg, var(--pink), var(--purple));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin-bottom: 1rem;
-  }
-  .step-content h3 { font-family: var(--font-display); font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
-  .step-content p  { font-size: 0.88rem; color: rgba(255,255,255,0.55); line-height: 1.6; }
-  .step-arrow { color: rgba(255,255,255,0.2); flex-shrink: 0; }
-
   /* ─── TESTIMONIALS ─── */
   .testimonials {
     padding: 6rem 2rem;
@@ -852,12 +773,7 @@ import Layout from '../layouts/Layout.astro';
   /* ─── RESPONSIVO ─── */
   @media (max-width: 900px) {
     .hero { grid-template-columns: 1fr; padding: 7rem 1.25rem 3rem; gap: 2.5rem; }
-    .hero-visual { order: -1; }
     .bag-mockup { width: 200px; height: 248px; }
-
-    .process-steps { flex-direction: column; align-items: stretch; }
-    .step { max-width: 100%; }
-    .step-arrow { transform: rotate(90deg); align-self: center; }
 
     .trust-inner { gap: 1.5rem; }
     .trust-sep { display: none; }
